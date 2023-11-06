@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
-import "../contracts/example/MockAgEUR.sol";
 import "oz/proxy/transparent/ProxyAdmin.sol";
 import "oz/proxy/transparent/TransparentUpgradeableProxy.sol";
 

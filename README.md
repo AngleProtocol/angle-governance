@@ -3,7 +3,70 @@
 [![CI](https://github.com/AngleProtocol/boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/AngleProtocol/boilerplate/actions)
 [![Coverage](https://codecov.io/gh/AngleProtocol/boilerplate/branch/main/graph/badge.svg)](https://codecov.io/gh/AngleProtocol/boilerplate)
 
-This repository proposes a template that is based on foundry frameworks. It also provides templates for EVM compatible smart contracts (in `./contracts/example`), tests and deployment scripts.
+## About this repository 🤔
+
+Angle is a decentralized stablecoin protocol, ruled by the [veANGLE token](https://etherscan.io/address/0x0c462dbb9ec8cd1630f1728b2cfd2769d09f0dd5) and natively deployed on multiple EVM compatible chains (including Ethereum, Polygon, Optimism, Arbitrum, ...).
+
+This repository contains the smart contracts for the cross-chain governance system for Angle Protocol relying on LayerZero message passing infrastructure.
+
+It also comes with some utils and scripts to facilitate the creation and execution of proposals on top of the deployed system.
+
+## Simulate a Proposal
+
+- Complete `test/Proposal.sol`
+- You can simulate the proposal's execution by running `forge test -vvvv --match-contract Simulate`
+- Eventually add tests to `test/Simulate.t.sol`
+
+## System Architecture 🏘️
+
+Angle onchain governance works a![Alt text](../angle-governance-old/logo.svg) ../angle-governance-old/README.md ![Alt text](../angle-governance-old/DAO.png)s follows:
+
+- veANGLE holders vote on Ethereum on an OpenZeppelin [`Governor`](contracts/AngleGovernor.sol) implementation called `AngleGovernor` with a predetermined quorum, voting delay and proposal threshold.
+- On every chain where the protocol is deployed, there is a `Timelock` contract which is admin of all the protocol contracts (Borrowing module, Transmuter, direct deposit modules, ...) of its chain.
+- While only onchain votes can lead to payloads being included in the `Timelock` contract of a chain before execution, [Angle 4/6 Governance multisig](https://docs.angle.money/protocol-governance/angle-dao) (deployed on all chains as well) has a veto power on the payloads in Timelock contracts, and can cancel rogue governance votes.
+- For successful votes on non-Ethereum proposals, payloads to execute are bridged to the chain of interest using LayerZero message passing technology before being sent to the `Timelock` contract of their chain.
+
+![Angle Governance Architecture Summary](./DAO.png)
+
+Precisely speaking, once a vote succeeds (majority of positive votes + quorum), the flow is the following:
+
+- If the vote concerns an Ethereum action:
+  - The payload to execute is sent to the Ethereum `Timelock` contract. The Ethereum Timelock contract only accepts payload from the `AngleGovernor` contract
+  - After the timelock period ends, if the payload is not veto-ed by [Angle Governance multisig](https://etherscan.io/address/0xdC4e6DFe07EFCa50a197DF15D9200883eF4Eb1c8) on Ethereum, it can be executed on Ethereum.
+- If the vote concerns an action on another chain:
+  - The payload to execute is sent to a [`ProposalSender`](contracts/ProposalSender.sol) contract on Ethereum which is a simple LayerZero message passing contract owned by the `AngleGovernor` contract.
+  - This payload is to be received on the destination chain by a [`ProposalReceiver`](contracts/ProposalReceiver.sol) contract which role is to then send the payload to the Timelock contract of this chain. `Timelock` contracts of non-Ethereum chains only accept payloads from their respective `ProposalReceiver` contract.
+
+It's worth noting that, setup like this, the Angle Governance system can be abstracted among a decision module (`AngleGovernor` contract) and an execution module. Both are modular, and so any could be changed at any time in the future.
+
+---
+
+## Documentation 📚
+
+- [Angle Governance Documentation](https://docs.angle.money/protocol-governance/angle-dao)
+- [Angle Documentation](https://docs.angle.money)
+- [Angle Developers Documentation](https://developers.angle.money)
+
+---
+
+## Security ⛑️
+
+## Audits
+
+- The `AngleGovernor` implementation relies on several OpenZeppelin extensions as well as on the [audited](http://blog.openzeppelin.com/scopelift-flexible-voting-audit) [`GovernorCountingFractional` extension](https://github.com/ScopeLift/flexible-voting/blob/4399694c1a70d9e236c4c072802bfbe8e4951bf0/src/GovernorCountingFractional.sol) by ScopeLift.
+- The [`ProposalReceiver`](contracts/ProposalReceiver.sol) and [`ProposalSender`](contracts/ProposalSender.sol) contracts are forks from LayerZero Labs implementation. Find their audits [here](https://github.com/LayerZero-Labs/omnichain-governance-executor/tree/main/audits).
+
+### Bug Bounty
+
+For contracts deployed for the Angle Protocol, a bug bounty is open on [Immunefi](https://immunefi.com) and [Hats Finance](https://hats.finance). The rewards and scope of the Angle Immunefi are defined [here](https://immunefi.com/bounty/angleprotocol/).
+
+---
+
+## Deployment Addresses 🚦
+
+All Angle governance deployment addresses can be found in the developers documentation [here](https://developers.angle.money/overview/smart-contracts).
+
+---
 
 ## Starting
 
@@ -29,15 +92,7 @@ For additional keys, you can check the `.env.example` file.
 
 Warning: always keep your confidential information safe.
 
-## Headers
-
-To automatically create headers, follow: <https://github.com/Picodes/headers>
-
-## Hardhat Command line completion
-
-Follow these instructions to have hardhat command line arguments completion: <https://hardhat.org/hardhat-runner/docs/guides/command-line-completion>
-
-## Foundry Installation
+### Foundry Installation
 
 ```bash
 curl -L https://foundry.paradigm.xyz | bash
@@ -78,6 +133,11 @@ docker run -it --rm -v $(pwd):/app -w /app foundry sh
 
 Then you are inside the container and can run Foundry’s commands.
 
+### Warnings
+
+- Always keep your confidential information safe
+- This repository uses [`ffi`](https://book.getfoundry.sh/cheatcodes/ffi) in its test suite. Beware as a malicious actor forking this repo may execute malicious commands on your machine
+
 ### Tests
 
 You can run tests as follows:
@@ -115,51 +175,37 @@ yarn foundry:deploy scripts/foundry/DeployMockAgEUR.s.sol --rpc-url goerli
 We recommend the use of this [vscode extension](ryanluker.vscode-coverage-gutters).
 
 ```bash
-yarn hardhat:coverage
-yarn foundry:coverage
+yarn coverage
 ```
 
-### Simulate
+You'll need to install lcov `brew install lcov` to visualize the coverage report.
 
-You can simulate your transaction live or in fork mode. For both option you need to
-complete the `scripts/foundry/Simulate.s.sol` with your values: address sending the tx,
-address caled and the data to give to this address call.
+---
 
-For live simulation
+### Gas report ⛽️
 
 ```bash
-yarn foundry:simulate
+yarn gas
 ```
 
-For fork simulation
+---
 
-```bash
-yarn foundry:fork
-yarn foundry:simulate:fork
-```
+## Contributing
 
-For fork simulation at a given block
+If you're interested in contributing, please see our [contributions guidelines](./CONTRIBUTING.md).
 
-```bash
-yarn foundry:fork:block ${XXXX}
-yarn foundry:simulate:fork
-```
+---
 
-### Gas report
+## Questions & Feedback
 
-```bash
-yarn foundry:gas
-```
+For any question or feedback you can send an email to [contact@angle.money](mailto:contact@angle.money). Don't hesitate to reach out on [Twitter](https://twitter.com/AngleProtocol)🐦 as well.
 
-## Slither
+---
 
-```bash
-pip3 install slither-analyzer
-pip3 install solc-select
-solc-select install 0.8.11
-solc-select use 0.8.11
-slither .
-```
+## License
+
+This repository is released under the [MIT License](LICENSE).
+
 
 ## Media
 
