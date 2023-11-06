@@ -99,15 +99,11 @@ contract AngleGovernor is
         _updateTimelock(newTimelock);
     }
 
-    /// @notice The ```setVeANGLEVotingDelegation``` function is called by governance to change the voting weight IERC5805 contract
-    /// @dev Only callable by governance through this contract
     /// @param veANGLEVotingDelegation New IERC5805 veANGLEVotingDelegation contract address
     function setVeANGLEVotingDelegation(address veANGLEVotingDelegation) external onlyExecutor {
         _setVeANGLEVotingDelegation(veANGLEVotingDelegation);
     }
 
-    /// @notice The ```updateShortCircuitNumerator``` function is called by governance to change the short circuit numerator
-    /// @dev Only callable by governance through this contract
     /// @param newShortCircuitNumerator Number expressed as x/100 (percentage)
     function updateShortCircuitNumerator(uint256 newShortCircuitNumerator) external onlyExecutor {
         _updateShortCircuitNumerator(newShortCircuitNumerator);
@@ -194,7 +190,6 @@ contract AngleGovernor is
         _timelock = newTimelock;
     }
 
-    /// @notice The ```_setVeANGLEVotingDelegation``` function is called by governance to change the voting weight IERC5805 contract
     /// @param veANGLEVotingDelegation new IERC5805 VeANGLEVotingDelegation contract address
     function _setVeANGLEVotingDelegation(address veANGLEVotingDelegation) internal {
         address oldVeANGLEVotingDelegation = address(token());

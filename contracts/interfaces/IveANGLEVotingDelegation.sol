@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.20;
 
+//solhint-disable
 /// @title VeANGLEVotingDelegation
 /// @author Frax Finance https://github.com/FraxFinance
 /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/interfaces/IVeFxsVotingDelegation.sol

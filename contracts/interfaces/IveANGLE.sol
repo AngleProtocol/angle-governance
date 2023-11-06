@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.20;
 
+//solhint-disable
 interface IveANGLE {
     struct LockedBalance {
         int128 amount;
