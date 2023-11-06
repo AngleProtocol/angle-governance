@@ -1,0 +1,38 @@
+## Defaults
+__pycache__
+.idea
+.DS_Store
+.deps
+.docs
+.env
+node_modules
+venv
+
+# Build output
+slither-audit.txt
+slither
+
+# Test output
+coverage
+coverage.json
+lcov.info
+
+# Running output
+gas-report.txt
+gasReporterOutput.json
+addresses.json
+blockchain_db
+yarn-error.log
+broadcast
+
+# deployments
+deployments/localhost
+deployments/mainnetForkRemote
+
+# bin
+bin
+
+
+# foundry
+/out
+/cache
