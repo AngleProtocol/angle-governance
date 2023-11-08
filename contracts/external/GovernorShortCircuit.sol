@@ -24,7 +24,7 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
                                                         EVENTS                                                      
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice The ```ShortCircuitNumeratorUpdated``` event is emitted when governance changes the short circuit numerator
+    /// @notice Emitted when governance changes the short circuit numerator
     /// @param oldShortCircuitNumerator The old short circuit numerator
     /// @param newShortCircuitNumerator The new contract address
     event ShortCircuitNumeratorUpdated(uint256 oldShortCircuitNumerator, uint256 newShortCircuitNumerator);
@@ -35,6 +35,8 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
 
     /// @notice Checkpoints for short circuit numerator mirroring _quorumNumeratorHistory from GovernorVotesQuorumFraction.sol
     Checkpoints.Trace224 private _$shortCircuitNumeratorHistory;
+    /// @notice Lookup from snapshot timestamp to corresponding snapshot block number, used for quorum
+    mapping(uint256 snapshot => uint256 blockNumber) public $snapshotTimestampToSnapshotBlockNumber;
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                       CONSTRUCTOR                                                   
@@ -81,8 +83,11 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
     /// @param timepoint A block.number corresponding to a proposal snapshot
     /// @return shortCircuitThresholdAtTimepoint Total voting weight needed for short circuit to succeed
     function shortCircuitThreshold(uint256 timepoint) public view returns (uint256 shortCircuitThresholdAtTimepoint) {
+        uint256 snapshotBlockNumber = $snapshotTimestampToSnapshotBlockNumber[timepoint];
+        if (snapshotBlockNumber == 0 || snapshotBlockNumber >= block.number) revert InvalidTimepoint();
+
         shortCircuitThresholdAtTimepoint =
-            (token().getPastTotalSupply(timepoint) * shortCircuitNumerator(timepoint)) /
+            (token().getPastTotalSupply(snapshotBlockNumber) * shortCircuitNumerator(timepoint)) /
             quorumDenominator();
     }
 

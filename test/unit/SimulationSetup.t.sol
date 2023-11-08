@@ -14,6 +14,7 @@ import { Vm } from "forge-std/Vm.sol";
 import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
+import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
 
 import { Proposal, SubCall } from "./Proposal.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
@@ -36,6 +37,7 @@ contract SimulationSetup is Test {
 
     address public whale = 0xD13F8C25CceD32cdfA79EB5eD654Ce3e484dCAF5;
     IVotes public veANGLE = IVotes(0x0C462Dbb9EC8cD1630f1728B2CFD2769d09f0dd5);
+    IVotes public veANGLEDelegation;
 
     function setUp() public {
         chainIds = new uint256[](2);
@@ -46,8 +48,12 @@ contract SimulationSetup is Test {
         mapChainIds[137] = "POLYGON";
         // TODO Complete with all deployed chains
 
+        veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
+
         vm.makePersistent(address(proposal));
         vm.makePersistent(address(veANGLE));
+        vm.makePersistent(address(veANGLEDelegation));
+
         string memory baseURI = "ETH_NODE_URI_";
         for (uint256 i; i < chainIds.length; i++) {
             forkIdentifier[chainIds[i]] = vm.createFork(
@@ -62,7 +68,7 @@ contract SimulationSetup is Test {
                 executors[0] = address(0); // Means everyone can execute
 
                 _timelocks[chainIds[i]] = new TimelockController(1 days, proposers, executors, address(this));
-                _governor = new AngleGovernor(veANGLE, _timelocks[chainIds[i]]);
+                _governor = new AngleGovernor(veANGLEDelegation, _timelocks[chainIds[i]]);
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].PROPOSER_ROLE(), address(governor()));
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].CANCELLER_ROLE(), multisig(chainIds[i]));
                 // _timelocks[chainIds[i]].renounceRole(_timelocks[chainIds[i]].TIMELOCK_ADMIN_ROLE(), address(this));

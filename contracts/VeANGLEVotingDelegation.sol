@@ -11,7 +11,7 @@ import { IveANGLEVotingDelegation } from "./interfaces/IveANGLEVotingDelegation.
 
 /// @title VeANGLEVotingDelegation
 /// @author Jon Walch (Frax Finance) https://github.com/jonwalch
-/// solhint-disable-next-line
+// solhint-disable-next-line
 /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/veANGLEVotingDelegation.sol
 /// @notice Contract that keeps track of voting weights and delegations, leveraging veANGLE
 contract VeANGLEVotingDelegation is EIP712, IERC5805 {
