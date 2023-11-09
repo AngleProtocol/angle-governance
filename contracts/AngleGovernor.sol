@@ -12,6 +12,7 @@ import { IERC5805 } from "oz/interfaces/IERC5805.sol";
 
 import { GovernorProposals } from "./external/GovernorProposals.sol";
 import { GovernorPreventLateQuorum } from "./external/GovernorPreventLateQuorum.sol";
+import { GovernorToken } from "./external/GovernorToken.sol";
 import { GovernorCountingFractional } from "./external/GovernorCountingFractional.sol";
 import { GovernorShortCircuit } from "./external/GovernorShortCircuit.sol";
 
@@ -27,6 +28,7 @@ import "./utils/Errors.sol";
 /// @custom:security-contact contact@angle.money
 contract AngleGovernor is
     GovernorSettings,
+    GovernorToken,
     GovernorProposals,
     GovernorPreventLateQuorum,
     GovernorCountingFractional,
@@ -38,15 +40,12 @@ contract AngleGovernor is
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     event TimelockChange(address oldTimelock, address newTimelock);
-    event QuorumChange(uint256 oldQuorum, uint256 newQuorum);
-    event VeANGLEVotingDelegationSet(address oldVotingDelegation, address newVotingDelegation);
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                        VARIABLES                                                    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     TimelockController private _timelock;
-    IERC5805 internal _token_;
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                        MODIFIER                                                     
@@ -67,14 +66,14 @@ contract AngleGovernor is
         TimelockController timelockAddress
     )
         Governor("AngleGovernor")
+        GovernorToken(_token)
         GovernorSettings(1800 /* 30 mins */, 36000 /* 10 hours */, 100000e18)
         GovernorPreventLateQuorum(3600 /* 1 hour */)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(10)
-        GovernorShortCircuit(50)
+        GovernorShortCircuit(50, 150 /* 1800/12 ≈ 150 blocks */)
     {
         _updateTimelock(timelockAddress);
-        _setVeANGLEVotingDelegation(address(_token));
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +191,7 @@ contract AngleGovernor is
         // of veANGLE. We did this so we can still support quorum(timestamp), without breaking the OZ standard.
         // The underlying issue is that VE_ANGLE.totalSupply(timestamp) doesn't work for historical values, so we must
         // use VE_ANGLE.totalSupply(), or VE_ANGLE.totalSupplyAt(blockNumber).
-        $snapshotTimestampToSnapshotBlockNumber[snapshot] = block.number + votingDelay();
+        $snapshotTimestampToSnapshotBlockNumber[snapshot] = block.number + $votingDelayBlocks;
 
         emit ProposalCreated(
             proposalId,
@@ -301,8 +300,8 @@ contract AngleGovernor is
     }
 
     /// @inheritdoc GovernorVotes
-    function token() public view override returns (IERC5805) {
-        return _token_;
+    function token() public view override(GovernorToken, GovernorVotes) returns (IERC5805) {
+        return GovernorToken.token();
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,15 +311,5 @@ contract AngleGovernor is
     function _updateTimelock(TimelockController newTimelock) private {
         emit TimelockChange(address(_timelock), address(newTimelock));
         _timelock = newTimelock;
-    }
-
-    /// @param veANGLEVotingDelegation new IERC5805 VeANGLEVotingDelegation contract address
-    function _setVeANGLEVotingDelegation(address veANGLEVotingDelegation) internal {
-        address oldVeANGLEVotingDelegation = address(token());
-        _token_ = IERC5805(veANGLEVotingDelegation);
-        emit VeANGLEVotingDelegationSet({
-            oldVotingDelegation: oldVeANGLEVotingDelegation,
-            newVotingDelegation: veANGLEVotingDelegation
-        });
     }
 }

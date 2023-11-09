@@ -13,6 +13,7 @@ import { Vm } from "forge-std/Vm.sol";
 import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
+import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
@@ -20,7 +21,6 @@ import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 //solhint-disable
 contract AngleGovernorTest is Test {
     event TimelockChange(address oldTimelock, address newTimelock);
-    event QuorumChange(uint256 oldQuorum, uint256 newQuorum);
     event VotingDelaySet(uint256 oldVotingDelay, uint256 newVotingDelay);
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
     event ProposalThresholdSet(uint256 oldProposalThreshold, uint256 newProposalThreshold);
@@ -29,6 +29,7 @@ contract AngleGovernorTest is Test {
     AngleGovernor public angleGovernor;
     ILayerZeroEndpoint public mainnetLzEndpoint = ILayerZeroEndpoint(0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675);
     IVotes public veANGLE = IVotes(0x0C462Dbb9EC8cD1630f1728B2CFD2769d09f0dd5);
+    IVotes public veANGLEDelegation;
     TimelockController public mainnetTimelock;
     address public mainnetMultisig = 0xdC4e6DFe07EFCa50a197DF15D9200883eF4Eb1c8;
 
@@ -40,8 +41,10 @@ contract AngleGovernorTest is Test {
         address[] memory executors = new address[](1);
         executors[0] = address(0); // Means everyone can execute
 
+        veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
+
         mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
-        angleGovernor = new AngleGovernor(veANGLE, mainnetTimelock);
+        angleGovernor = new AngleGovernor(veANGLEDelegation, mainnetTimelock);
         mainnetTimelock.grantRole(mainnetTimelock.PROPOSER_ROLE(), address(angleGovernor));
         mainnetTimelock.grantRole(mainnetTimelock.CANCELLER_ROLE(), mainnetMultisig);
         // mainnetTimelock.renounceRole(mainnetTimelock.TIMELOCK_ADMIN_ROLE(), address(this));

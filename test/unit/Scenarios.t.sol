@@ -42,11 +42,12 @@ contract Scenarios is SimulationSetup {
 
         hoax(whale);
         uint256 proposalId = governor().propose(targets, values, calldatas, description);
-        vm.roll(block.number + governor().votingDelay() + 1);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
 
         hoax(whale);
         governor().castVote(proposalId, 1);
-        vm.roll(block.number + governor().votingPeriod() + 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
 
         governor().state(proposalId);
 
@@ -81,11 +82,12 @@ contract Scenarios is SimulationSetup {
 
         hoax(whale);
         uint256 proposalId = governor().propose(targets, values, calldatas, description);
-        vm.roll(block.number + governor().votingDelay() + 1);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
 
         hoax(whale);
         governor().castVote(proposalId, 1);
-        vm.roll(block.number + governor().votingPeriod() + 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
 
         governor().execute(targets, values, calldatas, keccak256(bytes(description)));
         vm.warp(block.timestamp + timelock(1).getMinDelay() + 1);
@@ -114,10 +116,12 @@ contract Scenarios is SimulationSetup {
 
         hoax(whale);
         uint256 proposalId = governor().propose(targets, values, calldatas, description);
-        vm.roll(block.number + governor().votingDelay() + 1);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+
         hoax(whale);
         governor().castVote(proposalId, 1);
-        vm.roll(block.number + governor().votingPeriod() + 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
 
         vm.recordLogs();
         governor().execute{ value: 0.1 ether }(targets, values, calldatas, keccak256(bytes(description))); // TODO Optimize value

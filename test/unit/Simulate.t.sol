@@ -28,10 +28,12 @@ contract Simulate is SimulationSetup {
         hoax(whale);
         vm.selectFork(forkIdentifier[1]);
         uint256 proposalId = governor().propose(targets, values, calldatas, description);
-        vm.roll(block.number + governor().votingDelay() + 1);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+
         hoax(whale);
         governor().castVote(proposalId, 1);
-        vm.roll(block.number + governor().votingPeriod() + 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
 
         vm.recordLogs();
         governor().execute{ value: 1 ether }(targets, values, calldatas, keccak256(bytes(description)));

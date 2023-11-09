@@ -13,8 +13,9 @@ import "../utils/Errors.sol";
 /// @title GovernorShortCircuit
 /// @author Angle Labs, Inc
 /// @author Jon Walch (Frax Finance) https://github.com/jonwalch
-/// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/veANGLEVotingDelegation.sol
-/// @notice Contract extending governor to pass propositions if the quorum is reached before the end of the voting period
+/// @notice https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/veANGLEVotingDelegation.sol
+/// @notice Contract extending governor to pass propositions
+/// if the quorum is reached before the end of the voting period
 /// @dev We modified it to only work with block.number and not block.timestamp
 abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractional, GovernorVotesQuorumFraction {
     using SafeCast for *;
@@ -29,11 +30,20 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
     /// @param newShortCircuitNumerator The new contract address
     event ShortCircuitNumeratorUpdated(uint256 oldShortCircuitNumerator, uint256 newShortCircuitNumerator);
 
+    /// @notice Emitted when governance changes the voting delay in blocks
+    /// @param oldVotingDelayBlocks The old short circuit numerator
+    /// @param newVotingDelayBlocks The new contract address
+    event VotingDelayBlocksSet(uint256 oldVotingDelayBlocks, uint256 newVotingDelayBlocks);
+
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                        VARIABLES                                                    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Checkpoints for short circuit numerator mirroring _quorumNumeratorHistory from GovernorVotesQuorumFraction.sol
+    /// @notice Voting delay in number of blocks
+    /// @dev only used to look up total veANGLE supply
+    uint256 public $votingDelayBlocks;
+    /// @notice Checkpoints for short circuit numerator
+    /// mirroring _quorumNumeratorHistory from GovernorVotesQuorumFraction.sol
     Checkpoints.Trace224 private _$shortCircuitNumeratorHistory;
     /// @notice Lookup from snapshot timestamp to corresponding snapshot block number, used for quorum
     mapping(uint256 snapshot => uint256 blockNumber) public $snapshotTimestampToSnapshotBlockNumber;
@@ -42,8 +52,9 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
                                                       CONSTRUCTOR                                                   
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    constructor(uint256 initialShortCircuitNumerator) {
+    constructor(uint256 initialShortCircuitNumerator, uint256 initialVotingDelayBlocks) {
         _updateShortCircuitNumerator(initialShortCircuitNumerator);
+        _setVotingDelayBlocks(initialVotingDelayBlocks);
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +143,18 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
         emit ShortCircuitNumeratorUpdated({
             oldShortCircuitNumerator: oldShortCircuitNumerator,
             newShortCircuitNumerator: newShortCircuitNumerator
+        });
+    }
+
+    /// @notice Called by governance to change the voting delay in blocks
+    /// @notice This must be changed in tandem with ```votingDelay``` to properly set quorum values
+    /// @param votingDelayBlocks New voting delay in blocks value
+    function _setVotingDelayBlocks(uint256 votingDelayBlocks) internal {
+        uint256 oldVotingDelayBlocks = $votingDelayBlocks;
+        $votingDelayBlocks = votingDelayBlocks;
+        emit VotingDelayBlocksSet({
+            oldVotingDelayBlocks: oldVotingDelayBlocks,
+            newVotingDelayBlocks: votingDelayBlocks
         });
     }
 }
