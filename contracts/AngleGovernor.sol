@@ -63,15 +63,22 @@ contract AngleGovernor is
 
     constructor(
         IVotes _token,
-        TimelockController timelockAddress
+        TimelockController timelockAddress,
+        uint48 initialVotingDelay,
+        uint32 initialVotingPeriod,
+        uint256 initialProposalThreshold,
+        uint48 initialVoteExtension,
+        uint256 initialQuorumNumerator,
+        uint256 initialShortCircuitNumerator,
+        uint256 initialVotingDelayBlocks
     )
         Governor("AngleGovernor")
         GovernorToken(_token)
-        GovernorSettings(1800 /* 30 mins */, 36000 /* 10 hours */, 100000e18)
-        GovernorPreventLateQuorum(3600 /* 1 hour */)
+        GovernorSettings(initialVotingDelay, initialVotingPeriod, initialProposalThreshold)
+        GovernorPreventLateQuorum(initialVoteExtension)
         GovernorVotes(_token)
-        GovernorVotesQuorumFraction(10)
-        GovernorShortCircuit(50, 150 /* 1800/12 ≈ 150 blocks */)
+        GovernorVotesQuorumFraction(initialQuorumNumerator)
+        GovernorShortCircuit(initialShortCircuitNumerator, initialVotingDelayBlocks)
     {
         _updateTimelock(timelockAddress);
     }
@@ -115,6 +122,8 @@ contract AngleGovernor is
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc Governor
+    // solhint-disable-next-line
+    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/
     function state(uint256 proposalId) public view override returns (ProposalState) {
         // We read the struct fields into the stack at once so Solidity emits a single SLOAD
         ProposalCore storage proposal = _proposals[proposalId];
@@ -162,6 +171,8 @@ contract AngleGovernor is
     }
 
     /// @inheritdoc Governor
+    // solhint-disable-next-line
+    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/
     function _propose(
         address[] memory targets,
         uint256[] memory values,

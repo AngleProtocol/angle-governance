@@ -20,6 +20,8 @@ import { Proposal, SubCall } from "./Proposal.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import "stringutils/strings.sol";
 
+import "../Constants.t.sol";
+
 //solhint-disable
 contract SimulationSetup is Test {
     using strings for *;
@@ -68,7 +70,17 @@ contract SimulationSetup is Test {
                 executors[0] = address(0); // Means everyone can execute
 
                 _timelocks[chainIds[i]] = new TimelockController(1 days, proposers, executors, address(this));
-                _governor = new AngleGovernor(veANGLEDelegation, _timelocks[chainIds[i]]);
+                _governor = new AngleGovernor(
+                    veANGLEDelegation,
+                    _timelocks[chainIds[i]],
+                    initialVotingDelay,
+                    initialVotingPeriod,
+                    initialProposalThreshold,
+                    initialVoteExtension,
+                    initialQuorumNumeratorValue,
+                    initialShortCircuitNumerator,
+                    initialVotingDelayBlocks
+                );
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].PROPOSER_ROLE(), address(governor()));
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].CANCELLER_ROLE(), multisig(chainIds[i]));
                 // _timelocks[chainIds[i]].renounceRole(_timelocks[chainIds[i]].TIMELOCK_ADMIN_ROLE(), address(this));

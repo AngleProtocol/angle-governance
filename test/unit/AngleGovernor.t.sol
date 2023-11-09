@@ -17,6 +17,7 @@ import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
+import "../Constants.t.sol";
 
 //solhint-disable
 contract AngleGovernorTest is Test {
@@ -44,7 +45,17 @@ contract AngleGovernorTest is Test {
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
 
         mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
-        angleGovernor = new AngleGovernor(veANGLEDelegation, mainnetTimelock);
+        angleGovernor = new AngleGovernor(
+            veANGLEDelegation,
+            mainnetTimelock,
+            initialVotingDelay,
+            initialVotingPeriod,
+            initialProposalThreshold,
+            initialVoteExtension,
+            initialQuorumNumeratorValue,
+            initialShortCircuitNumerator,
+            initialVotingDelayBlocks
+        );
         mainnetTimelock.grantRole(mainnetTimelock.PROPOSER_ROLE(), address(angleGovernor));
         mainnetTimelock.grantRole(mainnetTimelock.CANCELLER_ROLE(), mainnetMultisig);
         // mainnetTimelock.renounceRole(mainnetTimelock.TIMELOCK_ADMIN_ROLE(), address(this));
@@ -53,11 +64,13 @@ contract AngleGovernorTest is Test {
     }
 
     function test_Initialization() public {
-        assertEq(angleGovernor.votingDelay(), 1800);
-        assertEq(angleGovernor.votingPeriod(), 36000);
-        assertEq(angleGovernor.proposalThreshold(), 100000e18);
-        assertEq(angleGovernor.quorumNumerator(), 10);
+        assertEq(angleGovernor.votingDelay(), initialVotingDelay);
+        assertEq(angleGovernor.votingPeriod(), initialVotingPeriod);
+        assertEq(angleGovernor.proposalThreshold(), initialProposalThreshold);
+        assertEq(angleGovernor.quorumNumerator(), initialQuorumNumeratorValue);
+        assertEq(angleGovernor.quorumNumerator(), initialQuorumNumeratorValue);
         assertEq(angleGovernor.timelock(), address(mainnetTimelock));
+        assertEq(address(angleGovernor.token()), address(veANGLEDelegation));
     }
 
     function test_RevertWhen_NotExecutor() public {
