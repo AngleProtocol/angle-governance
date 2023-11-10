@@ -6,7 +6,7 @@ import { EIP712 } from "oz/utils/cryptography/EIP712.sol";
 import { Math } from "oz/utils/math/Math.sol";
 import { SafeCast } from "oz/utils/math/SafeCast.sol";
 import { IERC5805 } from "oz/interfaces/IERC5805.sol";
-import { IveANGLE } from "./interfaces/IVeANGLE.sol";
+import { IveANGLE } from "./interfaces/IveANGLE.sol";
 import { IveANGLEVotingDelegation } from "./interfaces/IveANGLEVotingDelegation.sol";
 
 /// @title VeANGLEVotingDelegation
