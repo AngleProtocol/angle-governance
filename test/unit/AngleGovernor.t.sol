@@ -16,11 +16,10 @@ import { ProposalSender } from "contracts/ProposalSender.sol";
 import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
-import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
-import "../Constants.t.sol";
+import "../Utils.t.sol";
 
 //solhint-disable
-contract AngleGovernorTest is Test {
+contract AngleGovernorTest is Test, Utils {
     event TimelockChange(address oldTimelock, address newTimelock);
     event VotingDelaySet(uint256 oldVotingDelay, uint256 newVotingDelay);
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
@@ -29,11 +28,8 @@ contract AngleGovernorTest is Test {
 
     ProposalSender public proposalSender;
     AngleGovernor public angleGovernor;
-    ILayerZeroEndpoint public mainnetLzEndpoint = ILayerZeroEndpoint(0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675);
-    IVotes public veANGLE = IVotes(0x0C462Dbb9EC8cD1630f1728B2CFD2769d09f0dd5);
     IVotes public veANGLEDelegation;
     TimelockController public mainnetTimelock;
-    address public mainnetMultisig = 0xdC4e6DFe07EFCa50a197DF15D9200883eF4Eb1c8;
 
     address public alice = vm.addr(1);
     address public bob = vm.addr(2);
@@ -78,6 +74,7 @@ contract AngleGovernorTest is Test {
         assertEq(angleGovernor.timelock(), address(mainnetTimelock));
         assertEq(address(angleGovernor.token()), address(veANGLEDelegation));
         assertEq(angleGovernor.CLOCK_MODE(), "mode=timestamp");
+        assertEq(angleGovernor.COUNTING_MODE(), "support=bravo&quorum=for,abstain&params=fractional");
     }
 
     function test_RevertWhen_NotExecutor() public {
@@ -153,5 +150,29 @@ contract AngleGovernorTest is Test {
 
     function test_Clock() public {
         assertEq(angleGovernor.clock(), block.timestamp);
+    }
+
+    function test_Propose() public {
+        vm.mockCall(
+            address(veANGLEDelegation),
+            abi.encodeWithSelector(veANGLEDelegation.getPastVotes.selector, address(whale)),
+            abi.encode(1e24)
+        );
+        vm.mockCall(
+            address(veANGLEDelegation),
+            abi.encodeWithSelector(veANGLEDelegation.getPastTotalSupply.selector),
+            abi.encode(15e23)
+        );
+
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        string memory description = "Updating Quorum";
+
+        targets[0] = address(angleGovernor);
+        values[0] = 0;
+        calldatas[0] = abi.encodeWithSelector(angleGovernor.updateQuorumNumerator.selector, 11);
+
+        _passProposal(1, angleGovernor, address(mainnetTimelock), targets, values, calldatas, description);
     }
 }
