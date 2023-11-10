@@ -23,8 +23,9 @@ import "./utils/Errors.sol";
 /// @dev Core of Angle governance system, extending various OpenZeppelin modules
 /// @dev This contract overrides some OpenZeppelin function, like those in `GovernorSettings` to introduce
 /// the `onlyExecutor` modifier which ensures that only the Timelock contract can update the system's parameters
-/// @dev The time parameters (`votingDelay`, `votingPeriod`, ...) are expressed here in block number units which
-///  means that this implementation is only suited for an Ethereum deployment
+/// @dev The time parameters (`votingDelay`, `votingPeriod`, ...) are expressed here in timestamp units, but the
+/// also has a `votingDelayBlocks` parameters which must be set in accordance to the `votingDelay`
+/// @dev The `state` and `propose` functions here were forked from FRAX governance implementation
 /// @custom:security-contact contact@angle.money
 contract AngleGovernor is
     GovernorSettings,
@@ -123,7 +124,7 @@ contract AngleGovernor is
 
     /// @inheritdoc Governor
     // solhint-disable-next-line
-    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/
+    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
     function state(uint256 proposalId) public view override returns (ProposalState) {
         // We read the struct fields into the stack at once so Solidity emits a single SLOAD
         ProposalCore storage proposal = _proposals[proposalId];
@@ -172,7 +173,7 @@ contract AngleGovernor is
 
     /// @inheritdoc Governor
     // solhint-disable-next-line
-    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/
+    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
     function _propose(
         address[] memory targets,
         uint256[] memory values,

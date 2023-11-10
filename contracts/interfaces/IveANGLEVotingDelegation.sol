@@ -3,10 +3,11 @@
 pragma solidity ^0.8.20;
 
 //solhint-disable
-/// @title VeANGLEVotingDelegation
+/// @title IveANGLEVotingDelegation
+/// @notice Interface for the contract that keeps track of voting weights and delegations, leveraging veANGLE
 /// @author Frax Finance https://github.com/FraxFinance
+//solhint-disable-next-line
 /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/interfaces/IVeFxsVotingDelegation.sol
-/// @notice Contract that keeps track of voting weights and delegations, leveraging veANGLE
 interface IveANGLEVotingDelegation {
     /// Represents the values of a single delegation at the time `delegate()` is called,
     /// to be subtracted when removing delegation

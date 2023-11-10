@@ -18,7 +18,10 @@ import "../utils/Errors.sol";
  * voting with tokens that are held by a DeFi pool, voting from L2 with tokens
  * held by a bridge, or voting privately from a shielded pool using zero
  * knowledge proofs.
+ * @author ScopeLift
  */
+//solhint-disable-next-line
+// Fork from: https://github.com/ScopeLift/flexible-voting/blob/4399694c1a70d9e236c4c072802bfbe8e4951bf0/src/GovernorCountingFractional.sol
 abstract contract GovernorCountingFractional is Governor {
     struct ProposalVote {
         uint128 againstVotes;

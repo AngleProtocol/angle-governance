@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.20;
 
+/// @title IveANGLE
+/// @notice Interface for the veANGLE contract
 //solhint-disable
 interface IveANGLE {
     struct LockedBalance {

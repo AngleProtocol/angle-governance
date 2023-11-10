@@ -19,9 +19,9 @@ It also comes with some utils and scripts to facilitate the creation and executi
 
 ## System Architecture 🏘️
 
-Angle onchain governance works a![Alt text](../angle-governance-old/logo.svg) ../angle-governance-old/README.md ![Alt text](../angle-governance-old/DAO.png)s follows:
+Angle onchain governance works as follows:
 
-- veANGLE holders vote on Ethereum on an OpenZeppelin [`Governor`](contracts/AngleGovernor.sol) implementation called `AngleGovernor` with a predetermined quorum, voting delay and proposal threshold.
+- veANGLE holders vote on Ethereum on an OpenZeppelin [`Governor`](contracts/AngleGovernor.sol) implementation called `AngleGovernor` with a predetermined quorum, voting delay, proposal and shortcircuit thresholds.
 - On every chain where the protocol is deployed, there is a `Timelock` contract which is admin of all the protocol contracts (Borrowing module, Transmuter, direct deposit modules, ...) of its chain.
 - While only onchain votes can lead to payloads being included in the `Timelock` contract of a chain before execution, [Angle 4/6 Governance multisig](https://docs.angle.money/protocol-governance/angle-dao) (deployed on all chains as well) has a veto power on the payloads in Timelock contracts, and can cancel rogue governance votes.
 - For successful votes on non-Ethereum proposals, payloads to execute are bridged to the chain of interest using LayerZero message passing technology before being sent to the `Timelock` contract of their chain.
@@ -53,7 +53,7 @@ It's worth noting that, setup like this, the Angle Governance system can be abst
 
 ## Audits
 
-- The `AngleGovernor` implementation relies on several OpenZeppelin extensions as well as on the [audited](http://blog.openzeppelin.com/scopelift-flexible-voting-audit) [`GovernorCountingFractional` extension](https://github.com/ScopeLift/flexible-voting/blob/4399694c1a70d9e236c4c072802bfbe8e4951bf0/src/GovernorCountingFractional.sol) by ScopeLift.
+- The `AngleGovernor` implementation relies on several OpenZeppelin extensions, on the [audited](http://blog.openzeppelin.com/scopelift-flexible-voting-audit) [`GovernorCountingFractional` extension](https://github.com/ScopeLift/flexible-voting/blob/4399694c1a70d9e236c4c072802bfbe8e4951bf0/src/GovernorCountingFractional.sol) by ScopeLift. It is a fork of the [audited](https://github.com/trailofbits/publications/blob/master/reviews/2023-05-fraxgov-securityreview.pdf) [governance system by FRAX](https://github.com/FraxFinance/frax-governance).
 - The [`ProposalReceiver`](contracts/ProposalReceiver.sol) and [`ProposalSender`](contracts/ProposalSender.sol) contracts are forks from LayerZero Labs implementation. Find their audits [here](https://github.com/LayerZero-Labs/omnichain-governance-executor/tree/main/audits).
 
 ### Bug Bounty
@@ -144,7 +144,7 @@ You can run tests as follows:
 
 ```bash
 forge test -vvvv --watch
-forge test -vvvv --match-path contracts/forge-tests/KeeperMulticall.t.sol
+forge test -vvvv --match-path test/unit/Constants.t.sol
 forge test -vvvv --match-test "testAbc*"
 forge test -vvvv --fork-url https://eth-mainnet.alchemyapi.io/v2/Lc7oIGYeL_QvInzI0Wiu_pOZZDEKBrdf
 ```
@@ -205,7 +205,6 @@ For any question or feedback you can send an email to [contact@angle.money](mail
 ## License
 
 This repository is released under the [MIT License](LICENSE).
-
 
 ## Media
 
