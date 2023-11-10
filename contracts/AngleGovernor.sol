@@ -108,6 +108,21 @@ contract AngleGovernor is
         _updateTimelock(newTimelock);
     }
 
+    /// @inheritdoc GovernorSettings
+    function setVotingDelay(uint48 newVotingDelay) public override onlyExecutor {
+        _setVotingDelay(newVotingDelay);
+    }
+
+    /// @inheritdoc GovernorSettings
+    function setVotingPeriod(uint32 newVotingPeriod) public override onlyExecutor {
+        _setVotingPeriod(newVotingPeriod);
+    }
+
+    /// @inheritdoc GovernorSettings
+    function setProposalThreshold(uint256 newProposalThreshold) public override onlyExecutor {
+        _setProposalThreshold(newProposalThreshold);
+    }
+
     /// @param veANGLEVotingDelegation New IERC5805 veANGLEVotingDelegation contract address
     function setVeANGLEVotingDelegation(address veANGLEVotingDelegation) external onlyExecutor {
         _setVeANGLEVotingDelegation(veANGLEVotingDelegation);
@@ -116,6 +131,16 @@ contract AngleGovernor is
     /// @param newShortCircuitNumerator Number expressed as x/100 (percentage)
     function updateShortCircuitNumerator(uint256 newShortCircuitNumerator) external onlyExecutor {
         _updateShortCircuitNumerator(newShortCircuitNumerator);
+    }
+
+    /**
+     * @dev Changes the {lateQuorumVoteExtension}. This operation can only be performed by the governance executor,
+     * generally through a governance proposal.
+     *
+     * Emits a {LateQuorumVoteExtensionSet} event.
+     */
+    function setLateQuorumVoteExtension(uint48 newVoteExtension) public onlyExecutor {
+        _setLateQuorumVoteExtension(newVoteExtension);
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,6 +197,75 @@ contract AngleGovernor is
         }
     }
 
+    /// @inheritdoc GovernorVotesQuorumFraction
+    function quorum(
+        uint256 timepoint
+    ) public view override(Governor, GovernorVotesQuorumFraction) returns (uint256 quorumAtTimepoint) {
+        uint256 snapshotBlockNumber = $snapshotTimestampToSnapshotBlockNumber[timepoint];
+        if (snapshotBlockNumber == 0 || snapshotBlockNumber >= block.number) revert InvalidTimepoint();
+
+        quorumAtTimepoint =
+            (token().getPastTotalSupply(snapshotBlockNumber) * quorumNumerator(timepoint)) /
+            quorumDenominator();
+    }
+
+    /// @inheritdoc GovernorPreventLateQuorum
+    function proposalDeadline(
+        uint256 proposalId
+    ) public view override(Governor, GovernorProposals, GovernorPreventLateQuorum) returns (uint256) {
+        return GovernorPreventLateQuorum.proposalDeadline(proposalId);
+    }
+
+    /// @inheritdoc GovernorVotesQuorumFraction
+    function updateQuorumNumerator(uint256 newQuorumNumerator) external override onlyExecutor {
+        _updateQuorumNumerator(newQuorumNumerator);
+    }
+
+    /// @inheritdoc GovernorSettings
+    function votingDelay() public view override(Governor, GovernorSettings) returns (uint256) {
+        return GovernorSettings.votingDelay();
+    }
+
+    /// @inheritdoc GovernorSettings
+    function votingPeriod() public view override(Governor, GovernorSettings) returns (uint256) {
+        return GovernorSettings.votingPeriod();
+    }
+
+    /// @inheritdoc GovernorSettings
+    function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
+        return GovernorSettings.proposalThreshold();
+    }
+
+    /// @inheritdoc Governor
+    function proposalSnapshot(
+        uint256 proposalId
+    ) public view virtual override(Governor, GovernorProposals) returns (uint256) {
+        return GovernorProposals.proposalSnapshot(proposalId);
+    }
+
+    /// @inheritdoc Governor
+    function proposalProposer(
+        uint256 proposalId
+    ) public view virtual override(Governor, GovernorProposals) returns (address) {
+        return GovernorProposals.proposalProposer(proposalId);
+    }
+
+    /// @inheritdoc Governor
+    function proposalEta(
+        uint256 proposalId
+    ) public view virtual override(Governor, GovernorProposals) returns (uint256) {
+        return GovernorProposals.proposalEta(proposalId);
+    }
+
+    /// @inheritdoc GovernorVotes
+    function token() public view override(GovernorToken, GovernorVotes) returns (IERC5805) {
+        return GovernorToken.token();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                       INTERNALS                                                    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
     /// @inheritdoc Governor
     // solhint-disable-next-line
     /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
@@ -221,18 +315,6 @@ contract AngleGovernor is
         // Using a named return variable to avoid stack too deep errors
     }
 
-    /// @inheritdoc GovernorVotesQuorumFraction
-    function quorum(
-        uint256 timepoint
-    ) public view override(Governor, GovernorVotesQuorumFraction) returns (uint256 quorumAtTimepoint) {
-        uint256 snapshotBlockNumber = $snapshotTimestampToSnapshotBlockNumber[timepoint];
-        if (snapshotBlockNumber == 0 || snapshotBlockNumber >= block.number) revert InvalidTimepoint();
-
-        quorumAtTimepoint =
-            (token().getPastTotalSupply(snapshotBlockNumber) * quorumNumerator(timepoint)) /
-            quorumDenominator();
-    }
-
     /// @inheritdoc GovernorPreventLateQuorum
     function _castVote(
         uint256 proposalId,
@@ -243,83 +325,6 @@ contract AngleGovernor is
     ) internal override(Governor, GovernorPreventLateQuorum) returns (uint256) {
         return GovernorPreventLateQuorum._castVote(proposalId, account, support, reason, params);
     }
-
-    /// @inheritdoc GovernorPreventLateQuorum
-    function proposalDeadline(
-        uint256 proposalId
-    ) public view override(Governor, GovernorProposals, GovernorPreventLateQuorum) returns (uint256) {
-        return GovernorPreventLateQuorum.proposalDeadline(proposalId);
-    }
-
-    /// @inheritdoc GovernorVotesQuorumFraction
-    function updateQuorumNumerator(uint256 newQuorumNumerator) external override onlyExecutor {
-        _updateQuorumNumerator(newQuorumNumerator);
-    }
-
-    /// @inheritdoc GovernorPreventLateQuorum
-    function setLateQuorumVoteExtension(uint48 newVoteExtension) public override onlyExecutor {
-        _setLateQuorumVoteExtension(newVoteExtension);
-    }
-
-    /// @inheritdoc GovernorSettings
-    function setVotingDelay(uint48 newVotingDelay) public override onlyExecutor {
-        _setVotingDelay(newVotingDelay);
-    }
-
-    /// @inheritdoc GovernorSettings
-    function setVotingPeriod(uint32 newVotingPeriod) public override onlyExecutor {
-        _setVotingPeriod(newVotingPeriod);
-    }
-
-    /// @inheritdoc GovernorSettings
-    function setProposalThreshold(uint256 newProposalThreshold) public override onlyExecutor {
-        _setProposalThreshold(newProposalThreshold);
-    }
-
-    /// @inheritdoc GovernorSettings
-    function votingDelay() public view override(Governor, GovernorSettings) returns (uint256) {
-        return GovernorSettings.votingDelay();
-    }
-
-    /// @inheritdoc GovernorSettings
-    function votingPeriod() public view override(Governor, GovernorSettings) returns (uint256) {
-        return GovernorSettings.votingPeriod();
-    }
-
-    /// @inheritdoc GovernorSettings
-    function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
-        return GovernorSettings.proposalThreshold();
-    }
-
-    /// @inheritdoc Governor
-    function proposalSnapshot(
-        uint256 proposalId
-    ) public view virtual override(Governor, GovernorProposals) returns (uint256) {
-        return GovernorProposals.proposalSnapshot(proposalId);
-    }
-
-    /// @inheritdoc Governor
-    function proposalProposer(
-        uint256 proposalId
-    ) public view virtual override(Governor, GovernorProposals) returns (address) {
-        return GovernorProposals.proposalProposer(proposalId);
-    }
-
-    /// @inheritdoc Governor
-    function proposalEta(
-        uint256 proposalId
-    ) public view virtual override(Governor, GovernorProposals) returns (uint256) {
-        return GovernorProposals.proposalEta(proposalId);
-    }
-
-    /// @inheritdoc GovernorVotes
-    function token() public view override(GovernorToken, GovernorVotes) returns (IERC5805) {
-        return GovernorToken.token();
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                       INTERNALS                                                    
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     function _updateTimelock(TimelockController newTimelock) private {
         emit TimelockChange(address(_timelock), address(newTimelock));

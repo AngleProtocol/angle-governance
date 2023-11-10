@@ -36,6 +36,14 @@ abstract contract GovernorPreventLateQuorum is GovernorProposals {
     }
 
     /**
+     * @dev Returns the current value of the vote extension parameter: the number of blocks that are required to pass
+     * from the time a proposal reaches quorum until its voting period ends.
+     */
+    function lateQuorumVoteExtension() public view virtual returns (uint48) {
+        return _voteExtension;
+    }
+
+    /**
      * @dev Returns the proposal deadline, which may have been extended beyond that set at proposal creation, if the
      * proposal reached quorum late in the voting period. See {Governor-proposalDeadline}.
      */
@@ -69,24 +77,6 @@ abstract contract GovernorPreventLateQuorum is GovernorProposals {
         }
 
         return result;
-    }
-
-    /**
-     * @dev Returns the current value of the vote extension parameter: the number of blocks that are required to pass
-     * from the time a proposal reaches quorum until its voting period ends.
-     */
-    function lateQuorumVoteExtension() public view virtual returns (uint48) {
-        return _voteExtension;
-    }
-
-    /**
-     * @dev Changes the {lateQuorumVoteExtension}. This operation can only be performed by the governance executor,
-     * generally through a governance proposal.
-     *
-     * Emits a {LateQuorumVoteExtensionSet} event.
-     */
-    function setLateQuorumVoteExtension(uint48 newVoteExtension) public virtual onlyGovernance {
-        _setLateQuorumVoteExtension(newVoteExtension);
     }
 
     /**

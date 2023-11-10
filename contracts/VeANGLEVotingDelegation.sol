@@ -26,7 +26,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
     /// @notice vote weight multiplier taken from veANGLE
     /// TODO: update to our case
-    uint256 public constant VOTE_WEIGHT_MULTIPLIER = 3;
+    uint256 public constant VOTE_WEIGHT_MULTIPLIER = 1;
 
     /// @notice Typehash needed for delegations by signature
     /// @dev keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")
@@ -105,7 +105,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         // If all delegations are expired they have no voting weight.
         // This differs from veANGLE, which returns the locked ANGLE amount if it has not yet been withdrawn.
-        delegatedWeight = expirationAdjustedAngle + (VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp);
+        delegatedWeight = VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp;
+        // delegatedWeight = expirationAdjustedAngle + (VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp);
     }
 
     /// @notice Calculates ```account```'s voting weight.
