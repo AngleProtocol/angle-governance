@@ -152,9 +152,10 @@ contract AngleGovernor is
         }
 
         // Allow early execution when overwhelming majority
-        if (_shortCircuitFor(proposalId)) {
+        (bool isShortCircuitFor, bool isShortCircuitAgainst) = _shortCircuit(proposalId);
+        if (isShortCircuitFor) {
             return ProposalState.Succeeded;
-        } else if (_shortCircuitAgainst(proposalId)) {
+        } else if (isShortCircuitAgainst) {
             return ProposalState.Defeated;
         }
 

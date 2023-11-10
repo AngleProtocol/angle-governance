@@ -105,24 +105,19 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
                                                        INTERNALS                                                    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Called by state() to check for early proposal success
+    /// @notice Called by state() to check for early proposal success or failure
     /// @param proposalId Proposal ID
     /// @return isShortCircuitFor Represents if short circuit threshold for votes were reached or not
-    function _shortCircuitFor(uint256 proposalId) internal view returns (bool isShortCircuitFor) {
-        (, uint256 forVoteWeight, ) = proposalVotes(proposalId);
-
-        uint256 proposalVoteStart = proposalSnapshot(proposalId);
-        isShortCircuitFor = forVoteWeight > shortCircuitThreshold(proposalVoteStart);
-    }
-
-    /// @notice Called by state() to check for early proposal failure
-    /// @param proposalId Proposal ID
     /// @return isShortCircuitAgainst Represents if short circuit threshold against votes were reached or not
-    function _shortCircuitAgainst(uint256 proposalId) internal view returns (bool isShortCircuitAgainst) {
-        (uint256 againstVoteWeight, , ) = proposalVotes(proposalId);
+    function _shortCircuit(
+        uint256 proposalId
+    ) internal view returns (bool isShortCircuitFor, bool isShortCircuitAgainst) {
+        (uint256 againstVoteWeight, uint256 forVoteWeight, ) = proposalVotes(proposalId);
 
         uint256 proposalVoteStart = proposalSnapshot(proposalId);
-        isShortCircuitAgainst = againstVoteWeight > shortCircuitThreshold(proposalVoteStart);
+        uint256 shortCircuitThresholdValue = shortCircuitThreshold(proposalVoteStart);
+        isShortCircuitFor = forVoteWeight > shortCircuitThresholdValue;
+        isShortCircuitAgainst = againstVoteWeight > shortCircuitThresholdValue;
     }
 
     /// @notice Called by governance to change the short circuit numerator
