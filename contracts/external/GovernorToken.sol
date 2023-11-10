@@ -22,7 +22,7 @@ abstract contract GovernorToken is GovernorVotes {
         return _token_;
     }
 
-    /// @param veANGLEVotingDelegation new IERC5805 VeANGLEVotingDelegation contract address
+    /// @param veANGLEVotingDelegation New IERC5805 VeANGLEVotingDelegation contract address
     function _setVeANGLEVotingDelegation(address veANGLEVotingDelegation) internal {
         address oldVeANGLEVotingDelegation = address(token());
         _token_ = IERC5805(veANGLEVotingDelegation);

@@ -10,10 +10,11 @@ import { IveANGLE } from "./interfaces/IveANGLE.sol";
 import { IveANGLEVotingDelegation } from "./interfaces/IveANGLEVotingDelegation.sol";
 
 /// @title VeANGLEVotingDelegation
+/// @notice Contract that keeps track of voting weights and delegations, leveraging veANGLE
 /// @author Jon Walch (Frax Finance) https://github.com/jonwalch
 // solhint-disable-next-line
-/// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/veANGLEVotingDelegation.sol
-/// @notice Contract that keeps track of voting weights and delegations, leveraging veANGLE
+/// @dev Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/veANGLEVotingDelegation.sol
+/// @dev The Fxs in the variable names and comments have been replaced by ANGLE
 contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     using SafeCast for uint256;
 
@@ -54,8 +55,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         VE_ANGLE = IveANGLE(veANGLE);
     }
 
-    /// @notice The ```getCheckpoint``` function is called to retrieve a specific delegation checkpoint
-    /// @dev Get the checkpoint for a delegate at a given index.
+    /// @notice Retrieves a specific delegation checkpoint for a delegate at a given index
     /// @param delegateAddress Address of delegate
     /// @param index Integer index of the checkpoint
     /// @return delegateCheckpoint DelegateCheckpoint of ```delegate``` at ```index```
@@ -66,8 +66,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         return $delegateCheckpoints[delegateAddress][index];
     }
 
-    /// @notice The ```_calculateDelegatedWeight``` function calculates weight delegated to ```account```
-    /// accounting for any weight that expired since the nearest checkpoint
+    /// @notice Calculates weight delegated to ```account``` accounting for any weight that expired
+    /// since the nearest checkpoint
     /// @dev May include own weight if account previously delegated to someone else and then back to themselves
     /// @param voter Address of voter
     /// @param timestamp A block.timestamp, typically corresponding to a proposal snapshot
@@ -108,8 +108,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         delegatedWeight = expirationAdjustedAngle + (VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp);
     }
 
-    /// @notice The ```_calculateVotingWeight``` function calculates ```account```'s voting weight.
-    /// Is 0 if they ever delegated and the delegation is in effect.
+    /// @notice Calculates ```account```'s voting weight.
+    /// @dev Is 0 if they ever delegated and the delegation is in effect.
     /// @param voter Address of voter
     /// @param timestamp A block.timestamp, typically corresponding to a proposal snapshot
     /// @return votingWeight Voting weight corresponding to ```account```'s veANGLE balance
@@ -209,7 +209,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             _calculateDelegatedWeight({ voter: voter, timestamp: timestamp });
     }
 
-    /// @notice The ```getVotes``` function calculates a voter's weight at ```timestamp```
+    /// @notice Calculates a voter's weight at ```timestamp```
     /// @param voter Address of voter
     /// @param timepoint A block.timestamp, typically corresponding to a proposal snapshot
     /// @return votingWeight Voting weight of ```voterAddress``` at ```timepoint```
@@ -217,14 +217,14 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         return _getVotingWeight({ voter: voter, timestamp: timepoint });
     }
 
-    /// @notice The ```getVotes``` function calculates a voter's weight at the current block.timestamp
+    /// @notice Calculates a voter's weight at the current block.timestamp
     /// @param voter Address of voter
     /// @return votingWeight Voting weight of ```voterAddress``` at ```block.timestamp```
     function getVotes(address voter) external view returns (uint256 votingWeight) {
         votingWeight = _getVotingWeight({ voter: voter, timestamp: block.timestamp });
     }
 
-    /// @notice The ```getPastVotes``` function calculates a voter's weight at ```timepoint```
+    /// @notice Calculates a voter's weight at ```timepoint```
     /// @param voter Address of voter
     /// @param timepoint A block.timestamp, typically corresponding to a proposal snapshot, must be in past
     /// @return pastVotingWeight Voting weight of ```account``` at ```timepoint``` in past
@@ -249,20 +249,20 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         pastTotalSupply = VE_ANGLE.totalSupplyAt(blockNumber);
     }
 
-    /// @notice The ```delegates``` function returns who the address of the delegate, that delegatorAddress has chosen
+    /// @notice Returns who the address of the delegate, that delegatorAddress has chosen
     /// @param delegator Address of delegator
     /// @return delegateAddress Address of the delegate
     function delegates(address delegator) external view returns (address delegateAddress) {
         delegateAddress = $delegations[delegator].delegate;
     }
 
-    /// @notice The ```delegate``` function delegates votes from signer to ```delegatee``` at the next epoch
+    /// @notice Delegates votes from signer to ```delegatee``` at the next epoch
     /// @param delegatee Address to delegate to
     function delegate(address delegatee) external {
         _delegate({ delegator: msg.sender, delegatee: delegatee });
     }
 
-    /// @notice The ```delegate``` function delegates votes from signer to ```delegatee```
+    /// @notice Delegates votes from signer to ```delegatee```
     /// @param delegatee Address to delegate to
     /// @param nonce Nonce of signed message
     /// @param expiry Expiry time of message
@@ -292,7 +292,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         _delegate(signer, delegatee);
     }
 
-    /// @notice The ```_delegate``` function delegates votes from signer to ```delegatee``` at the next epoch
+    /// @notice Delegates votes from signer to ```delegatee``` at the next epoch
     /// @param delegator Caller delegating their weight
     /// @param delegatee Address to delegate to
     /// @dev An account can only delegate to one account at a time. The previous delegation will be overwritten.
@@ -373,7 +373,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         normalizedVeANGLELockInfo.bias = SafeCast.toUint256(userBias) + normalizedVeANGLELockInfo.slope * lastUpdate;
     }
 
-    /// @notice Do a binary search for the closest checkpoint before ```timestamp```
+    /// @notice Does a binary search for the closest checkpoint before ```timestamp```
     /// @param _$checkpoints Storage pointer to the account's DelegateCheckpoints
     /// @param timestamp block.timestamp to get voting power at, frequently proposal snapshot
     /// @return closestCheckpoint The closest DelegateCheckpoint before timestamp
@@ -411,8 +411,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         closestCheckpoint = high == 0 ? closestCheckpoint : _$checkpoints[high - 1];
     }
 
-    /// @notice Removes voting power from the previous delegate, handling expirations
-    /// @notice and writing a new DelegateCheckpoint
+    /// @notice Removes voting power from the previous delegate, handling expirations and writing
+    /// a new DelegateCheckpoint
     /// @param previousDelegation The delegator's previous delegation
     /// @param checkpointTimestamp block.timestamp of the next DelegateCheckpoint's epoch
     function _moveVotingPowerFromPreviousDelegate(
@@ -488,8 +488,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         }
     }
 
-    /// @notice Add voting power to the new delegate, handling expirations
-    /// @notice and writing a new DelegateCheckpoint
+    /// @notice Adds voting power to the new delegate, handling expirations and writing a new DelegateCheckpoint
     /// @param newDelegate The new delegate that is being delegated to
     /// @param delegatorVeANGLELockInfo Information about the delegator's veANGLE lock
     /// @param checkpointTimestamp block.timestamp of the next DelegateCheckpoint's epoch
@@ -553,7 +552,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         });
     }
 
-    /// @notice Calculate the values to be written for the new DelegateCheckpoint
+    /// @notice Calculates the values to be written for the new DelegateCheckpoint
     /// @param previousCheckpoint The previous checkpoint for account
     /// @param account The account to calculate the expirations for
     /// @param isDeltaPositive Whether adding or subtracting from the previous checkpoint
@@ -627,8 +626,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         }
     }
 
-    /// @notice Push a new checkpoint to the array
-    /// or updates the most recent one if it already exists for the current epoch
+    /// @notice Pushes a new checkpoint to the array or updates the most recent one if it already
+    /// exists for the current epoch
     /// @param $userDelegationCheckpoints Pointer to the user's delegation checkpoints
     /// @param accountCheckpointsLength The length of the user's delegation checkpoints
     /// @param newCheckpoint The new checkpoint returned from _calculateCheckpoint()
@@ -648,8 +647,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         }
     }
 
-    /// @notice Generate a summation of all bias, slope, and angle
-    /// for all delegations that expire during the specified time window for ```account```
+    /// @notice Generates a summation of all bias, slope, and angle for all delegations that expire during the
+    /// specified time window for ```account```
     /// @param account Delegate account to generate summations for
     /// @param start Timestamp to start the summations from. The start is not included
     /// @param end Timestamp to end the summations. The end is included

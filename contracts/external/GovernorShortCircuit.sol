@@ -11,12 +11,11 @@ import { GovernorCountingFractional, SafeCast } from "./GovernorCountingFraction
 import "../utils/Errors.sol";
 
 /// @title GovernorShortCircuit
+/// @notice Extends governor to pass propositions if the quorum is reached before the end of the voting period
 /// @author Angle Labs, Inc
 /// @author Jon Walch (Frax Finance) https://github.com/jonwalch
+//solhint-disable-next-line
 /// @notice https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/veANGLEVotingDelegation.sol
-/// @notice Contract extending governor to pass propositions
-/// if the quorum is reached before the end of the voting period
-/// @dev We modified it to only work with block.number and not block.timestamp
 abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractional, GovernorVotesQuorumFraction {
     using SafeCast for *;
     using Checkpoints for Checkpoints.Trace224;
@@ -61,14 +60,14 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
                                                     VIEW FUNCTIONS                                                  
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice The ```shortCircuitNumerator``` function returns the latest short circuit numerator
+    /// @notice Returns the latest short circuit numerator
     /// @dev Mirrors ```GovernorVotesQuorumFraction::quorumNumerator()```
     /// @return latestShortCircuitNumerator The short circuit numerator
     function shortCircuitNumerator() public view returns (uint256 latestShortCircuitNumerator) {
         latestShortCircuitNumerator = _$shortCircuitNumeratorHistory.latest();
     }
 
-    /// @notice The ```shortCircuitNumerator``` function returns the short circuit numerator at ```timepoint```
+    /// @notice Returns the short circuit numerator at ```timepoint```
     /// @dev Mirrors ```GovernorVotesQuorumFraction::quorumNumerator(uint256 timepoint)```
     /// @param timepoint A block.number
     /// @return shortCircuitNumeratorAtTimepoint Short circuit numerator
@@ -89,7 +88,7 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
         );
     }
 
-    /// @notice The ```shortCircuitThreshold``` function returns the latest short circuit numerator
+    /// @notice Returns the latest short circuit numerator
     /// @dev Only supports historical quorum values for proposals that actually exist at ```timepoint```
     /// @param timepoint A block.number corresponding to a proposal snapshot
     /// @return shortCircuitThresholdAtTimepoint Total voting weight needed for short circuit to succeed
@@ -106,7 +105,7 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
                                                        INTERNALS                                                    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice The ```_shortCircuitFor``` function is called by state() to check for early proposal success
+    /// @notice Called by state() to check for early proposal success
     /// @param proposalId Proposal ID
     /// @return isShortCircuitFor Represents if short circuit threshold for votes were reached or not
     function _shortCircuitFor(uint256 proposalId) internal view returns (bool isShortCircuitFor) {
@@ -116,7 +115,7 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
         isShortCircuitFor = forVoteWeight > shortCircuitThreshold(proposalVoteStart);
     }
 
-    /// @notice The ```_shortCircuitAgainst``` function is called by state() to check for early proposal failure
+    /// @notice Called by state() to check for early proposal failure
     /// @param proposalId Proposal ID
     /// @return isShortCircuitAgainst Represents if short circuit threshold against votes were reached or not
     function _shortCircuitAgainst(uint256 proposalId) internal view returns (bool isShortCircuitAgainst) {
@@ -126,7 +125,7 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
         isShortCircuitAgainst = againstVoteWeight > shortCircuitThreshold(proposalVoteStart);
     }
 
-    /// @notice The ```_updateShortCircuitNumerator``` function is called by governance to change the short circuit numerator
+    /// @notice Called by governance to change the short circuit numerator
     /// @dev Mirrors ```GovernorVotesQuorumFraction::_updateQuorumNumerator(uint256 newQuorumNumerator)```
     /// @param newShortCircuitNumerator New short circuit numerator value
     function _updateShortCircuitNumerator(uint256 newShortCircuitNumerator) internal {
