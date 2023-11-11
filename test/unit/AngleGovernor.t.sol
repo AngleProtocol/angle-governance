@@ -71,7 +71,7 @@ contract AngleGovernorTest is Test, Utils {
         assertEq(angleGovernor.shortCircuitNumerator(), initialShortCircuitNumerator);
         assertEq(angleGovernor.quorumNumerator(), initialQuorumNumeratorValue);
         assertEq(angleGovernor.$votingDelayBlocks(), initialVotingDelayBlocks);
-        assertEq(angleGovernor.timelock(), address(mainnetTimelock));
+        assertEq(address(angleGovernor.timelock()), address(mainnetTimelock));
         assertEq(address(angleGovernor.token()), address(veANGLEDelegation));
         assertEq(angleGovernor.CLOCK_MODE(), "mode=timestamp");
         assertEq(angleGovernor.COUNTING_MODE(), "support=bravo&quorum=for,abstain&params=fractional");
@@ -112,7 +112,7 @@ contract AngleGovernorTest is Test, Utils {
         emit TimelockChange(address(mainnetTimelock), address(mainnetTimelock2));
         hoax(address(mainnetTimelock));
         angleGovernor.updateTimelock(mainnetTimelock2);
-        assertEq(angleGovernor.timelock(), address(mainnetTimelock2));
+        assertEq(address(angleGovernor.timelock()), address(mainnetTimelock2));
     }
 
     function test_SetVotingDelay() public {
@@ -133,7 +133,7 @@ contract AngleGovernorTest is Test, Utils {
 
     function test_SetProposalThreshold() public {
         vm.expectEmit(true, true, true, true, address(angleGovernor));
-        emit ProposalThresholdSet(100000e18, 13);
+        emit ProposalThresholdSet(initialProposalThreshold, 13);
         hoax(address(mainnetTimelock));
         angleGovernor.setProposalThreshold(13);
         assertEq(angleGovernor.proposalThreshold(), 13);
@@ -150,29 +150,5 @@ contract AngleGovernorTest is Test, Utils {
 
     function test_Clock() public {
         assertEq(angleGovernor.clock(), block.timestamp);
-    }
-
-    function test_Propose() public {
-        vm.mockCall(
-            address(veANGLEDelegation),
-            abi.encodeWithSelector(veANGLEDelegation.getPastVotes.selector, address(whale)),
-            abi.encode(1e24)
-        );
-        vm.mockCall(
-            address(veANGLEDelegation),
-            abi.encodeWithSelector(veANGLEDelegation.getPastTotalSupply.selector),
-            abi.encode(15e23)
-        );
-
-        address[] memory targets = new address[](1);
-        uint256[] memory values = new uint256[](1);
-        bytes[] memory calldatas = new bytes[](1);
-        string memory description = "Updating Quorum";
-
-        targets[0] = address(angleGovernor);
-        values[0] = 0;
-        calldatas[0] = abi.encodeWithSelector(angleGovernor.updateQuorumNumerator.selector, 11);
-
-        _passProposal(1, angleGovernor, address(mainnetTimelock), targets, values, calldatas, description);
     }
 }

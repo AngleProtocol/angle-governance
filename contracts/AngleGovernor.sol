@@ -16,6 +16,7 @@ import { GovernorCountingFractional } from "./external/GovernorCountingFractiona
 import { GovernorShortCircuit } from "./external/GovernorShortCircuit.sol";
 
 import "./utils/Errors.sol";
+import "forge-std/console.sol";
 
 /// @title AngleGovernor
 /// @author Angle Labs, Inc
@@ -44,7 +45,8 @@ contract AngleGovernor is
                                                        VARIABLES                                                    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    TimelockController private _timelock;
+    /// @notice Timelock address that owns this contract and can change the system's parameters
+    TimelockController public timelock;
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                        MODIFIER                                                     
@@ -86,13 +88,8 @@ contract AngleGovernor is
                                                     VIEW FUNCTIONS                                                  
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Timelock address that owns this contract and can change the system's parameters
-    function timelock() public view returns (address) {
-        return address(_timelock);
-    }
-
     function _executor() internal view override(Governor) returns (address) {
-        return address(_timelock);
+        return address(timelock);
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +241,7 @@ contract AngleGovernor is
     }
 
     function _updateTimelock(TimelockController newTimelock) private {
-        emit TimelockChange(address(_timelock), address(newTimelock));
-        _timelock = newTimelock;
+        emit TimelockChange(address(timelock), address(newTimelock));
+        timelock = newTimelock;
     }
 }
