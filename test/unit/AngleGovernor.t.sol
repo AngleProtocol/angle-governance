@@ -25,6 +25,10 @@ contract AngleGovernorTest is Test, Utils {
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
     event ProposalThresholdSet(uint256 oldProposalThreshold, uint256 newProposalThreshold);
     event VeANGLEVotingDelegationSet(address oldVotingDelegation, address newVotingDelegation);
+    event QuorumNumeratorUpdated(uint256 oldQuorumNumerator, uint256 newQuorumNumerator);
+    event ShortCircuitNumeratorUpdated(uint256 oldShortCircuitNumerator, uint256 newShortCircuitNumerator);
+    event VotingDelayBlocksSet(uint256 oldVotingDelayBlocks, uint256 newVotingDelayBlocks);
+    event LateQuorumVoteExtensionSet(uint64 oldVoteExtension, uint64 newVoteExtension);
 
     ProposalSender public proposalSender;
     AngleGovernor public angleGovernor;
@@ -51,7 +55,7 @@ contract AngleGovernorTest is Test, Utils {
             initialVotingPeriod,
             initialProposalThreshold,
             initialVoteExtension,
-            initialQuorumNumeratorValue,
+            initialQuorumNumerator,
             initialShortCircuitNumerator,
             initialVotingDelayBlocks
         );
@@ -66,10 +70,9 @@ contract AngleGovernorTest is Test, Utils {
         assertEq(angleGovernor.votingDelay(), initialVotingDelay);
         assertEq(angleGovernor.votingPeriod(), initialVotingPeriod);
         assertEq(angleGovernor.proposalThreshold(), initialProposalThreshold);
-        assertEq(angleGovernor.quorumNumerator(), initialQuorumNumeratorValue);
+        assertEq(angleGovernor.quorumNumerator(), initialQuorumNumerator);
         assertEq(angleGovernor.lateQuorumVoteExtension(), initialVoteExtension);
         assertEq(angleGovernor.shortCircuitNumerator(), initialShortCircuitNumerator);
-        assertEq(angleGovernor.quorumNumerator(), initialQuorumNumeratorValue);
         assertEq(angleGovernor.$votingDelayBlocks(), initialVotingDelayBlocks);
         assertEq(address(angleGovernor.timelock()), address(mainnetTimelock));
         assertEq(address(angleGovernor.token()), address(veANGLEDelegation));
@@ -89,6 +92,8 @@ contract AngleGovernorTest is Test, Utils {
         vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.setVotingDelay(10);
         vm.expectRevert(Errors.NotExecutor.selector);
+        angleGovernor.setVotingDelayBlocks(100);
+        vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.setVotingPeriod(10);
         vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.setProposalThreshold(10);
@@ -98,6 +103,8 @@ contract AngleGovernorTest is Test, Utils {
         angleGovernor.updateShortCircuitNumerator(12);
         vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.setLateQuorumVoteExtension(12);
+        vm.expectRevert(Errors.NotExecutor.selector);
+        angleGovernor.updateQuorumNumerator(12);
 
         vm.stopPrank();
     }
@@ -117,15 +124,23 @@ contract AngleGovernorTest is Test, Utils {
 
     function test_SetVotingDelay() public {
         vm.expectEmit(true, true, true, true, address(angleGovernor));
-        emit VotingDelaySet(1800, 11);
+        emit VotingDelaySet(initialVotingDelay, 11);
         hoax(address(mainnetTimelock));
         angleGovernor.setVotingDelay(11);
         assertEq(angleGovernor.votingDelay(), 11);
     }
 
+    function test_SetVotingDelayBlocks() public {
+        vm.expectEmit(true, true, true, true, address(angleGovernor));
+        emit VotingDelayBlocksSet(initialVotingDelayBlocks, 100);
+        hoax(address(mainnetTimelock));
+        angleGovernor.setVotingDelayBlocks(100);
+        assertEq(angleGovernor.$votingDelayBlocks(), 100);
+    }
+
     function test_SetVotingPeriod() public {
         vm.expectEmit(true, true, true, true, address(angleGovernor));
-        emit VotingPeriodSet(36000, 12);
+        emit VotingPeriodSet(initialVotingPeriod, 12);
         hoax(address(mainnetTimelock));
         angleGovernor.setVotingPeriod(12);
         assertEq(angleGovernor.votingPeriod(), 12);
@@ -146,6 +161,30 @@ contract AngleGovernorTest is Test, Utils {
         hoax(address(mainnetTimelock));
         angleGovernor.setVeANGLEVotingDelegation(address(veANGLEDelegation2));
         assertEq(address(angleGovernor.token()), address(veANGLEDelegation2));
+    }
+
+    function test_UpdateQuorumNumerator() public {
+        vm.expectEmit(true, true, true, true, address(angleGovernor));
+        emit QuorumNumeratorUpdated(initialQuorumNumerator, 13);
+        hoax(address(mainnetTimelock));
+        angleGovernor.updateQuorumNumerator(13);
+        assertEq(angleGovernor.quorumNumerator(), 13);
+    }
+
+    function test_UpdateShortCircuitNumerator() public {
+        vm.expectEmit(true, true, true, true, address(angleGovernor));
+        emit ShortCircuitNumeratorUpdated(initialShortCircuitNumerator, 60);
+        hoax(address(mainnetTimelock));
+        angleGovernor.updateShortCircuitNumerator(60);
+        assertEq(angleGovernor.shortCircuitNumerator(), 60);
+    }
+
+    function test_SetLateQuorumVoteExtension() public {
+        vm.expectEmit(true, true, true, true, address(angleGovernor));
+        emit LateQuorumVoteExtensionSet(initialVoteExtension, 1800);
+        hoax(address(mainnetTimelock));
+        angleGovernor.setLateQuorumVoteExtension(1800);
+        assertEq(angleGovernor.lateQuorumVoteExtension(), 1800);
     }
 
     function test_Clock() public {

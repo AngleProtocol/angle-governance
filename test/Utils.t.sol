@@ -14,7 +14,6 @@ contract Utils is Test {
     using stdStorage for StdStorage;
 
     function _passProposal(
-        uint256 chainId,
         AngleGovernor governor,
         address[] memory targets,
         uint256[] memory values,

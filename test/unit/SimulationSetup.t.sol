@@ -75,7 +75,7 @@ contract SimulationSetup is Test {
                     initialVotingPeriod,
                     initialProposalThreshold,
                     initialVoteExtension,
-                    initialQuorumNumeratorValue,
+                    initialQuorumNumerator,
                     initialShortCircuitNumerator,
                     initialVotingDelayBlocks
                 );

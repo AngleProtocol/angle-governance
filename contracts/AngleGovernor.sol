@@ -123,9 +123,19 @@ contract AngleGovernor is
         _setVeANGLEVotingDelegation(veANGLEVotingDelegation);
     }
 
+    /// @inheritdoc GovernorVotesQuorumFraction
+    function updateQuorumNumerator(uint256 newQuorumNumerator) external override onlyExecutor {
+        _updateQuorumNumerator(newQuorumNumerator);
+    }
+
     /// @param newShortCircuitNumerator Number expressed as x/100 (percentage)
     function updateShortCircuitNumerator(uint256 newShortCircuitNumerator) external onlyExecutor {
         _updateShortCircuitNumerator(newShortCircuitNumerator);
+    }
+
+    /// @notice Changes the amount of blocks before the voting snapshot
+    function setVotingDelayBlocks(uint256 newVotingDelayBlocks) external onlyExecutor {
+        _setVotingDelayBlocks(newVotingDelayBlocks);
     }
 
     /// @inheritdoc GovernorPreventLateQuorum
@@ -177,11 +187,6 @@ contract AngleGovernor is
         uint256 proposalId
     ) public view override(Governor, GovernorPreventLateQuorum) returns (uint256) {
         return GovernorPreventLateQuorum.proposalDeadline(proposalId);
-    }
-
-    /// @inheritdoc GovernorVotesQuorumFraction
-    function updateQuorumNumerator(uint256 newQuorumNumerator) external override onlyExecutor {
-        _updateQuorumNumerator(newQuorumNumerator);
     }
 
     /// @inheritdoc GovernorSettings

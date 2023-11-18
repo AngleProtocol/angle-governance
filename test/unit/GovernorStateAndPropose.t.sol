@@ -51,7 +51,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
             initialVotingPeriod,
             initialProposalThreshold,
             initialVoteExtension,
-            initialQuorumNumeratorValue,
+            initialQuorumNumerator,
             initialShortCircuitNumerator,
             initialVotingDelayBlocks
         );
@@ -190,6 +190,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
 
         // revert because in pending state
         {
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Pending));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
@@ -206,6 +207,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
         {
             vm.warp(block.timestamp + angleGovernor.votingDelay() + 1);
             vm.roll(block.number + angleGovernor.$votingDelayBlocks() + 1);
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Active));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
@@ -220,13 +222,11 @@ contract GovernorStateAndProposeTest is Test, Utils {
 
         // revert because in successful state
         {
-            vm.warp(block.timestamp + angleGovernor.votingDelay() + 1);
-            vm.roll(block.number + angleGovernor.$votingDelayBlocks() + 1);
-
             hoax(whale);
             angleGovernor.castVote(proposalId, 1);
             vm.warp(block.timestamp + angleGovernor.votingPeriod() + 1);
 
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Succeeded));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
@@ -273,6 +273,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
             angleGovernor.castVote(proposalId, 0);
             vm.warp(block.timestamp + angleGovernor.votingPeriod() + 1);
 
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Defeated));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
@@ -315,7 +316,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
         hoax(whale);
         uint256 proposalId = angleGovernor.propose(targets, values, calldatas, description);
 
-        // revert because in defeated state
+        // revert because in succeeded state
         {
             vm.warp(block.timestamp + angleGovernor.votingDelay() + 1);
             vm.roll(block.number + angleGovernor.$votingDelayBlocks() + 1);
@@ -323,6 +324,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
             hoax(whale);
             angleGovernor.castVote(proposalId, 1);
 
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Succeeded));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
@@ -373,6 +375,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
             hoax(whale);
             angleGovernor.castVote(proposalId, 0);
 
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Defeated));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
@@ -412,10 +415,11 @@ contract GovernorStateAndProposeTest is Test, Utils {
         values[0] = 0;
         calldatas[0] = abi.encodeWithSelector(angleGovernor.updateQuorumNumerator.selector, 11);
 
-        uint256 proposalId = _passProposal(1, angleGovernor, targets, values, calldatas, description);
+        uint256 proposalId = _passProposal(angleGovernor, targets, values, calldatas, description);
 
-        // revert because in defeated state
+        // revert because in Executed state
         {
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Executed));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
@@ -458,6 +462,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
             hoax(whale);
             angleGovernor.cancel(targets, values, calldatas, keccak256(bytes(description)));
 
+            assertEq(uint256(angleGovernor.state(proposalId)), uint256(IGovernor.ProposalState.Canceled));
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
