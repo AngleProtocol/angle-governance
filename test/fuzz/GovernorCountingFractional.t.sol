@@ -254,9 +254,8 @@ contract GovernorCountingFractionalTest is Test {
     }
 
     function _assumeAndLabelFuzzedAddress(address _addr, string memory _name) internal returns (address) {
+        while (_addr == address(this)) _addr = _randomAddress();
         vm.assume(_addr > address(0));
-        // TODO doesn't exist in newer forge version
-        // assumeNoPrecompiles(_addr);
         vm.label(_addr, _name);
         return _addr;
     }
