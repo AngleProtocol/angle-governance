@@ -89,7 +89,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         // It's possible that some delegated veANGLE has expired.
         // Add up all expirations during this time period, week by week.
-        (uint256 totalExpiredBias, uint256 totalExpiredSlope, uint256 totalExpiredAngle) = _calculateExpirations({
+        (uint256 totalExpiredBias, uint256 totalExpiredSlope, ) = _calculateExpirations({
             account: voter,
             start: checkpoint.timestamp,
             end: timestamp,
@@ -98,7 +98,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         uint256 expirationAdjustedBias = checkpoint.normalizedBias - totalExpiredBias;
         uint256 expirationAdjustedSlope = checkpoint.normalizedSlope - totalExpiredSlope;
-        uint256 expirationAdjustedAngle = checkpoint.totalAngle - totalExpiredAngle;
+        // uint256 expirationAdjustedAngle = checkpoint.totalAngle - totalExpiredAngle;
 
         uint256 voteDecay = expirationAdjustedSlope * timestamp;
         uint256 biasAtTimestamp = (expirationAdjustedBias > voteDecay) ? expirationAdjustedBias - voteDecay : 0;

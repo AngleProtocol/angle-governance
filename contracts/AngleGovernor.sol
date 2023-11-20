@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import { IVotes } from "oz/governance/utils/IVotes.sol";
 
-import { Governor, SafeCast } from "oz/governance/Governor.sol";
+import { Governor } from "oz/governance/Governor.sol";
 import { GovernorPreventLateQuorum } from "oz/governance/extensions/GovernorPreventLateQuorum.sol";
 import { GovernorVotesQuorumFraction, GovernorVotes } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
 import { GovernorSettings } from "oz/governance/extensions/GovernorSettings.sol";
@@ -16,7 +16,6 @@ import { GovernorCountingFractional } from "./external/GovernorCountingFractiona
 import { GovernorShortCircuit } from "./external/GovernorShortCircuit.sol";
 
 import "./utils/Errors.sol";
-import "forge-std/console.sol";
 
 /// @title AngleGovernor
 /// @author Angle Labs, Inc
