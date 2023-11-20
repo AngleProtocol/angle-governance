@@ -81,6 +81,11 @@ jobs:
             out
           key: "build-${{ github.sha }}"
 
+      - name: Setup repo
+        uses: ./.github/actions/setup-repo
+        with:
+          registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:

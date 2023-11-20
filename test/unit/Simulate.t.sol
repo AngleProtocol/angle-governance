@@ -18,6 +18,7 @@ import { Proposal, SubCall } from "./Proposal.sol";
 import { SimulationSetup } from "./SimulationSetup.t.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import "stringutils/strings.sol";
+import "../Constants.t.sol";
 
 //solhint-disable
 contract Simulate is SimulationSetup {

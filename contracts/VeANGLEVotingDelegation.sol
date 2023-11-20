@@ -26,7 +26,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
     /// @notice vote weight multiplier taken from veANGLE
     /// TODO: update to our case
-    uint256 public constant VOTE_WEIGHT_MULTIPLIER = 3;
+    uint256 public constant VOTE_WEIGHT_MULTIPLIER = 1;
 
     /// @notice Typehash needed for delegations by signature
     /// @dev keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")
@@ -89,7 +89,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         // It's possible that some delegated veANGLE has expired.
         // Add up all expirations during this time period, week by week.
-        (uint256 totalExpiredBias, uint256 totalExpiredSlope, uint256 totalExpiredAngle) = _calculateExpirations({
+        (uint256 totalExpiredBias, uint256 totalExpiredSlope, ) = _calculateExpirations({
             account: voter,
             start: checkpoint.timestamp,
             end: timestamp,
@@ -98,14 +98,15 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         uint256 expirationAdjustedBias = checkpoint.normalizedBias - totalExpiredBias;
         uint256 expirationAdjustedSlope = checkpoint.normalizedSlope - totalExpiredSlope;
-        uint256 expirationAdjustedAngle = checkpoint.totalAngle - totalExpiredAngle;
+        // uint256 expirationAdjustedAngle = checkpoint.totalAngle - totalExpiredAngle;
 
         uint256 voteDecay = expirationAdjustedSlope * timestamp;
         uint256 biasAtTimestamp = (expirationAdjustedBias > voteDecay) ? expirationAdjustedBias - voteDecay : 0;
 
         // If all delegations are expired they have no voting weight.
         // This differs from veANGLE, which returns the locked ANGLE amount if it has not yet been withdrawn.
-        delegatedWeight = expirationAdjustedAngle + (VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp);
+        delegatedWeight = VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp;
+        // delegatedWeight = expirationAdjustedAngle + (VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp);
     }
 
     /// @notice Calculates ```account```'s voting weight.

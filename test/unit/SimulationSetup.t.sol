@@ -37,8 +37,6 @@ contract SimulationSetup is Test {
     ProposalSender internal _proposalSender;
     AngleGovernor public _governor;
 
-    address public whale = 0xD13F8C25CceD32cdfA79EB5eD654Ce3e484dCAF5;
-    IVotes public veANGLE = IVotes(0x0C462Dbb9EC8cD1630f1728B2CFD2769d09f0dd5);
     IVotes public veANGLEDelegation;
 
     function setUp() public {
@@ -77,7 +75,7 @@ contract SimulationSetup is Test {
                     initialVotingPeriod,
                     initialProposalThreshold,
                     initialVoteExtension,
-                    initialQuorumNumeratorValue,
+                    initialQuorumNumerator,
                     initialShortCircuitNumerator,
                     initialVotingDelayBlocks
                 );
