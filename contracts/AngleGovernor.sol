@@ -20,11 +20,10 @@ import "./utils/Errors.sol";
 /// @title AngleGovernor
 /// @author Angle Labs, Inc
 /// @dev Core of Angle governance system, extending various OpenZeppelin modules
-/// @dev This contract overrides some OpenZeppelin function, like those in `GovernorSettings` to introduce
+/// @dev This contract overrides some OpenZeppelin functions, like those in `GovernorSettings` to introduce
 /// the `onlyExecutor` modifier which ensures that only the Timelock contract can update the system's parameters
 /// @dev The time parameters (`votingDelay`, `votingPeriod`, ...) are expressed here in timestamp units, but the
-/// also has a `votingDelayBlocks` parameters which must be set in accordance to the `votingDelay`
-/// @dev The `state` and `propose` functions here were forked from FRAX governance implementation
+/// contract also has a `votingDelayBlocks` parameter which must be set in accordance to the `votingDelay`
 /// @custom:security-contact contact@angle.money
 contract AngleGovernor is
     GovernorSettings,
@@ -150,15 +149,32 @@ contract AngleGovernor is
 
     /// @inheritdoc Governor
     // solhint-disable-next-line
-    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
+    /// @notice Taken from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
     function state(uint256 proposalId) public view override returns (ProposalState) {
-        ProposalState classicProposalState = Governor.state(proposalId);
+        // We read the struct fields into the stack at once so Solidity emits a single SLOAD
+        ProposalCore storage proposal = _proposals[proposalId];
+        bool proposalExecuted = proposal.executed;
+        bool proposalCanceled = proposal.canceled;
 
-        if (
-            classicProposalState == ProposalState.Executed ||
-            classicProposalState == ProposalState.Canceled ||
-            classicProposalState == ProposalState.Pending
-        ) return classicProposalState;
+        if (proposalExecuted) {
+            return ProposalState.Executed;
+        }
+
+        if (proposalCanceled) {
+            return ProposalState.Canceled;
+        }
+
+        uint256 snapshot = proposalSnapshot(proposalId);
+
+        if (snapshot == 0) {
+            revert GovernorNonexistentProposal(proposalId);
+        }
+
+        uint256 currentTimepoint = clock();
+
+        if (snapshot >= currentTimepoint || $snapshotTimestampToSnapshotBlockNumber[snapshot] >= block.number) {
+            return ProposalState.Pending;
+        }
 
         // Allow early execution when overwhelming majority
         (bool isShortCircuitFor, bool isShortCircuitAgainst) = _shortCircuit(proposalId);
@@ -166,7 +182,19 @@ contract AngleGovernor is
             return ProposalState.Succeeded;
         } else if (isShortCircuitAgainst) {
             return ProposalState.Defeated;
-        } else return classicProposalState;
+        }
+
+        uint256 deadline = proposalDeadline(proposalId);
+
+        if (deadline >= currentTimepoint) {
+            return ProposalState.Active;
+        } else if (!_quorumReached(proposalId) || !_voteSucceeded(proposalId)) {
+            return ProposalState.Defeated;
+        } else if (proposalEta(proposalId) == 0) {
+            return ProposalState.Succeeded;
+        } else {
+            return ProposalState.Queued;
+        }
     }
 
     /// @inheritdoc GovernorVotesQuorumFraction

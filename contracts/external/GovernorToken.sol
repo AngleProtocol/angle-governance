@@ -5,9 +5,9 @@ pragma solidity ^0.8.20;
 import { IVotes } from "oz/governance/utils/IVotes.sol";
 import { GovernorVotes, IERC5805 } from "oz/governance/extensions/GovernorVotes.sol";
 
-/**
- * @notice Extension of {Governor} with `internal` and not `private` _token
- */
+/// @title GovernorToken
+/// @author Angle Labs, Inc.
+/// @notice Extension of {Governor} with an `internal` (and not `private`) _token_ variable which can be modified
 abstract contract GovernorToken is GovernorVotes {
     event VeANGLEVotingDelegationSet(address oldVotingDelegation, address newVotingDelegation);
 
