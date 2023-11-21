@@ -8,6 +8,7 @@ import { SafeCast } from "oz/utils/math/SafeCast.sol";
 import { Strings } from "oz/utils/Strings.sol";
 import { MessageHashUtils } from "oz/utils/cryptography/MessageHashUtils.sol";
 import { GovernorCountingSimple } from "oz/governance/extensions/GovernorCountingSimple.sol";
+import { GovernorVotesQuorumFraction } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
 
 import { Test, stdError } from "forge-std/Test.sol";
 import { Vm } from "forge-std/Vm.sol";
@@ -112,7 +113,7 @@ contract GovernorCountingFractionalTest is Test {
         mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
         governor = new AngleGovernor(
             token,
-            mainnetTimelock,
+            address(mainnetTimelock),
             initialVotingDelay,
             initialVotingPeriod,
             initialProposalThreshold,
@@ -180,7 +181,7 @@ contract GovernorCountingFractionalTest is Test {
         bytes[] memory calldatas = new bytes[](1);
         targets[0] = address(governor);
         values[0] = 0; // no ETH will be sent
-        calldatas[0] = abi.encodeWithSelector(AngleGovernor.updateQuorumNumerator.selector, 11);
+        calldatas[0] = abi.encodeWithSelector(GovernorVotesQuorumFraction.updateQuorumNumerator.selector, 11);
         string memory description = "A modest proposal";
         uint256 proposalId = governor.hashProposal(targets, values, calldatas, keccak256(bytes(description)));
 

@@ -24,8 +24,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @notice Max veANGLE lock duration
     uint256 public constant MAX_LOCK_DURATION = 365 days * 4;
 
-    /// @notice vote weight multiplier taken from veANGLE
-    /// TODO: update to our case
+    /// @notice Vote weight multiplier taken from veANGLE
     uint256 public constant VOTE_WEIGHT_MULTIPLIER = 1;
 
     /// @notice Typehash needed for delegations by signature
@@ -49,7 +48,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     mapping(address delegate => mapping(uint256 week => IveANGLEVotingDelegation.Expiration))
         public $expiredDelegations;
 
-    /// @notice The ```constructor``` function is called on deployment
+    /// @notice Constructor of the contract, called on deployment
     /// @param veANGLE Address of veANGLE contract
     constructor(address veANGLE, string memory name, string memory version) EIP712(name, version) {
         VE_ANGLE = IveANGLE(veANGLE);

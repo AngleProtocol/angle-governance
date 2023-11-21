@@ -50,7 +50,7 @@ contract AngleGovernorTest is Test, Utils {
         mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
         angleGovernor = new AngleGovernor(
             veANGLEDelegation,
-            mainnetTimelock,
+            address(mainnetTimelock),
             initialVotingDelay,
             initialVotingPeriod,
             initialProposalThreshold,
@@ -88,7 +88,7 @@ contract AngleGovernorTest is Test, Utils {
         vm.startPrank(alice);
         TimelockController mainnetTimelock2 = new TimelockController(1 days, proposers, executors, address(this));
         vm.expectRevert(Errors.NotExecutor.selector);
-        angleGovernor.updateTimelock(mainnetTimelock2);
+        angleGovernor.updateTimelock(address(mainnetTimelock2));
         vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.setVotingDelay(10);
         vm.expectRevert(Errors.NotExecutor.selector);
@@ -97,8 +97,6 @@ contract AngleGovernorTest is Test, Utils {
         angleGovernor.setVotingPeriod(10);
         vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.setProposalThreshold(10);
-        vm.expectRevert(Errors.NotExecutor.selector);
-        angleGovernor.setVeANGLEVotingDelegation(address(veANGLE));
         vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.updateShortCircuitNumerator(12);
         vm.expectRevert(Errors.NotExecutor.selector);
@@ -118,7 +116,7 @@ contract AngleGovernorTest is Test, Utils {
         vm.expectEmit(true, true, true, true, address(angleGovernor));
         emit TimelockChange(address(mainnetTimelock), address(mainnetTimelock2));
         hoax(address(mainnetTimelock));
-        angleGovernor.updateTimelock(mainnetTimelock2);
+        angleGovernor.updateTimelock(address(mainnetTimelock2));
         assertEq(address(angleGovernor.timelock()), address(mainnetTimelock2));
     }
 
@@ -152,15 +150,6 @@ contract AngleGovernorTest is Test, Utils {
         hoax(address(mainnetTimelock));
         angleGovernor.setProposalThreshold(13);
         assertEq(angleGovernor.proposalThreshold(), 13);
-    }
-
-    function test_SetVeANGLEVotingDelegation() public {
-        IVotes veANGLEDelegation2 = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation2", "2");
-        vm.expectEmit(true, true, true, true, address(angleGovernor));
-        emit VeANGLEVotingDelegationSet(address(veANGLEDelegation), address(veANGLEDelegation2));
-        hoax(address(mainnetTimelock));
-        angleGovernor.setVeANGLEVotingDelegation(address(veANGLEDelegation2));
-        assertEq(address(angleGovernor.token()), address(veANGLEDelegation2));
     }
 
     function test_UpdateQuorumNumerator() public {
