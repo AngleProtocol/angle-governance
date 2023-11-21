@@ -67,14 +67,12 @@ interface IveANGLE {
 
     function epoch() external view returns (uint256);
 
-    function point_history(
-        uint256 arg0
-    ) external view returns (int128 bias, int128 slope, uint256 ts, uint256 blk, uint256 fxs_amt);
+    function point_history(uint256 arg0) external view returns (int128 bias, int128 slope, uint256 ts, uint256 blk);
 
     function user_point_history(
         address _addr,
         uint256 _idx
-    ) external view returns (int128 bias, int128 slope, uint256 ts, uint256 blk, uint256 fxs_amt);
+    ) external view returns (int128 bias, int128 slope, uint256 ts, uint256 blk);
 
     function user_point_epoch(address arg0) external view returns (uint256);
 

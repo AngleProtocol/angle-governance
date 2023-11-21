@@ -162,7 +162,7 @@ contract GovernorCountingFractionalTest is Test {
         }
     }
 
-    function _supplyInverseQuorum(uint256 quorum) internal returns (uint256) {
+    function _supplyInverseQuorum(uint256 quorum) internal view returns (uint256) {
         return (governor.quorumDenominator() * quorum) / governor.quorumNumerator(block.timestamp);
     }
 

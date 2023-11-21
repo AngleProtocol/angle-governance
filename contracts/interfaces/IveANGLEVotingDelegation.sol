@@ -17,14 +17,12 @@ interface IveANGLEVotingDelegation {
         uint48 expiry;
         // __________
         uint96 bias;
-        uint96 angle;
         uint64 slope;
     }
 
     /// A representation of a delegate and all its delegators at a particular timestamp
     struct DelegateCheckpoint {
         uint128 normalizedBias;
-        uint128 totalAngle;
         // _________
         uint128 normalizedSlope;
         uint128 timestamp; // Rounded up to the nearest day
@@ -34,7 +32,6 @@ interface IveANGLEVotingDelegation {
     /// in a particular week
     struct Expiration {
         uint96 bias;
-        uint96 angle;
         uint64 slope;
     }
 
@@ -42,28 +39,20 @@ interface IveANGLEVotingDelegation {
     struct NormalizedVeANGLELockInfo {
         uint256 bias;
         uint256 slope;
-        uint256 angle;
         uint256 expiry;
     }
 
     function $delegateCheckpoints(
         address,
         uint256
-    ) external view returns (uint128 normalizedBias, uint128 totalAngle, uint128 normalizedSlope, uint128 timestamp);
+    ) external view returns (uint128 normalizedBias, uint128 normalizedSlope, uint128 timestamp);
 
     function $delegations(
         address
     )
         external
         view
-        returns (
-            address delegate,
-            uint48 firstDelegationTimestamp,
-            uint48 expiry,
-            uint96 bias,
-            uint96 angle,
-            uint64 slope
-        );
+        returns (address delegate, uint48 firstDelegationTimestamp, uint48 expiry, uint96 bias, uint64 slope);
 
     function $expiredDelegations(address, uint256) external view returns (uint96 bias, uint96 angle, uint64 slope);
 

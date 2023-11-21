@@ -88,7 +88,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         // It's possible that some delegated veANGLE has expired.
         // Add up all expirations during this time period, week by week.
-        (uint256 totalExpiredBias, uint256 totalExpiredSlope, ) = _calculateExpirations({
+        (uint256 totalExpiredBias, uint256 totalExpiredSlope) = _calculateExpirations({
             account: voter,
             start: checkpoint.timestamp,
             end: timestamp,
@@ -157,7 +157,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             return calculatedCheckpoint;
         }
 
-        (uint256 totalExpiredBias, uint256 totalExpiredSlope, uint256 totalExpiredAngle) = _calculateExpirations({
+        (uint256 totalExpiredBias, uint256 totalExpiredSlope) = _calculateExpirations({
             account: delegateAddress,
             start: lastCheckpoint.timestamp,
             end: checkpointTimestamp,
@@ -165,15 +165,14 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         });
 
         // All will be 0 if no expirations, only need to check one of them
-        if (totalExpiredAngle == 0) return calculatedCheckpoint;
+        if (totalExpiredBias == 0) return calculatedCheckpoint;
 
         /// NOTE: Checkpoint values will always be larger than or equal to expired values
         unchecked {
             calculatedCheckpoint = IveANGLEVotingDelegation.DelegateCheckpoint({
                 timestamp: uint128(checkpointTimestamp),
                 normalizedBias: uint128(lastCheckpoint.normalizedBias - totalExpiredBias),
-                normalizedSlope: uint128(lastCheckpoint.normalizedSlope - totalExpiredSlope),
-                totalAngle: uint128(lastCheckpoint.totalAngle - totalExpiredAngle)
+                normalizedSlope: uint128(lastCheckpoint.normalizedSlope - totalExpiredSlope)
             });
         }
     }
@@ -331,7 +330,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
                 : previousDelegation.firstDelegationTimestamp,
             expiry: uint48(normalizedDelegatorVeANGLELockInfo.expiry),
             bias: uint96(normalizedDelegatorVeANGLELockInfo.bias),
-            angle: uint96(normalizedDelegatorVeANGLELockInfo.angle),
             slope: uint64(normalizedDelegatorVeANGLELockInfo.slope)
         });
 
@@ -358,16 +356,12 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         // Most recent epoch
         uint256 epoch = VE_ANGLE.user_point_epoch(delegator);
         // Values for delegator at the most recent epoch
-        (int128 userBias, int128 userSlope, , , uint256 userAngle) = VE_ANGLE.user_point_history({
-            _addr: delegator,
-            _idx: epoch
-        });
+        (int128 userBias, int128 userSlope, , ) = VE_ANGLE.user_point_history({ _addr: delegator, _idx: epoch });
         // Get the timestamp of the last update in veANGLE user history
         uint256 lastUpdate = VE_ANGLE.user_point_history__ts({ _addr: delegator, _idx: epoch });
 
         // Set return values
         normalizedVeANGLELockInfo.slope = SafeCast.toUint256(userSlope);
-        normalizedVeANGLELockInfo.angle = userAngle;
         normalizedVeANGLELockInfo.expiry = expiry;
         // Normalize bias to unix epoch, so all biases can be added and subtracted directly
         normalizedVeANGLELockInfo.bias = SafeCast.toUint256(userBias) + normalizedVeANGLELockInfo.slope * lastUpdate;
@@ -449,7 +443,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
                 unchecked {
                     expiration.bias -= uint96(previousDelegation.bias);
                     expiration.slope -= uint64(previousDelegation.slope);
-                    expiration.angle -= uint96(previousDelegation.angle);
                 }
 
                 // Effects
@@ -464,7 +457,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
                     isDeltaPositive: false,
                     deltaBias: previousDelegation.bias,
                     deltaSlope: previousDelegation.slope,
-                    deltaAngle: previousDelegation.angle,
                     checkpointTimestamp: checkpointTimestamp,
                     previousDelegationExpiry: previousDelegation.expiry
                 });
@@ -503,7 +495,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         ];
         uint256 accountCheckpointsLength = $newDelegateCheckpoints.length;
         IveANGLEVotingDelegation.DelegateCheckpoint memory lastCheckpoint = accountCheckpointsLength == 0
-            ? IveANGLEVotingDelegation.DelegateCheckpoint(0, 0, 0, 0)
+            ? IveANGLEVotingDelegation.DelegateCheckpoint(0, 0, 0)
             : $newDelegateCheckpoints[accountCheckpointsLength - 1];
         uint256 oldWeightNewDelegate = _getVotingWeight(newDelegate, checkpointTimestamp);
 
@@ -518,7 +510,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         unchecked {
             expiration.bias += uint96(delegatorVeANGLELockInfo.bias);
             expiration.slope += uint64(delegatorVeANGLELockInfo.slope);
-            expiration.angle += uint96(delegatorVeANGLELockInfo.angle);
         }
         // Effects
         $expiredDelegations[newDelegate][delegatorVeANGLELockInfo.expiry] = expiration;
@@ -530,7 +521,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             account: newDelegate,
             deltaBias: delegatorVeANGLELockInfo.bias,
             deltaSlope: delegatorVeANGLELockInfo.slope,
-            deltaAngle: delegatorVeANGLELockInfo.angle,
             checkpointTimestamp: checkpointTimestamp,
             previousDelegationExpiry: 0 // not used
         });
@@ -558,7 +548,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param isDeltaPositive Whether adding or subtracting from the previous checkpoint
     /// @param deltaBias Amount of bias to add or subtract
     /// @param deltaSlope Amount of slope to add or subtract
-    /// @param deltaAngle Amount of ANGLE to add or subtract
     /// @param checkpointTimestamp block.timestamp of the next DelegateCheckpoint's epoch
     /// @param previousDelegationExpiry When the previous delegation expires
     /// @return newCheckpoint The new DelegateCheckpoint to be stored
@@ -568,7 +557,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         bool isDeltaPositive,
         uint256 deltaBias,
         uint256 deltaSlope,
-        uint256 deltaAngle,
         uint256 checkpointTimestamp,
         uint256 previousDelegationExpiry
     ) private view returns (IveANGLEVotingDelegation.DelegateCheckpoint memory newCheckpoint) {
@@ -579,15 +567,13 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
                     // can be unsafely cast because values will never exceed uint128 max
                     timestamp: uint128(checkpointTimestamp),
                     normalizedBias: uint128(deltaBias),
-                    normalizedSlope: uint128(deltaSlope),
-                    totalAngle: uint128(deltaAngle)
+                    normalizedSlope: uint128(deltaSlope)
                 });
         }
 
         newCheckpoint.timestamp = previousCheckpoint.timestamp;
         newCheckpoint.normalizedBias = previousCheckpoint.normalizedBias;
         newCheckpoint.normalizedSlope = previousCheckpoint.normalizedSlope;
-        newCheckpoint.totalAngle = previousCheckpoint.totalAngle;
 
         // All checkpoint fields will never exceed their size so addition and subtraction doesnt need to be checked
         unchecked {
@@ -595,33 +581,26 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             if (isDeltaPositive) {
                 newCheckpoint.normalizedBias += uint128(deltaBias);
                 newCheckpoint.normalizedSlope += uint128(deltaSlope);
-                newCheckpoint.totalAngle += uint128(deltaAngle);
             } else {
                 // only subtract the weight from this account if it has not already expired in a previous checkpoint
                 if (previousDelegationExpiry > previousCheckpoint.timestamp) {
                     newCheckpoint.normalizedBias -= uint128(deltaBias);
                     newCheckpoint.normalizedSlope -= uint128(deltaSlope);
-                    newCheckpoint.totalAngle -= uint128(deltaAngle);
                 }
             }
 
             // If there have been expirations, incorporate the adjustments by subtracting them from the checkpoint
             if (newCheckpoint.timestamp != checkpointTimestamp) {
-                (
-                    uint256 totalExpiredBias,
-                    uint256 totalExpiredSlope,
-                    uint256 totalExpiredAngle
-                ) = _calculateExpirations({
-                        account: account,
-                        start: newCheckpoint.timestamp,
-                        end: checkpointTimestamp,
-                        checkpoint: previousCheckpoint
-                    });
+                (uint256 totalExpiredBias, uint256 totalExpiredSlope) = _calculateExpirations({
+                    account: account,
+                    start: newCheckpoint.timestamp,
+                    end: checkpointTimestamp,
+                    checkpoint: previousCheckpoint
+                });
 
                 newCheckpoint.timestamp = uint128(checkpointTimestamp);
                 newCheckpoint.normalizedBias -= uint128(totalExpiredBias);
                 newCheckpoint.normalizedSlope -= uint128(totalExpiredSlope);
-                newCheckpoint.totalAngle -= uint128(totalExpiredAngle);
             }
         }
     }
@@ -655,19 +634,17 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param checkpoint Checkpoint to start expirations at
     /// @return totalExpiredBias Total bias that expired for delegate ```account``` during timeframe
     /// @return totalExpiredSlope Total slope that expired for delegate ```account``` during timeframe
-    /// @return totalExpiredAngle Total ANGLE that expired for delegate ```account``` during timeframe
     function _calculateExpirations(
         address account,
         uint256 start,
         uint256 end,
         IveANGLEVotingDelegation.DelegateCheckpoint memory checkpoint
-    ) private view returns (uint256 totalExpiredBias, uint256 totalExpiredSlope, uint256 totalExpiredAngle) {
+    ) private view returns (uint256 totalExpiredBias, uint256 totalExpiredSlope) {
         unchecked {
             // Maximum lock time for veANGLE is 4 years, it will all be expired
             if (end > start + MAX_LOCK_DURATION) {
                 totalExpiredBias = checkpoint.normalizedBias;
                 totalExpiredSlope = checkpoint.normalizedSlope;
-                totalExpiredAngle = checkpoint.totalAngle;
             } else {
                 // Total values will always be less than or equal to a checkpoint's values
                 uint256 currentWeek = WEEK + (start / WEEK) * WEEK;
@@ -678,7 +655,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
                     IveANGLEVotingDelegation.Expiration memory expiration = $delegateExpirations[currentWeek];
                     totalExpiredBias += expiration.bias;
                     totalExpiredSlope += expiration.slope;
-                    totalExpiredAngle += expiration.angle;
                     currentWeek += WEEK;
                 }
             }
