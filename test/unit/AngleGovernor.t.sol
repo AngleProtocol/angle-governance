@@ -162,6 +162,12 @@ contract AngleGovernorTest is Test, Utils {
         assertEq(angleGovernor.quorumNumerator(), 13);
     }
 
+    function test_RevertWhen_UpdateShortCircuitNumeratorLargerDenominator() public {
+        vm.expectRevert(Errors.ShortCircuitNumeratorGreaterThanQuorumDenominator.selector);
+        hoax(address(mainnetTimelock));
+        angleGovernor.updateShortCircuitNumerator(101);
+    }
+
     function test_UpdateShortCircuitNumerator() public {
         vm.expectEmit(true, true, true, true, address(angleGovernor));
         emit ShortCircuitNumeratorUpdated(initialShortCircuitNumerator, 60);
