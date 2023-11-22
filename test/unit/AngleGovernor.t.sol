@@ -113,8 +113,10 @@ contract AngleGovernorTest is Test, Utils {
         executors[0] = address(0); // Means everyone can execute
         TimelockController mainnetTimelock2 = new TimelockController(1 days, proposers, executors, address(this));
 
-        vm.expectEmit(true, true, true, true, address(angleGovernor));
-        emit TimelockChange(address(mainnetTimelock), address(mainnetTimelock2));
+        vm.expectRevert(Errors.ZeroAddress.selector);
+        hoax(address(mainnetTimelock));
+        angleGovernor.updateTimelock(address(0));
+
         hoax(address(mainnetTimelock));
         angleGovernor.updateTimelock(address(mainnetTimelock2));
         assertEq(address(angleGovernor.timelock()), address(mainnetTimelock2));
