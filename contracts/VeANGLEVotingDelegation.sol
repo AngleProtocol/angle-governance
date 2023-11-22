@@ -97,7 +97,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         uint256 expirationAdjustedBias = checkpoint.normalizedBias - totalExpiredBias;
         uint256 expirationAdjustedSlope = checkpoint.normalizedSlope - totalExpiredSlope;
-        // uint256 expirationAdjustedAngle = checkpoint.totalAngle - totalExpiredAngle;
 
         uint256 voteDecay = expirationAdjustedSlope * timestamp;
         uint256 biasAtTimestamp = (expirationAdjustedBias > voteDecay) ? expirationAdjustedBias - voteDecay : 0;
@@ -105,7 +104,6 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         // If all delegations are expired they have no voting weight.
         // This differs from veANGLE, which returns the locked ANGLE amount if it has not yet been withdrawn.
         delegatedWeight = VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp;
-        // delegatedWeight = expirationAdjustedAngle + (VOTE_WEIGHT_MULTIPLIER * biasAtTimestamp);
     }
 
     /// @notice Calculates ```account```'s voting weight.
