@@ -8,10 +8,8 @@ import { Governor } from "oz/governance/Governor.sol";
 import { GovernorPreventLateQuorum } from "oz/governance/extensions/GovernorPreventLateQuorum.sol";
 import { GovernorVotesQuorumFraction, GovernorVotes } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
 import { GovernorSettings } from "oz/governance/extensions/GovernorSettings.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
 import { IERC5805 } from "oz/interfaces/IERC5805.sol";
 
-import { GovernorToken } from "./external/GovernorToken.sol";
 import { GovernorCountingFractional } from "./external/GovernorCountingFractional.sol";
 import { GovernorShortCircuit } from "./external/GovernorShortCircuit.sol";
 
@@ -20,15 +18,14 @@ import "./utils/Errors.sol";
 /// @title AngleGovernor
 /// @author Angle Labs, Inc
 /// @dev Core of Angle governance system, extending various OpenZeppelin modules
-/// @dev This contract overrides some OpenZeppelin function, like those in `GovernorSettings` to introduce
-/// the `onlyExecutor` modifier which ensures that only the Timelock contract can update the system's parameters
+/// @dev This contract overrides some OpenZeppelin functions, like those in `GovernorSettings` to introduce
+/// the `onlyGovernance` modifier which ensures that only the Timelock contract can update the system's parameters
 /// @dev The time parameters (`votingDelay`, `votingPeriod`, ...) are expressed here in timestamp units, but the
-/// also has a `votingDelayBlocks` parameters which must be set in accordance to the `votingDelay`
-/// @dev The `state` and `propose` functions here were forked from FRAX governance implementation
+/// contract also has a `votingDelayBlocks` parameter which must be set in accordance to the `votingDelay` that is
+/// used when computing quorums and whether proposals can be shortcircuited
 /// @custom:security-contact contact@angle.money
 contract AngleGovernor is
     GovernorSettings,
-    GovernorToken,
     GovernorPreventLateQuorum,
     GovernorCountingFractional,
     GovernorVotesQuorumFraction,
@@ -38,24 +35,16 @@ contract AngleGovernor is
                                                         EVENTS                                                      
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    event TimelockChange(address oldTimelock, address newTimelock);
+    event TimelockChange(address indexed oldTimelock, address indexed newTimelock);
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                        VARIABLES                                                    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Timelock address that owns this contract and can change the system's parameters
-    TimelockController public timelock;
-
-    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                       MODIFIER                                                     
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Checks whether the sender is the system's executor
-    modifier onlyExecutor() {
-        if (msg.sender != _executor()) revert NotExecutor();
-        _;
-    }
+    address public timelock;
+    /// @notice Address where veANGLE holders can delegate their vote
+    IERC5805 public veANGLEVotingDelegation;
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                       CONSTRUCTOR                                                   
@@ -63,7 +52,7 @@ contract AngleGovernor is
 
     constructor(
         IVotes _token,
-        TimelockController timelockAddress,
+        address timelockAddress,
         uint48 initialVotingDelay,
         uint32 initialVotingPeriod,
         uint256 initialProposalThreshold,
@@ -73,7 +62,6 @@ contract AngleGovernor is
         uint256 initialVotingDelayBlocks
     )
         Governor("AngleGovernor")
-        GovernorToken(_token)
         GovernorSettings(initialVotingDelay, initialVotingPeriod, initialProposalThreshold)
         GovernorPreventLateQuorum(initialVoteExtension)
         GovernorVotes(_token)
@@ -81,84 +69,29 @@ contract AngleGovernor is
         GovernorShortCircuit(initialShortCircuitNumerator, initialVotingDelayBlocks)
     {
         _updateTimelock(timelockAddress);
+        veANGLEVotingDelegation = IERC5805(address(_token));
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                    VIEW FUNCTIONS                                                  
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
-    function _executor() internal view override(Governor) returns (address) {
-        return address(timelock);
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                        SETTERS                                                     
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Public endpoint to update the underlying timelock instance. Restricted to the timelock itself,
-    /// so updates must be proposed, scheduled, and executed through governance proposals.
-    /// @dev It is not recommended to change the timelock while there are other queued governance proposals.
-    function updateTimelock(TimelockController newTimelock) external virtual onlyExecutor {
-        _updateTimelock(newTimelock);
-    }
-
-    /// @inheritdoc GovernorSettings
-    function setVotingDelay(uint48 newVotingDelay) public override onlyExecutor {
-        _setVotingDelay(newVotingDelay);
-    }
-
-    /// @inheritdoc GovernorSettings
-    function setVotingPeriod(uint32 newVotingPeriod) public override onlyExecutor {
-        _setVotingPeriod(newVotingPeriod);
-    }
-
-    /// @inheritdoc GovernorSettings
-    function setProposalThreshold(uint256 newProposalThreshold) public override onlyExecutor {
-        _setProposalThreshold(newProposalThreshold);
-    }
-
-    /// @param veANGLEVotingDelegation New IERC5805 veANGLEVotingDelegation contract address
-    function setVeANGLEVotingDelegation(address veANGLEVotingDelegation) external onlyExecutor {
-        _setVeANGLEVotingDelegation(veANGLEVotingDelegation);
-    }
-
-    /// @inheritdoc GovernorVotesQuorumFraction
-    function updateQuorumNumerator(uint256 newQuorumNumerator) external override onlyExecutor {
-        _updateQuorumNumerator(newQuorumNumerator);
-    }
-
-    /// @param newShortCircuitNumerator Number expressed as x/100 (percentage)
-    function updateShortCircuitNumerator(uint256 newShortCircuitNumerator) external onlyExecutor {
-        _updateShortCircuitNumerator(newShortCircuitNumerator);
-    }
-
-    /// @notice Changes the amount of blocks before the voting snapshot
-    function setVotingDelayBlocks(uint256 newVotingDelayBlocks) external onlyExecutor {
-        _setVotingDelayBlocks(newVotingDelayBlocks);
-    }
-
-    /// @inheritdoc GovernorPreventLateQuorum
-    function setLateQuorumVoteExtension(
-        uint48 newVoteExtension
-    ) public override(GovernorPreventLateQuorum) onlyExecutor {
-        _setLateQuorumVoteExtension(newVoteExtension);
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                       OVERRIDES                                                    
+                                                  EXTERNAL OVERRIDES                                                
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc Governor
     // solhint-disable-next-line
-    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
-    function state(uint256 proposalId) public view override returns (ProposalState) {
-        ProposalState classicProposalState = Governor.state(proposalId);
-
+    /// @notice Base implementation taken from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
+    /// @dev In this governor implementation, the owner of the contract is a Timelock contract. Yet not all proposals
+    /// have to go through the Timelock contract, and so proposals may appear as executed when in fact they are
+    /// queued in a timelock
+    function state(uint256 proposalId) public view override(Governor) returns (ProposalState) {
+        ProposalState currentState = super.state(proposalId);
         if (
-            classicProposalState == ProposalState.Executed ||
-            classicProposalState == ProposalState.Canceled ||
-            classicProposalState == ProposalState.Pending
-        ) return classicProposalState;
+            currentState == ProposalState.Executed ||
+            currentState == ProposalState.Canceled ||
+            currentState == ProposalState.Pending
+        ) return currentState;
+
+        uint256 snapshot = proposalSnapshot(proposalId);
+        if ($snapshotTimestampToSnapshotBlockNumber[snapshot] >= block.number) return ProposalState.Pending;
 
         // Allow early execution when overwhelming majority
         (bool isShortCircuitFor, bool isShortCircuitAgainst) = _shortCircuit(proposalId);
@@ -166,7 +99,7 @@ contract AngleGovernor is
             return ProposalState.Succeeded;
         } else if (isShortCircuitAgainst) {
             return ProposalState.Defeated;
-        } else return classicProposalState;
+        } else return currentState;
     }
 
     /// @inheritdoc GovernorVotesQuorumFraction
@@ -189,39 +122,40 @@ contract AngleGovernor is
     }
 
     /// @inheritdoc GovernorSettings
-    function votingDelay() public view override(Governor, GovernorSettings) returns (uint256) {
-        return GovernorSettings.votingDelay();
-    }
-
-    /// @inheritdoc GovernorSettings
-    function votingPeriod() public view override(Governor, GovernorSettings) returns (uint256) {
-        return GovernorSettings.votingPeriod();
-    }
-
-    /// @inheritdoc GovernorSettings
     function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
         return GovernorSettings.proposalThreshold();
     }
 
     /// @inheritdoc GovernorVotes
-    function token() public view override(GovernorToken, GovernorVotes) returns (IERC5805) {
-        return GovernorToken.token();
+    function token() public view override(GovernorVotes) returns (IERC5805) {
+        return veANGLEVotingDelegation;
+    }
+
+    /// @inheritdoc GovernorVotes
+    // solhint-disable-next-line
+    function CLOCK_MODE() public pure override(GovernorVotes, Governor) returns (string memory) {
+        return "mode=timestamp";
+    }
+
+    /// @inheritdoc GovernorVotes
+    function clock() public view override(GovernorVotes, Governor) returns (uint48) {
+        return uint48(block.timestamp);
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                       INTERNALS                                                    
+                                                  INTERNAL OVERRIDES                                                
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc Governor
     // solhint-disable-next-line
-    /// @notice Fork from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
+    /// @notice Base implementation taken from Frax Finance: https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorAlpha.sol
     function _propose(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description,
         address proposer
-    ) internal override returns (uint256 proposalId) {
+    ) internal override(Governor) returns (uint256 proposalId) {
         proposalId = super._propose(targets, values, calldatas, description, proposer);
 
         // cf Frax Finance contracts
@@ -244,8 +178,30 @@ contract AngleGovernor is
         return GovernorPreventLateQuorum._castVote(proposalId, account, support, reason, params);
     }
 
-    function _updateTimelock(TimelockController newTimelock) private {
-        emit TimelockChange(address(timelock), address(newTimelock));
+    /// @inheritdoc Governor
+    function _executor() internal view override(Governor) returns (address) {
+        return address(timelock);
+    }
+
+    /// @inheritdoc Governor
+    function _checkGovernance() internal view override(Governor) {
+        if (msg.sender != _executor()) revert NotExecutor();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                        SETTER                                                      
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Public endpoint to update the underlying timelock instance. Restricted to the timelock itself,
+    /// so updates must be proposed, scheduled, and executed through governance proposals.
+    /// @dev It is not recommended to change the timelock while there are other queued governance proposals.
+    function updateTimelock(address newTimelock) external virtual onlyGovernance {
+        _updateTimelock(newTimelock);
+    }
+
+    function _updateTimelock(address newTimelock) internal {
+        if (newTimelock == address(0)) revert ZeroAddress();
+        emit TimelockChange(timelock, newTimelock);
         timelock = newTimelock;
     }
 }

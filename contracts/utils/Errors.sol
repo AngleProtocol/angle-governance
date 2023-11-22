@@ -16,3 +16,4 @@ error OmnichainProposalSenderInvalidEndpoint();
 error OmnichainProposalSenderInvalidExecParams();
 error OmnichainProposalSenderNoStoredPayload();
 error ShortCircuitNumeratorGreaterThanQuorumDenominator();
+error ZeroAddress();

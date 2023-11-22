@@ -12,10 +12,10 @@ import "../utils/Errors.sol";
 
 /// @title GovernorShortCircuit
 /// @notice Extends governor to pass propositions if the quorum is reached before the end of the voting period
-/// @author Angle Labs, Inc
 /// @author Jon Walch (Frax Finance) https://github.com/jonwalch
 //solhint-disable-next-line
-/// @notice https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/veANGLEVotingDelegation.sol
+/// @notice Taken from:
+/// https://github.com/FraxFinance/frax-governance/blob/e465513ac282aa7bfd6744b3136354fae51fed3c/src/FraxGovernorBase.sol
 abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractional, GovernorVotesQuorumFraction {
     using SafeCast for *;
     using Checkpoints for Checkpoints.Trace224;
@@ -99,6 +99,20 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
         shortCircuitThresholdAtTimepoint =
             (token().getPastTotalSupply(snapshotBlockNumber) * shortCircuitNumerator(timepoint)) /
             quorumDenominator();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                        SETTERS                                                     
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+    /// @param newShortCircuitNumerator Number expressed as x/100 (percentage)
+    function updateShortCircuitNumerator(uint256 newShortCircuitNumerator) external onlyGovernance {
+        _updateShortCircuitNumerator(newShortCircuitNumerator);
+    }
+
+    /// @notice Changes the amount of blocks before the voting snapshot
+    function setVotingDelayBlocks(uint256 newVotingDelayBlocks) external onlyGovernance {
+        _setVotingDelayBlocks(newVotingDelayBlocks);
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////

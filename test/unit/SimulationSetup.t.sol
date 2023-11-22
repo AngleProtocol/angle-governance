@@ -70,7 +70,7 @@ contract SimulationSetup is Test {
                 _timelocks[chainIds[i]] = new TimelockController(1 days, proposers, executors, address(this));
                 _governor = new AngleGovernor(
                     veANGLEDelegation,
-                    _timelocks[chainIds[i]],
+                    address(_timelocks[chainIds[i]]),
                     initialVotingDelay,
                     initialVotingPeriod,
                     initialProposalThreshold,
