@@ -131,6 +131,17 @@ contract AngleGovernor is
         return veANGLEVotingDelegation;
     }
 
+    /// @inheritdoc GovernorVotes
+    // solhint-disable-next-line
+    function CLOCK_MODE() public pure override(GovernorVotes, Governor) returns (string memory) {
+        return "mode=timestamp";
+    }
+
+    /// @inheritdoc GovernorVotes
+    function clock() public view override(GovernorVotes, Governor) returns (uint48) {
+        return uint48(block.timestamp);
+    }
+
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                   INTERNAL OVERRIDES                                                
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
