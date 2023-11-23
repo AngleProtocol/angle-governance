@@ -180,7 +180,7 @@ contract AngleGovernor is
 
     /// @inheritdoc Governor
     function _executor() internal view override(Governor) returns (address) {
-        return address(timelock);
+        return timelock;
     }
 
     /// @inheritdoc Governor

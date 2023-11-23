@@ -52,7 +52,7 @@ contract GovernorShortCircuitTest is Test, Utils {
         mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
         angleGovernor = new AngleGovernor(
             veANGLEDelegation,
-            mainnetTimelock,
+            address(mainnetTimelock),
             initialVotingDelay,
             initialVotingPeriod,
             initialProposalThreshold,
