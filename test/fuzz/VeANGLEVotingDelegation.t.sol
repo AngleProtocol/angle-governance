@@ -103,7 +103,6 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         receiver = angleGovernor;
         mainnetTimelock.grantRole(mainnetTimelock.PROPOSER_ROLE(), address(angleGovernor));
         mainnetTimelock.grantRole(mainnetTimelock.CANCELLER_ROLE(), mainnetMultisig);
-        // mainnetTimelock.renounceRole(mainnetTimelock.TIMELOCK_ADMIN_ROLE(), address(this));
         proposalSender = new ProposalSender(mainnetLzEndpoint);
         proposalSender.transferOwnership(address(angleGovernor));
     }
