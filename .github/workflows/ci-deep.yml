@@ -169,7 +169,7 @@ jobs:
         
       - name: Install viper
         shell: bash
-        run: pip install vyper
+        run: pip install vyper==0.3.0
      
 
       - name: Install Foundry
