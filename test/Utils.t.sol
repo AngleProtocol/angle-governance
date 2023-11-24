@@ -32,4 +32,15 @@ contract Utils is Test {
         stdstore.target(address(governor)).sig("timelock()").checked_write(address(governor));
         governor.execute(targets, values, calldatas, keccak256(bytes(description)));
     }
+
+    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+    }
+
+    function mineBlocksBySecond(uint256 secondsElapsed) public {
+        uint256 timeElapsed = secondsElapsed;
+        uint256 blocksElapsed = secondsElapsed / 12;
+        vm.warp(block.timestamp + timeElapsed);
+        vm.roll(block.number + blocksElapsed);
+    }
 }

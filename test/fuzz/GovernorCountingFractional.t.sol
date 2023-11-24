@@ -162,7 +162,7 @@ contract GovernorCountingFractionalTest is Test {
         }
     }
 
-    function _supplyInverseQuorum(uint256 quorum) internal returns (uint256) {
+    function _supplyInverseQuorum(uint256 quorum) internal view returns (uint256) {
         return (governor.quorumDenominator() * quorum) / governor.quorumNumerator(block.timestamp);
     }
 
@@ -578,7 +578,7 @@ contract GovernorCountingFractionalTest is Test {
     }
 
     function testFuzz_UsersCannotVoteWithZeroWeight(address _voterAddr) public {
-        _assumeAndLabelFuzzedVoter(_voterAddr);
+        _voterAddr = _assumeAndLabelFuzzedVoter(_voterAddr);
 
         // They must have no weight at the time of the proposal snapshot.
         vm.mockCall(address(token), abi.encodeWithSelector(token.getVotes.selector, _voterAddr), abi.encode(0));
@@ -605,6 +605,30 @@ contract GovernorCountingFractionalTest is Test {
             uint8(GovernorCountingSimple.VoteType.For),
             "I'm so bad",
             abi.encodePacked(type(uint128).max, type(uint128).max, type(uint128).max)
+        );
+    }
+
+    function testFuzz_RevertWhen_UsersInvalidVote(address _voterAddr) public {
+        _voterAddr = _assumeAndLabelFuzzedVoter(_voterAddr);
+
+        // They must have weight at the time of the proposal snapshot.
+        vm.mockCall(address(token), abi.encodeWithSelector(token.getVotes.selector, _voterAddr), abi.encode(100e18));
+        vm.mockCall(
+            address(token),
+            abi.encodeWithSelector(token.getPastVotes.selector, _voterAddr),
+            abi.encode(100e18)
+        );
+
+        uint256 _proposalId = _createAndSubmitProposal();
+
+        // Attempt to cast nominal votes.
+        vm.prank(_voterAddr);
+        vm.expectRevert(Errors.GovernorCountingFractionalInvalidSupportValueNotVoteType.selector);
+        governor.castVoteWithReasonAndParams(
+            _proposalId,
+            3,
+            "I hope no one catches me doing this!",
+            new bytes(0) // No data, this is a nominal vote.
         );
     }
 
