@@ -48,7 +48,7 @@ contract Fixture is Test {
         dylan = vm.addr(4);
         sweeper = address(uint160(uint256(keccak256(abi.encodePacked("sweeper")))));
 
-        vm.label(governor, "Governor");
+        vm.label(mainnetMultisig, "mainnetMultisig");
         vm.label(alice, "Alice");
         vm.label(bob, "Bob");
         vm.label(charlie, "Charlie");
@@ -62,8 +62,8 @@ contract Fixture is Test {
         vyperDeployer = new VyperDeployer();
         (address _mockANGLE, , ) = deployMockANGLE();
         ANGLE = ERC20(_mockANGLE);
-        deal(address(ANGLE), governor, GOVERNOR_INIT_BALANCE);
-        (address _mockVeANGLE, , ) = deployVeANGLE(vyperDeployer, _mockANGLE, governor);
+        deal(address(ANGLE), mainnetMultisig, GOVERNOR_INIT_BALANCE);
+        (address _mockVeANGLE, , ) = deployVeANGLE(vyperDeployer, _mockANGLE, mainnetMultisig);
         veANGLE = IveANGLE(_mockVeANGLE);
         _setupDealAndLockANGLE(alice, 1_000_000 * 1e18, 365 days);
         _setupDealAndLockANGLE(bob, 333_000 * 1e18, 4 * 365 days);
@@ -120,7 +120,7 @@ contract Fixture is Test {
     }
 
     function dealCreateLockANGLE(address account, uint256 amount) public {
-        hoax(governor);
+        hoax(mainnetMultisig);
         ANGLE.transfer(account, amount);
 
         vm.startPrank(account, account);

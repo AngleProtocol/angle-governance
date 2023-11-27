@@ -391,4 +391,28 @@ contract SimulationSetup is Test {
             }
         }
     }
+
+    /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                        HELPERS                                                     
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+    function _dummyProposal(uint256 chainId, SubCall[] memory p, string memory description) public {
+        vm.selectFork(forkIdentifier[chainId]);
+
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = wrap(p);
+
+        hoax(whale);
+        uint256 proposalId = governor().propose(targets, values, calldatas, description);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+
+        hoax(whale);
+        governor().castVote(proposalId, 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
+
+        governor().state(proposalId);
+
+        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
+        vm.warp(block.timestamp + timelock(chainId).getMinDelay() + 1);
+    }
 }

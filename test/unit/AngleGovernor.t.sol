@@ -78,6 +78,7 @@ contract AngleGovernorTest is Test, Utils {
         assertEq(address(angleGovernor.token()), address(veANGLEDelegation));
         assertEq(angleGovernor.CLOCK_MODE(), "mode=timestamp");
         assertEq(angleGovernor.COUNTING_MODE(), "support=bravo&quorum=for,abstain&params=fractional");
+        assertEq(angleGovernor.CLOCK_MODE(), VeANGLEVotingDelegation(address(veANGLEDelegation)).CLOCK_MODE());
     }
 
     function test_RevertWhen_NotExecutor() public {
@@ -186,5 +187,6 @@ contract AngleGovernorTest is Test, Utils {
 
     function test_Clock() public {
         assertEq(angleGovernor.clock(), block.timestamp);
+        assertEq(angleGovernor.clock(), VeANGLEVotingDelegation(address(veANGLEDelegation)).clock());
     }
 }
