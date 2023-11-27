@@ -68,6 +68,9 @@ contract ProposalSenderTest is SimulationSetup {
         string memory description = "Updating Angle Governor";
 
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = wrap(p);
+        targets[0] = address(proposalSender());
+        values[0] = 0;
+        calldatas[0] = abi.encodeWithSelector(proposalSender().transferOwnership.selector, address(governor2));
 
         hoax(whale);
         uint256 proposalId = governor().propose(targets, values, calldatas, description);
@@ -80,26 +83,29 @@ contract ProposalSenderTest is SimulationSetup {
 
         governor().state(proposalId);
 
+        assertEq(_proposalSender.owner(), address(governor()));
         governor().execute(targets, values, calldatas, keccak256(bytes(description)));
         vm.warp(block.timestamp + timelock(1).getMinDelay() + 1);
-
-        assertEq(_proposalSender.owner(), address(governor()));
-        (targets, values, calldatas) = filterChainSubCalls(1, p);
-        timelock(1).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
         assertEq(_proposalSender.owner(), address(governor2));
 
         // reset back to the old governor
-        p[0].data = abi.encodeWithSelector(
-            governor().relay.selector,
-            proposalSender(),
-            0,
-            abi.encodeWithSelector(proposalSender().transferOwnership.selector, address(governor()))
-        );
+        calldatas[0] = abi.encodeWithSelector(proposalSender().transferOwnership.selector, address(governor()));
         // Then let's try to pass a proposal with the old timelock/governor
-        _dummyProposal(1, p, description);
-        (targets, values, calldatas) = filterChainSubCalls(1, p);
+        vm.selectFork(forkIdentifier[1]);
+
+        hoax(whale);
+        proposalId = governor().propose(targets, values, calldatas, description);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+
+        hoax(whale);
+        governor().castVote(proposalId, 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
+
+        governor().state(proposalId);
+
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, governor()));
-        timelock(1).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
 
         // Set in current contract storage the governor and timelock
         AngleGovernor realGovernor = governor();
@@ -108,10 +114,19 @@ contract ProposalSenderTest is SimulationSetup {
         _timelocks[1] = timelock2;
 
         // Pass a proposal with the new timelock/governor
-        p[0].target = address(governor());
-        _dummyProposal(1, p, description);
-        (targets, values, calldatas) = filterChainSubCalls(1, p);
-        timelock(1).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+        vm.selectFork(forkIdentifier[1]);
+
+        hoax(whale);
+        proposalId = governor().propose(targets, values, calldatas, description);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+
+        hoax(whale);
+        governor().castVote(proposalId, 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
+
+        governor().state(proposalId);
+        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
 
         // reset the storage for other test
         _governor = realGovernor;
