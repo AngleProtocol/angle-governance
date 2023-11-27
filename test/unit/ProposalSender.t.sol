@@ -57,6 +57,7 @@ contract ProposalSenderTest is SimulationSetup {
             chainId: 1,
             target: address(governor()),
             value: 0,
+            // not direct way to call this function, but just to use the utils functions
             data: abi.encodeWithSelector(
                 governor().relay.selector,
                 proposalSender(),
