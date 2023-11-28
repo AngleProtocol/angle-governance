@@ -28,7 +28,7 @@ contract ProposalSenderTest is SimulationSetup {
     address public alice = vm.addr(1);
     address public bob = vm.addr(2);
 
-    function test_MainnetChangeAngleRelayerReceiver() public {
+    function test_SetRelayerReceiver() public {
         vm.selectFork(forkIdentifier[10]);
         ProposalReceiver newReceiverOptimism = new ProposalReceiver(address(lzEndPoint(10)));
         newReceiverOptimism.setTrustedRemoteAddress(getLZChainId(1), abi.encodePacked(proposalSender()));
@@ -105,6 +105,318 @@ contract ProposalSenderTest is SimulationSetup {
             vm.selectFork(forkIdentifier[10]);
             assertEq(timelock(10).getMinDelay() == 100, true);
         }
+    }
+
+    function test_SetRelayerSenderConfig() public {
+        vm.selectFork(forkIdentifier[1]);
+
+        uint64 defaultBlockConfirmation = 0;
+
+        /** Can be modified  */
+        uint16 version = 2;
+        uint16 chainId = 1;
+        uint16 configType = 2;
+        uint64 blockConfirmation = 365;
+        /** Stop  */
+
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(proposalSender());
+        values[0] = 0;
+        calldatas[0] = abi.encodeWithSelector(
+            proposalSender().setConfig.selector,
+            version,
+            chainId,
+            configType,
+            abi.encode(blockConfirmation)
+        );
+        string memory description = "Updating config on Mainnet";
+
+        assertEq(proposalSender().getConfig(version, chainId, configType), abi.encode(defaultBlockConfirmation));
+        _shortcutProposal(1, description, targets, values, calldatas);
+        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
+        assertEq(proposalSender().getConfig(version, chainId, configType), abi.encode(blockConfirmation));
+    }
+
+    function test_SetRelayerSenderSendVersion() public {
+        vm.selectFork(forkIdentifier[1]);
+
+        uint64 defaultVersion = 2;
+
+        /** Can be modified  */
+        uint16 version = 1;
+        /** Stop  */
+
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(proposalSender());
+        values[0] = 0;
+        calldatas[0] = abi.encodeWithSelector(proposalSender().setSendVersion.selector, version);
+        string memory description = "Updating sendVersion on Mainnet";
+
+        _shortcutProposal(1, description, targets, values, calldatas);
+        assertEq(lzEndPoint(1).getSendVersion(address(proposalSender())), defaultVersion);
+        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
+        assertEq(lzEndPoint(1).getSendVersion(address(proposalSender())), 1);
+    }
+
+    function test_RevertWhen_lzEndpointFail() public {
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: 137,
+            target: address(timelock(137)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(137).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 1);
+        bytes
+            memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
+        (uint nativeFee, uint zroFee) = proposalSender().estimateFees(getLZChainId(137), payload, adapterParams);
+        assertEq(zroFee, 0);
+        assertGt(nativeFee, 0);
+        assertLe(nativeFee, 0.1 ether);
+        bytes memory execution = abi.encode(getLZChainId(137), payload, adapterParams, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(1), keccak256(execution));
+    }
+
+    function test_RevertWhen_NoFailTx() public {
+        uint64 nonce = 0;
+        vm.expectRevert(abi.encodeWithSelector(Errors.OmnichainProposalSenderNoStoredPayload.selector));
+        proposalSender().retryExecute(nonce, getLZChainId(137), hex"", hex"", 1);
+    }
+
+    function test_RevertWhen_RetryExecuteWrongParams() public {
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: 137,
+            target: address(timelock(137)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(137).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        vm.expectRevert(abi.encodeWithSelector(Errors.OmnichainProposalSenderInvalidExecParams.selector));
+        proposalSender().retryExecute(1, getLZChainId(137), hex"", hex"", 1);
+    }
+
+    function test_RetryExecuteSimple() public {
+        uint256 destChain = 137;
+
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        bytes
+            memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
+        (uint256 nativeFee, ) = proposalSender().estimateFees(getLZChainId(137), payload, adapterParams);
+        assertLe(nativeFee, 0.1 ether);
+        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        vm.clearMockedCalls();
+        // We need to execute with an address to get the eth refund
+        vm.startPrank(alice);
+        proposalSender().retryExecute(1, getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+
+        vm.selectFork(forkIdentifier[destChain]);
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload
+        );
+
+        vm.selectFork(forkIdentifier[destChain]);
+        vm.warp(block.timestamp + timelock(destChain).getMinDelay() + 1);
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+            destChain,
+            p
+        );
+        assertEq(timelock(destChain).getMinDelay() != 100, true);
+        timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+        assertEq(timelock(destChain).getMinDelay() == 100, true);
+    }
+
+    function test_RetryExecuteMulti() public {
+        uint256 destChain = 137;
+
+        SubCall[] memory p1 = new SubCall[](1);
+        p1[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        bytes
+            memory payload1 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams1 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p1, description, 0.1 ether, hex"");
+
+        SubCall[] memory p2 = new SubCall[](1);
+        p2[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(
+                timelock(destChain).grantRole.selector,
+                timelock(1).PROPOSER_ROLE(),
+                address(alice)
+            )
+        });
+        description = "Grant role on Optimism";
+        bytes
+            memory payload2 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000014401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001518000000000000000000000000000000000000000000000000000000000000000442f2ff15db09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc10000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams2 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p2, description, 0.1 ether, hex"");
+
+        vm.clearMockedCalls();
+        // We need to execute with an address to get the eth refund
+        vm.prank(alice);
+        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
+
+        vm.prank(alice);
+        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+
+        vm.selectFork(forkIdentifier[destChain]);
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload1
+        );
+
+        uint256 oldDelay = timelock(destChain).getMinDelay();
+        vm.selectFork(forkIdentifier[destChain]);
+        vm.warp(block.timestamp + oldDelay + 1);
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p1
+            );
+            assertEq(timelock(destChain).getMinDelay() != 100, true);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).getMinDelay() == 100, true);
+        }
+
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload2
+        );
+        vm.warp(block.timestamp + oldDelay + 1);
+
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p2
+            );
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), false);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), true);
+        }
+    }
+
+    function test_RetryExecuteBatch() public {
+        uint256 destChain = 137;
+
+        SubCall[] memory p = new SubCall[](2);
+        p[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        p[1] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(
+                timelock(destChain).grantRole.selector,
+                timelock(1).PROPOSER_ROLE(),
+                address(alice)
+            )
+        });
+        string memory description = "Batch delay and grantRole on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        bytes
+            memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000002c48f2a0bb000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000000002000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000442f2ff15db09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc10000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        vm.clearMockedCalls();
+        // We need to execute with an address to get the eth refund
+        vm.startPrank(alice);
+        proposalSender().retryExecute(1, getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+
+        vm.selectFork(forkIdentifier[destChain]);
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload
+        );
+
+        vm.selectFork(forkIdentifier[destChain]);
+        vm.warp(block.timestamp + timelock(destChain).getMinDelay() + 1);
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+            destChain,
+            p
+        );
+        assertEq(timelock(destChain).getMinDelay() != 100, true);
+        timelock(destChain).executeBatch(targets, values, calldatas, bytes32(0), 0);
+        assertEq(timelock(destChain).getMinDelay() == 100, true);
     }
 
     function test_MainnetChangeAngleGovernorAndTimelock() public {
