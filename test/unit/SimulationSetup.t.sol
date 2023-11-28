@@ -415,4 +415,25 @@ contract SimulationSetup is Test {
         governor().execute(targets, values, calldatas, keccak256(bytes(description)));
         vm.warp(block.timestamp + timelock(chainId).getMinDelay() + 1);
     }
+
+    function _shortcutProposal(
+        uint256 chainId,
+        string memory description,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas
+    ) public {
+        vm.selectFork(forkIdentifier[chainId]);
+
+        hoax(whale);
+        uint256 proposalId = governor().propose(targets, values, calldatas, description);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+
+        hoax(whale);
+        governor().castVote(proposalId, 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
+
+        governor().state(proposalId);
+    }
 }
