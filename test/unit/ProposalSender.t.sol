@@ -18,6 +18,7 @@ import { ProposalSender, Ownable } from "contracts/ProposalSender.sol";
 import { SubCall } from "./Proposal.sol";
 import { SimulationSetup } from "./SimulationSetup.t.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
+import "contracts/utils/Errors.sol" as Errors;
 import "../Constants.t.sol";
 
 //solhint-disable
@@ -26,6 +27,85 @@ contract ProposalSenderTest is SimulationSetup {
 
     address public alice = vm.addr(1);
     address public bob = vm.addr(2);
+
+    function test_MainnetChangeAngleRelayerReceiver() public {
+        vm.selectFork(forkIdentifier[10]);
+        ProposalReceiver newReceiverOptimism = new ProposalReceiver(address(lzEndPoint(10)));
+        newReceiverOptimism.setTrustedRemoteAddress(getLZChainId(1), abi.encodePacked(proposalSender()));
+        newReceiverOptimism.transferOwnership(address(timelock(10)));
+
+        {
+            SubCall[] memory p = new SubCall[](2);
+            p[0] = SubCall({
+                chainId: 10,
+                target: address(timelock(10)),
+                value: 0,
+                data: abi.encodeWithSelector(
+                    timelock(10).grantRole.selector,
+                    timelock(10).PROPOSER_ROLE(),
+                    address(newReceiverOptimism)
+                )
+            });
+            p[1] = SubCall({
+                chainId: 10,
+                target: address(timelock(10)),
+                value: 0,
+                data: abi.encodeWithSelector(
+                    timelock(10).revokeRole.selector,
+                    timelock(10).PROPOSER_ROLE(),
+                    address(proposalReceiver(10))
+                )
+            });
+            string memory description = "Updating relayer receiver on Optimism";
+            _crossChainProposal(10, p, description, 0.1 ether, hex"");
+        }
+
+        vm.selectFork(forkIdentifier[1]);
+
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(proposalSender());
+        values[0] = 0;
+        calldatas[0] = abi.encodeWithSelector(
+            proposalSender().setTrustedRemoteAddress.selector,
+            getLZChainId(10),
+            abi.encodePacked(address(newReceiverOptimism))
+        );
+
+        string memory description = "Updating trustedRemote relayer on Optimism";
+        _shortcutProposal(1, description, targets, values, calldatas);
+
+        vm.selectFork(forkIdentifier[1]);
+        assertEq(
+            proposalSender().trustedRemoteLookup(getLZChainId(10)),
+            abi.encodePacked(address(proposalReceiver(10)), address(proposalSender()))
+        );
+        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
+        assertEq(
+            proposalSender().trustedRemoteLookup(getLZChainId(10)),
+            abi.encodePacked(address(newReceiverOptimism), address(proposalSender()))
+        );
+
+        // now passing a tx on Optimism should go through the new receiver
+        _proposalReceivers[10] = newReceiverOptimism;
+        {
+            SubCall[] memory p = new SubCall[](1);
+            p[0] = SubCall({
+                chainId: 10,
+                target: address(timelock(10)),
+                value: 0,
+                data: abi.encodeWithSelector(timelock(10).updateDelay.selector, 100)
+            });
+            description = "Updating delay on Optimism";
+            vm.selectFork(forkIdentifier[10]);
+            assertEq(timelock(10).getMinDelay() != 100, true);
+
+            _crossChainProposal(10, p, description, 0.1 ether, hex"");
+            vm.selectFork(forkIdentifier[10]);
+            assertEq(timelock(10).getMinDelay() == 100, true);
+        }
+    }
 
     function test_MainnetChangeAngleGovernorAndTimelock() public {
         vm.selectFork(forkIdentifier[1]);

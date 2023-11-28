@@ -13,6 +13,7 @@ uint256 constant initialQuorumNumerator = 10;
 uint256 constant initialShortCircuitNumerator = 50;
 uint256 constant initialVotingDelayBlocks = 150;
 uint256 constant totalVotes = 1e25;
+bytes constant nullBytes = hex"";
 
 address constant whale = 0xD13F8C25CceD32cdfA79EB5eD654Ce3e484dCAF5;
 IVotes constant veANGLE = IVotes(0x0C462Dbb9EC8cD1630f1728B2CFD2769d09f0dd5);

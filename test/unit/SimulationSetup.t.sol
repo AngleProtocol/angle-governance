@@ -40,12 +40,14 @@ contract SimulationSetup is Test {
     IVotes public veANGLEDelegation;
 
     function setUp() public {
-        chainIds = new uint256[](2);
+        chainIds = new uint256[](3);
         chainIds[0] = 1;
         chainIds[1] = 137;
+        chainIds[2] = 10;
 
         mapChainIds[1] = "MAINNET";
         mapChainIds[137] = "POLYGON";
+        mapChainIds[10] = "OPTIMISM";
         // TODO Complete with all deployed chains
 
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
@@ -396,7 +398,63 @@ contract SimulationSetup is Test {
                                                         HELPERS                                                     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    function _dummyProposal(uint256 chainId, SubCall[] memory p, string memory description) public {
+    function _crossChainProposal(
+        uint256 chainId,
+        SubCall[] memory p,
+        string memory description,
+        uint256 valueEther,
+        bytes memory error
+    ) public {
+        vm.selectFork(forkIdentifier[1]);
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = wrap(p);
+
+        hoax(whale);
+        uint256 proposalId = governor().propose(targets, values, calldatas, description);
+        vm.warp(block.timestamp + governor().votingDelay() + 1);
+        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+
+        hoax(whale);
+        governor().castVote(proposalId, 1);
+        vm.warp(block.timestamp + governor().votingPeriod() + 1);
+
+        vm.recordLogs();
+        governor().execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description))); // TODO Optimize value
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        bytes memory payload;
+        for (uint256 i; i < entries.length; i++) {
+            if (
+                entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
+                entries[i].topics[1] == bytes32(uint256(getLZChainId(chainId)))
+            ) {
+                payload = abi.decode(entries[i].data, (bytes));
+                break;
+            }
+        }
+
+        vm.selectFork(forkIdentifier[chainId]);
+        hoax(address(lzEndPoint(chainId)));
+        proposalReceiver(chainId).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(chainId)),
+            0,
+            payload
+        );
+
+        vm.warp(block.timestamp + timelock(chainId).getMinDelay() + 1);
+        (targets, values, calldatas) = filterChainSubCalls(chainId, p);
+        if (keccak256(error) != keccak256(nullBytes)) vm.expectRevert(error);
+        if (targets.length == 1) timelock(chainId).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+        else timelock(chainId).executeBatch(targets, values, calldatas, bytes32(0), 0);
+    }
+
+    function _dummyProposal(
+        uint256 chainId,
+        SubCall[] memory p,
+        string memory description,
+        uint256 valueEther,
+        bytes memory error
+    ) public {
         vm.selectFork(forkIdentifier[chainId]);
 
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = wrap(p);
@@ -412,7 +470,8 @@ contract SimulationSetup is Test {
 
         governor().state(proposalId);
 
-        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
+        if (keccak256(error) != keccak256(nullBytes)) vm.expectRevert(error);
+        governor().execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description)));
         vm.warp(block.timestamp + timelock(chainId).getMinDelay() + 1);
     }
 
