@@ -249,6 +249,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.startPrank(alice);
         proposalSender().retryExecute(1, getLZChainId(destChain), payload, adapterParams, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+        vm.stopPrank();
 
         vm.selectFork(forkIdentifier[destChain]);
         hoax(address(lzEndPoint(destChain)));
@@ -675,6 +676,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.startPrank(alice);
         proposalSender().retryExecute(1, getLZChainId(destChain), payload, adapterParams, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+        vm.stopPrank();
 
         vm.selectFork(forkIdentifier[destChain]);
         hoax(address(lzEndPoint(destChain)));
