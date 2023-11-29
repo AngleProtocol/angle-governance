@@ -269,7 +269,191 @@ contract ProposalSenderTest is SimulationSetup {
         assertEq(timelock(destChain).getMinDelay() == 100, true);
     }
 
-    function test_RetryExecuteMulti() public {
+    function test_RetryExecuteMulti_OrderRetryOrderReceive() public {
+        uint256 destChain = 137;
+
+        SubCall[] memory p1 = new SubCall[](1);
+        p1[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        bytes
+            memory payload1 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams1 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p1, description, 0.1 ether, hex"");
+
+        SubCall[] memory p2 = new SubCall[](1);
+        p2[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(
+                timelock(destChain).grantRole.selector,
+                timelock(1).PROPOSER_ROLE(),
+                address(alice)
+            )
+        });
+        description = "Grant role on Optimism";
+        bytes
+            memory payload2 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000014401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001518000000000000000000000000000000000000000000000000000000000000000442f2ff15db09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc10000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams2 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p2, description, 0.1 ether, hex"");
+
+        vm.clearMockedCalls();
+        // We need to execute with an address to get the eth refund
+        vm.prank(alice);
+        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+
+        vm.prank(alice);
+        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
+
+        vm.selectFork(forkIdentifier[destChain]);
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload1
+        );
+
+        uint256 oldDelay = timelock(destChain).getMinDelay();
+        vm.selectFork(forkIdentifier[destChain]);
+        vm.warp(block.timestamp + oldDelay + 1);
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p1
+            );
+            assertEq(timelock(destChain).getMinDelay() != 100, true);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).getMinDelay() == 100, true);
+        }
+
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload2
+        );
+        vm.warp(block.timestamp + oldDelay + 1);
+
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p2
+            );
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), false);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), true);
+        }
+    }
+
+    function test_RetryExecuteMulti_OrderRetryInverseReceive() public {
+        uint256 destChain = 137;
+
+        SubCall[] memory p1 = new SubCall[](1);
+        p1[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        bytes
+            memory payload1 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams1 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p1, description, 0.1 ether, hex"");
+
+        SubCall[] memory p2 = new SubCall[](1);
+        p2[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(
+                timelock(destChain).grantRole.selector,
+                timelock(1).PROPOSER_ROLE(),
+                address(alice)
+            )
+        });
+        description = "Grant role on Optimism";
+        bytes
+            memory payload2 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000014401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001518000000000000000000000000000000000000000000000000000000000000000442f2ff15db09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc10000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams2 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p2, description, 0.1 ether, hex"");
+
+        vm.clearMockedCalls();
+        // We need to execute with an address to get the eth refund
+        vm.prank(alice);
+        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+
+        vm.prank(alice);
+        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
+
+        vm.selectFork(forkIdentifier[destChain]);
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload2
+        );
+
+        uint256 oldDelay = timelock(destChain).getMinDelay();
+        vm.selectFork(forkIdentifier[destChain]);
+        vm.warp(block.timestamp + oldDelay + 1);
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p2
+            );
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), false);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), true);
+        }
+
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload1
+        );
+        vm.warp(block.timestamp + oldDelay + 1);
+
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p1
+            );
+            assertEq(timelock(destChain).getMinDelay() != 100, true);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).getMinDelay() == 100, true);
+        }
+    }
+
+    function test_RetryExecuteMulti_InverseRetryOrderReceive() public {
         uint256 destChain = 137;
 
         SubCall[] memory p1 = new SubCall[](1);
@@ -358,6 +542,98 @@ contract ProposalSenderTest is SimulationSetup {
             assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), false);
             timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
             assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), true);
+        }
+    }
+
+    function test_RetryExecuteMulti_InverseRetryInverseReceive() public {
+        uint256 destChain = 137;
+
+        SubCall[] memory p1 = new SubCall[](1);
+        p1[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        vm.mockCallRevert(
+            address(lzEndPoint(1)),
+            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            abi.encode("REVERT")
+        );
+        bytes
+            memory payload1 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams1 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p1, description, 0.1 ether, hex"");
+
+        SubCall[] memory p2 = new SubCall[](1);
+        p2[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(
+                timelock(destChain).grantRole.selector,
+                timelock(1).PROPOSER_ROLE(),
+                address(alice)
+            )
+        });
+        description = "Grant role on Optimism";
+        bytes
+            memory payload2 = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000014401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001518000000000000000000000000000000000000000000000000000000000000000442f2ff15db09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc10000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams2 = abi.encodePacked(uint16(1), uint256(300000));
+        _dummyProposal(1, p2, description, 0.1 ether, hex"");
+
+        vm.clearMockedCalls();
+        // We need to execute with an address to get the eth refund
+        vm.prank(alice);
+        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
+
+        vm.prank(alice);
+        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
+
+        vm.selectFork(forkIdentifier[destChain]);
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload2
+        );
+
+        uint256 oldDelay = timelock(destChain).getMinDelay();
+        vm.selectFork(forkIdentifier[destChain]);
+        vm.warp(block.timestamp + oldDelay + 1);
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p2
+            );
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), false);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), true);
+        }
+
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload1
+        );
+        vm.warp(block.timestamp + oldDelay + 1);
+
+        {
+            (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+                destChain,
+                p1
+            );
+            assertEq(timelock(destChain).getMinDelay() != 100, true);
+            timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            assertEq(timelock(destChain).getMinDelay() == 100, true);
         }
     }
 
