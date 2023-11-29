@@ -23,7 +23,7 @@ import "contracts/utils/Errors.sol" as Errors;
 import "../Constants.t.sol";
 
 //solhint-disable
-contract ProposalSenderTest is SimulationSetup {
+contract ProposalLayerZeroRelayer is SimulationSetup {
     event ExecuteRemoteProposal(uint16 indexed remoteChainId, bytes payload);
 
     address public alice = vm.addr(1);
