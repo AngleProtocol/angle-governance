@@ -861,4 +861,226 @@ contract ProposalSenderTest is SimulationSetup {
         assertEq(timelock(137).hasRole(_timelocks[137].PROPOSER_ROLE(), address(proposalReceiver(137))), false);
         assertEq(timelock(137).hasRole(_timelocks[137].PROPOSER_ROLE(), address(proposalReceiver2)), true);
     }
+
+    function test_RevertWhen_ReceiverCallFail() public {
+        uint256 destChain = 137;
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+
+        vm.selectFork(forkIdentifier[destChain]);
+        bytes
+            memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
+        bytes memory execution = abi.encode(getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        vm.mockCallRevert(
+            address(timelock(destChain)),
+            abi.encodeWithSelector(timelock(destChain).schedule.selector),
+            abi.encode(TimelockController.TimelockUnexpectedOperationState.selector, hex"", hex"01")
+        );
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload
+        );
+        assertEq(
+            proposalReceiver(destChain).failedMessages(
+                getLZChainId(1),
+                abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+                0
+            ),
+            keccak256(payload)
+        );
+
+        vm.expectRevert(Errors.OmnichainGovernanceExecutorTxExecReverted.selector);
+        proposalReceiver(destChain).retryMessage(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload
+        );
+        vm.clearMockedCalls();
+
+        assertEq(timelock(destChain).getMinDelay() != 100, true);
+        proposalReceiver(destChain).retryMessage(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            0,
+            payload
+        );
+
+        vm.warp(block.timestamp + timelock(destChain).getMinDelay() + 1);
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+            destChain,
+            p
+        );
+        timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+        assertEq(timelock(destChain).getMinDelay() == 100, true);
+    }
+
+    function test_RevertWhen_Receiver2ndCallFail() public {
+        uint256 destChain = 137;
+
+        vm.selectFork(forkIdentifier[destChain]);
+        uint256 oldDelay = timelock(destChain).getMinDelay();
+
+        vm.selectFork(forkIdentifier[1]);
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 1371)
+        });
+        string memory description = "Updating delay on Optimism";
+        _crossChainProposal(destChain, p, description, 0.1 ether, hex"");
+        assertEq(timelock(destChain).getMinDelay() == 1371, true);
+
+        p[0].data = abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100);
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+
+        vm.selectFork(forkIdentifier[destChain]);
+        bytes
+            memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
+        bytes memory execution = abi.encode(getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        vm.mockCallRevert(
+            address(timelock(destChain)),
+            abi.encodeWithSelector(timelock(destChain).schedule.selector),
+            abi.encode(TimelockController.TimelockUnexpectedOperationState.selector, hex"", hex"01")
+        );
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            1,
+            payload
+        );
+        assertEq(
+            proposalReceiver(destChain).failedMessages(
+                getLZChainId(1),
+                abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+                1
+            ),
+            keccak256(payload)
+        );
+
+        vm.expectRevert(Errors.OmnichainGovernanceExecutorTxExecReverted.selector);
+        proposalReceiver(destChain).retryMessage(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            1,
+            payload
+        );
+        vm.clearMockedCalls();
+
+        assertEq(timelock(destChain).getMinDelay() != 100, true);
+        proposalReceiver(destChain).retryMessage(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            1,
+            payload
+        );
+
+        vm.warp(block.timestamp + oldDelay + 1);
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+            destChain,
+            p
+        );
+        timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+        assertEq(timelock(destChain).getMinDelay() == 100, true);
+    }
+
+    function test_RevertWhen_Receiver2ndCallTooSmallDelay() public {
+        uint256 destChain = 137;
+
+        vm.selectFork(forkIdentifier[destChain]);
+        uint256 oldDelay = timelock(destChain).getMinDelay();
+        uint256 newDelay = 1371;
+        newDelay = bound(newDelay, 1, oldDelay);
+
+        vm.selectFork(forkIdentifier[1]);
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, newDelay)
+        });
+        string memory description = "Updating delay on Optimism";
+        _crossChainProposal(destChain, p, description, 0.1 ether, hex"");
+        assertEq(timelock(destChain).getMinDelay() == newDelay, true);
+
+        p[0].data = abi.encodeWithSelector(timelock(destChain).updateDelay.selector, oldDelay);
+        vm.selectFork(forkIdentifier[1]);
+        // Making the call revert to force replay
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+
+        vm.selectFork(forkIdentifier[destChain]);
+        bytes
+            memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
+        bytes memory execution = abi.encode(getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        vm.mockCallRevert(
+            address(timelock(destChain)),
+            abi.encodeWithSelector(timelock(destChain).schedule.selector),
+            abi.encode(TimelockController.TimelockUnexpectedOperationState.selector, hex"", hex"01")
+        );
+        hoax(address(lzEndPoint(destChain)));
+        proposalReceiver(destChain).lzReceive(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            1,
+            payload
+        );
+        vm.clearMockedCalls();
+
+        assertEq(timelock(destChain).getMinDelay() != oldDelay, true);
+        proposalReceiver(destChain).retryMessage(
+            getLZChainId(1),
+            abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
+            1,
+            payload
+        );
+
+        vm.warp(block.timestamp + newDelay + 1);
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = filterChainSubCalls(
+            destChain,
+            p
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockController.TimelockUnexpectedOperationState.selector,
+                keccak256(
+                    abi.encode(
+                        address(timelock(destChain)),
+                        0,
+                        abi.encodeWithSelector(timelock(destChain).updateDelay.selector, oldDelay),
+                        bytes32(0),
+                        bytes32(0)
+                    )
+                ),
+                bytes32(1 << uint8(TimelockController.OperationState.Ready))
+            )
+        );
+        timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+    }
 }
