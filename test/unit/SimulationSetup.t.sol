@@ -403,46 +403,54 @@ contract SimulationSetup is Test {
         SubCall[] memory p,
         string memory description,
         uint256 valueEther,
-        bytes memory error
+        bytes memory error,
+        address addressExecutor
     ) public {
         vm.selectFork(forkIdentifier[1]);
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = wrap(p);
 
         hoax(whale);
-        uint256 proposalId = governor().propose(targets, values, calldatas, description);
-        vm.warp(block.timestamp + governor().votingDelay() + 1);
-        vm.roll(block.number + governor().$votingDelayBlocks() + 1);
+        {
+            uint256 proposalId = governor().propose(targets, values, calldatas, description);
+            vm.warp(block.timestamp + governor().votingDelay() + 1);
+            vm.roll(block.number + governor().$votingDelayBlocks() + 1);
 
-        hoax(whale);
-        governor().castVote(proposalId, 1);
-        vm.warp(block.timestamp + governor().votingPeriod() + 1);
+            hoax(whale);
+            governor().castVote(proposalId, 1);
+            vm.warp(block.timestamp + governor().votingPeriod() + 1);
+        }
 
         vm.recordLogs();
         governor().execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description))); // TODO Optimize value
 
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-        bytes memory payload;
-        for (uint256 i; i < entries.length; i++) {
-            if (
-                entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                entries[i].topics[1] == bytes32(uint256(getLZChainId(chainId)))
-            ) {
-                payload = abi.decode(entries[i].data, (bytes));
-                break;
+        {
+            bytes memory payload;
+            {
+                Vm.Log[] memory entries = vm.getRecordedLogs();
+                for (uint256 i; i < entries.length; i++) {
+                    if (
+                        entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
+                        entries[i].topics[1] == bytes32(uint256(getLZChainId(chainId)))
+                    ) {
+                        payload = abi.decode(entries[i].data, (bytes));
+                        break;
+                    }
+                }
             }
-        }
 
-        vm.selectFork(forkIdentifier[chainId]);
-        hoax(address(lzEndPoint(chainId)));
-        proposalReceiver(chainId).lzReceive(
-            getLZChainId(1),
-            abi.encodePacked(proposalSender(), proposalReceiver(chainId)),
-            0,
-            payload
-        );
+            vm.selectFork(forkIdentifier[chainId]);
+            hoax(address(lzEndPoint(chainId)));
+            proposalReceiver(chainId).lzReceive(
+                getLZChainId(1),
+                abi.encodePacked(proposalSender(), proposalReceiver(chainId)),
+                0,
+                payload
+            );
+        }
 
         vm.warp(block.timestamp + timelock(chainId).getMinDelay() + 1);
         (targets, values, calldatas) = filterChainSubCalls(chainId, p);
+        if (addressExecutor != address(0)) vm.prank(addressExecutor);
         if (keccak256(error) != keccak256(nullBytes)) vm.expectRevert(error);
         if (targets.length == 1) timelock(chainId).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
         else timelock(chainId).executeBatch(targets, values, calldatas, bytes32(0), 0);

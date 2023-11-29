@@ -5,6 +5,7 @@ pragma solidity ^0.8.9;
 import { IGovernor } from "oz/governance/IGovernor.sol";
 import { TimelockController } from "oz/governance/TimelockController.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
+import { IAccessControl } from "oz/access/IAccessControl.sol";
 import { Strings } from "oz/utils/Strings.sol";
 
 import { console } from "forge-std/console.sol";
@@ -57,7 +58,7 @@ contract ProposalSenderTest is SimulationSetup {
                 )
             });
             string memory description = "Updating relayer receiver on Optimism";
-            _crossChainProposal(10, p, description, 0.1 ether, hex"");
+            _crossChainProposal(10, p, description, 0.1 ether, hex"", address(0));
         }
 
         vm.selectFork(forkIdentifier[1]);
@@ -101,7 +102,7 @@ contract ProposalSenderTest is SimulationSetup {
             vm.selectFork(forkIdentifier[10]);
             assertEq(timelock(10).getMinDelay() != 100, true);
 
-            _crossChainProposal(10, p, description, 0.1 ether, hex"");
+            _crossChainProposal(10, p, description, 0.1 ether, hex"", address(0));
             vm.selectFork(forkIdentifier[10]);
             assertEq(timelock(10).getMinDelay() == 100, true);
         }
@@ -945,7 +946,7 @@ contract ProposalSenderTest is SimulationSetup {
             data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 1371)
         });
         string memory description = "Updating delay on Optimism";
-        _crossChainProposal(destChain, p, description, 0.1 ether, hex"");
+        _crossChainProposal(destChain, p, description, 0.1 ether, hex"", address(0));
         assertEq(timelock(destChain).getMinDelay() == 1371, true);
 
         p[0].data = abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100);
@@ -1024,7 +1025,7 @@ contract ProposalSenderTest is SimulationSetup {
             data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, newDelay)
         });
         string memory description = "Updating delay on Optimism";
-        _crossChainProposal(destChain, p, description, 0.1 ether, hex"");
+        _crossChainProposal(destChain, p, description, 0.1 ether, hex"", address(0));
         assertEq(timelock(destChain).getMinDelay() == newDelay, true);
 
         p[0].data = abi.encodeWithSelector(timelock(destChain).updateDelay.selector, oldDelay);
@@ -1082,5 +1083,50 @@ contract ProposalSenderTest is SimulationSetup {
             )
         );
         timelock(destChain).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+    }
+
+    function test_RevertWhen_TimelockSidechainNotExecutor() public {
+        uint256 destChain = 137;
+
+        vm.selectFork(forkIdentifier[destChain]);
+        timelock(destChain).grantRole(timelock(destChain).EXECUTOR_ROLE(), multisig(destChain));
+        timelock(destChain).revokeRole(timelock(destChain).EXECUTOR_ROLE(), address(0));
+
+        vm.selectFork(forkIdentifier[1]);
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+
+        bytes memory error = abi.encodeWithSelector(
+            IAccessControl.AccessControlUnauthorizedAccount.selector,
+            alice,
+            timelock(1).EXECUTOR_ROLE()
+        );
+        _crossChainProposal(destChain, p, description, 0.1 ether, error, alice);
+    }
+
+    function test_TimelockSidechainExecutor() public {
+        uint256 destChain = 137;
+
+        vm.selectFork(forkIdentifier[destChain]);
+        timelock(destChain).grantRole(timelock(destChain).EXECUTOR_ROLE(), multisig(destChain));
+        timelock(destChain).revokeRole(timelock(destChain).EXECUTOR_ROLE(), address(0));
+
+        vm.selectFork(forkIdentifier[1]);
+        SubCall[] memory p = new SubCall[](1);
+        p[0] = SubCall({
+            chainId: destChain,
+            target: address(timelock(destChain)),
+            value: 0,
+            data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
+        });
+        string memory description = "Updating delay on Optimism";
+        _crossChainProposal(destChain, p, description, 0.1 ether, hex"", multisig(destChain));
+        assertEq(timelock(destChain).getMinDelay() == 100, true);
     }
 }
