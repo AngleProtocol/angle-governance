@@ -5,5 +5,9 @@ import { BaseActor, IERC20, IERC20Metadata, AngleGovernor, TestStorage } from ".
 import { console } from "forge-std/console.sol";
 
 contract Voter is BaseActor {
-    constructor(AngleGovernor angleGovernor, uint256 nbrVoter) BaseActor(nbrVoter, "Voter", angleGovernor) {}
+    AngleGovernor internal _angleGovernor;
+
+    constructor(AngleGovernor angleGovernor, IERC20 _agToken, uint256 nbrVoter) BaseActor(nbrVoter, "Voter", _agToken) {
+        _angleGovernor = angleGovernor;
+    }
 }
