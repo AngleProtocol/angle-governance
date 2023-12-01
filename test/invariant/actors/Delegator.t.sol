@@ -17,10 +17,8 @@ contract Delegator is BaseActor {
         uint256 end;
     }
 
-    mapping(address => uint256) public delegationAmounts;
     mapping(address => address) public delegations;
     mapping(address => address[]) public reverseDelegations;
-    mapping(address => Lock) public _locks;
     address[] public delegatees;
 
     constructor(
@@ -31,10 +29,6 @@ contract Delegator is BaseActor {
     ) BaseActor(_nbrActor, "Delegator", _agToken) {
         veToken = IveANGLE(_veToken);
         veDelegation = IERC5805(_veDelegation);
-    }
-
-    function locks(address locker) public view returns (Lock memory) {
-        return _locks[locker];
     }
 
     function reverseDelegationsView(address locker) public view returns (address[] memory) {
@@ -91,18 +85,11 @@ contract Delegator is BaseActor {
         angle.approve(address(veToken), amount);
 
         veToken.create_lock(amount, block.timestamp + duration);
-
-        _locks[_currentActor] = Lock({
-            amount: veToken.balanceOf(_currentActor),
-            end: veToken.locked__end(_currentActor)
-        });
     }
 
     function withdraw() public {
         if (veToken.locked__end(_currentActor) != 0 && veToken.locked__end(_currentActor) < block.timestamp) {
             veToken.withdraw();
-
-            _locks[_currentActor] = Lock({ amount: 0, end: 0 });
         }
     }
 
@@ -114,7 +101,6 @@ contract Delegator is BaseActor {
 
         duration = bound(duration, end + 1 weeks, block.timestamp + 365 days * 4);
         veToken.increase_unlock_time(duration);
-        _locks[_currentActor].end = veToken.locked__end(_currentActor);
     }
 
     function extendLockAmount(uint256 actorIndex, uint256 amount) public useActor(actorIndex) {
@@ -126,8 +112,6 @@ contract Delegator is BaseActor {
         MockANGLE(address(angle)).mint(_currentActor, amount);
         angle.approve(address(veToken), amount);
         veToken.increase_amount(amount);
-
-        _locks[_currentActor].amount = veToken.balanceOf(_currentActor);
     }
 
     function wrap(uint256 timestamp) public {

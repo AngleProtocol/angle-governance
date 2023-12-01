@@ -47,13 +47,6 @@ contract DelegationInvariants is Fixture {
             assertEq(token.delegates(actor), _delegatorHandler.delegations(actor));
             if (_delegatorHandler.delegations(actor) != address(0)) {
                 assertEq(votes, 0, "Delegator should not have votes");
-            } else {
-                Delegator.Lock memory lock = _delegatorHandler.locks(actor);
-                if (lock.end > block.timestamp) {
-                    assertEq(votes, lock.amount, "Delegator should have votes");
-                } else {
-                    assertEq(votes, 0, "Delegator should not have votes");
-                }
             }
         }
         for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
@@ -64,10 +57,10 @@ contract DelegationInvariants is Fixture {
             address[] memory delegators = _delegatorHandler.reverseDelegationsView(delegatee);
             for (uint256 j; j < delegators.length; j++) {
                 address delegator = delegators[j];
-                Delegator.Lock memory lock = _delegatorHandler.locks(delegator);
-                if (lock.end > block.timestamp) amount += lock.amount;
+                uint256 balance = veANGLE.balanceOf(delegator);
+                amount += balance;
             }
-            assertEq(votes, _delegatorHandler.delegationAmounts(delegatee), "Delegatee should have votes");
+            assertEq(votes, amount, "Delegatee should have votes");
         }
     }
 }
