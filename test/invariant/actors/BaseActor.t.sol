@@ -25,7 +25,7 @@ contract BaseActor is Test {
     uint256 public nbrActor;
     address internal _currentActor;
 
-    IERC20 public agToken;
+    IERC20 public angle;
 
     modifier countCall(bytes32 key) {
         calls[key]++;
@@ -39,12 +39,12 @@ contract BaseActor is Test {
         vm.stopPrank();
     }
 
-    constructor(uint256 _nbrActor, string memory actorType, IERC20 _agToken) {
+    constructor(uint256 _nbrActor, string memory actorType, IERC20 _angle) {
         for (uint256 i; i < _nbrActor; ++i) {
             address actor = address(uint160(uint256(keccak256(abi.encodePacked("actor", actorType, i)))));
             actors.push(actor);
         }
         nbrActor = _nbrActor;
-        agToken = _agToken;
+        angle = _angle;
     }
 }

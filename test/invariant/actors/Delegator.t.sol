@@ -45,7 +45,7 @@ contract Delegator is BaseActor {
         return delegatees.length;
     }
 
-    function delegate(uint256 acordIndex, address toDelegate) public useActor(acordIndex) {
+    function delegate(uint256 actorIndex, address toDelegate) public useActor(actorIndex) {
         if (toDelegate == address(0)) return;
 
         uint256 balance = veToken.balanceOf(_currentActor);
@@ -58,13 +58,9 @@ contract Delegator is BaseActor {
         veDelegation.delegate(toDelegate);
 
         // Update delegations
-        delegations[_currentActor] = toDelegate;
-        for (uint256 i; i < delegatees.length; i++) {
-            if (delegatees[i] == toDelegate) {
-                return;
-            }
+        if (toDelegate == currentDelegatee) {
+            return;
         }
-        delegatees.push(toDelegate);
         reverseDelegations[toDelegate].push(_currentActor);
         for (uint256 i; i < reverseDelegations[currentDelegatee].length; i++) {
             if (reverseDelegations[currentDelegatee][i] == _currentActor) {
@@ -75,17 +71,24 @@ contract Delegator is BaseActor {
                 break;
             }
         }
+        delegations[_currentActor] = toDelegate;
+        for (uint256 i; i < delegatees.length; i++) {
+            if (delegatees[i] == toDelegate) {
+                return;
+            }
+        }
+        delegatees.push(toDelegate);
     }
 
-    function createLock(uint256 acordIndex, uint256 amount, uint256 duration) public useActor(acordIndex) {
+    function createLock(uint256 actorIndex, uint256 amount, uint256 duration) public useActor(actorIndex) {
         if (veToken.locked__end(_currentActor) != 0) {
             return;
         }
         duration = bound(duration, 1 weeks, 365 days * 4);
         amount = bound(amount, 100e18, 1_500e18);
 
-        MockANGLE(address(agToken)).mint(_currentActor, amount);
-        agToken.approve(address(veToken), amount);
+        MockANGLE(address(angle)).mint(_currentActor, amount);
+        angle.approve(address(veToken), amount);
 
         veToken.create_lock(amount, block.timestamp + duration);
 
@@ -103,7 +106,7 @@ contract Delegator is BaseActor {
         }
     }
 
-    function extandLockTime(uint256 acordIndex, uint256 duration) public useActor(acordIndex) {
+    function extandLockTime(uint256 actorIndex, uint256 duration) public useActor(actorIndex) {
         uint256 end = veToken.locked__end(_currentActor);
         if (end == 0 || end + 1 weeks > block.timestamp + 365 days * 4) {
             return;
@@ -114,14 +117,14 @@ contract Delegator is BaseActor {
         _locks[_currentActor].end = veToken.locked__end(_currentActor);
     }
 
-    function extandLockAmount(uint256 acordIndex, uint256 amount) public useActor(acordIndex) {
+    function extendLockAmount(uint256 actorIndex, uint256 amount) public useActor(actorIndex) {
         if (veToken.balanceOf(_currentActor) == 0) {
             return;
         }
         amount = bound(amount, 100e18, 1_500e18);
 
-        MockANGLE(address(agToken)).mint(_currentActor, amount);
-        agToken.approve(address(veToken), amount);
+        MockANGLE(address(angle)).mint(_currentActor, amount);
+        angle.approve(address(veToken), amount);
         veToken.increase_amount(amount);
 
         _locks[_currentActor].amount = veToken.balanceOf(_currentActor);

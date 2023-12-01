@@ -32,7 +32,7 @@ contract DelegationInvariants is Fixture {
             selectors[0] = Delegator.delegate.selector;
             selectors[1] = Delegator.createLock.selector;
             selectors[2] = Delegator.extandLockTime.selector;
-            selectors[3] = Delegator.extandLockAmount.selector;
+            selectors[3] = Delegator.extendLockAmount.selector;
             selectors[4] = Delegator.wrap.selector;
             selectors[5] = Delegator.withdraw.selector;
             targetSelector(FuzzSelector({ addr: address(_delegatorHandler), selectors: selectors }));
