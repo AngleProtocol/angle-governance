@@ -7,8 +7,8 @@
     "coverage": "FOUNDRY_PROFILE=dev forge coverage --report lcov && yarn lcov:clean && yarn lcov:generate-html",
     "compile": "forge build",
     "compile:dev": "FOUNDRY_PROFILE=dev forge build",
-    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url mainnet scripts/DeployMockAgEUR.s.sol",
-    "deploy:fork": "source .env && forge script --skip test  --slow --fork-url fork --broadcast scripts/DeployMockAgEUR.s.sol -vvvv",
+    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url polygon scripts/DeploySideChainGovernance.s.sol",
+    "deploy:fork": "source .env && forge script --skip test  --slow --fork-url fork --broadcast scripts/DeploySideChainGovernance.s.sol -vvvv",
     "gas": "yarn test --gas-report",
     "fork": "bash helpers/fork.sh",
     "run": "docker run -it --rm -v $(pwd):/app -w /app ghcr.io/foundry-rs/foundry sh",
@@ -24,7 +24,8 @@
     "size:dev": "FOUNDRY_PROFILE=dev forge build --skip test --sizes",
     "prettier": "prettier --write '**/*.sol'",
     "lint": "yarn lint:check --fix",
-    "lint:check": "solhint --max-warnings 20 \"**/*.sol\""
+    "lint:check": "solhint --max-warnings 20 \"**/*.sol\"",
+    "verify": "forge verify-contract --chain-id 100 --watch 0x9b4c3f0eb7e732a64c549ec989d62ec82b00d37b VyperDeployer"
   },
   "keywords": [],
   "author": "Angle Core Team",

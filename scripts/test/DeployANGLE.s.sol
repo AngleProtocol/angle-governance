@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: ISC
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 import "../../test/external/MockANGLE.sol";
 import "../../contracts/interfaces/IveANGLE.sol";
 import "test/external/VyperDeployer.sol";
 import "test/external/SmartWalletChecker.sol";
-import "../Utils.s.sol";
 
 interface initVeANGLE {
     function initialize(
@@ -34,10 +33,4 @@ function deployVeANGLE(
     _constructorParams = abi.encode(_mockANGLE, _contractName, "1");
     _address = address(vyperDeployer.deployContract(_contractName, _constructorParams));
     initVeANGLE(_address).initialize(admin, _mockANGLE, smartWalletChecker, "veANGLE", "veANGLE");
-}
-
-contract DeployTestANGLE is Utils {
-    function run() external returns (address _address, bytes memory _constructorParams, string memory _contractName) {
-        (_address, _constructorParams, _contractName) = deployMockANGLE();
-    }
 }
