@@ -15,6 +15,9 @@ import "./utils/Errors.sol";
 /// @dev Full fork from:
 /// https://github.com/LayerZero-Labs/omnichain-governance-executor/blob/main/contracts/OmnichainProposalSender.sol
 //solhint-disable
+/// @dev Acknowledge issue: `setTrustedRemoteAddress`, `setSendVersion` and `setConfig` are not protected by
+/// a timelock. But any other proposal will need to be executed through a timelock because the other chains
+/// are still dependant on their timelock contract.
 contract ProposalSender is Ownable, ReentrancyGuard {
     uint64 public lastStoredPayloadNonce;
 

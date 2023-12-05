@@ -73,9 +73,9 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
 
         (address _mockANGLE, , ) = deployMockANGLE();
         ANGLE = ERC20(_mockANGLE);
-        deal(address(ANGLE), governor, 300_000_000e18);
+        deal(address(ANGLE), mainnetMultisig, 300_000_000e18);
 
-        (address _mockVeANGLE, , ) = deployVeANGLE(vyperDeployer, _mockANGLE, governor);
+        (address _mockVeANGLE, , ) = deployVeANGLE(vyperDeployer, _mockANGLE, mainnetMultisig);
         veANGLE = IveANGLE(_mockVeANGLE);
 
         _setupDealAndLockANGLE();
@@ -147,7 +147,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
     }
 
     function dealCreateLockANGLE(address account, uint256 amount) public {
-        hoax(governor);
+        hoax(mainnetMultisig);
         ANGLE.transfer(account, amount);
 
         vm.startPrank(account, account);
@@ -451,7 +451,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         hoax(diane);
         token.delegate(bob);
 
-        hoax(governor);
+        hoax(mainnetMultisig);
         ANGLE.transfer(charlie, amount);
 
         vm.startPrank(charlie, charlie);
@@ -683,7 +683,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
     function testFuzz_DelegationVeANGLEEquivalenceBeforeExpiration(uint256 amount, uint256 ts) public {
         amount = bound(amount, 100e18, 1_500_000e18);
 
-        vm.startPrank(governor);
+        vm.startPrank(mainnetMultisig);
         ANGLE.transfer(charlie, amount);
         ANGLE.transfer(alice, amount);
         vm.stopPrank();
@@ -730,7 +730,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
     function testFuzz_DelegationVeANGLEAfterExpiry(uint256 amount, uint256 ts) public {
         amount = bound(amount, 100e18, 1_500_000e18);
 
-        vm.startPrank(governor);
+        vm.startPrank(mainnetMultisig);
         ANGLE.transfer(charlie, amount);
         ANGLE.transfer(alice, amount);
         vm.stopPrank();
@@ -775,7 +775,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         uint256 start = ((block.timestamp / 1 days) * 1 days) + 1 days;
         vm.warp(start);
 
-        vm.startPrank(governor);
+        vm.startPrank(mainnetMultisig);
         ANGLE.transfer(charlie, amount);
         ANGLE.transfer(alice, amount);
         vm.stopPrank();
@@ -820,7 +820,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         ts = bound(ts, block.timestamp + 30 days, block.timestamp + (365 days * 4));
         ts2 = bound(ts2, block.timestamp + 30 days, block.timestamp + (365 days * 4));
 
-        vm.startPrank(governor);
+        vm.startPrank(mainnetMultisig);
         ANGLE.transfer(charlie, amount);
         ANGLE.transfer(alice, amount2);
         vm.stopPrank();
