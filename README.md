@@ -1,7 +1,7 @@
-# <img src=".github/assets/logo.svg" alt="Angle" height="40px"> Angle Project Boilerplate
+# <img src=".github/assets/logo.svg" alt="Angle" height="40px"> Angle Governance
 
-[![CI](https://github.com/AngleProtocol/boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/AngleProtocol/boilerplate/actions)
-[![Coverage](https://codecov.io/gh/AngleProtocol/boilerplate/branch/main/graph/badge.svg)](https://codecov.io/gh/AngleProtocol/boilerplate)
+[![CI](https://github.com/AngleProtocol/angle-governance/actions/workflows/ci.yml/badge.svg)](https://github.com/AngleProtocol/angle-governance/actions)
+[![Coverage](https://codecov.io/gh/AngleProtocol/angle-governance/branch/main/graph/badge.svg)](https://codecov.io/gh/AngleProtocol/angle-governance)
 
 ## About this repository 🤔
 
@@ -10,12 +10,6 @@ Angle is a decentralized stablecoin protocol, ruled by the [veANGLE token](https
 This repository contains the smart contracts for the cross-chain governance system for Angle Protocol relying on LayerZero message passing infrastructure.
 
 It also comes with some utils and scripts to facilitate the creation and execution of proposals on top of the deployed system.
-
-## Simulate a Proposal
-
-- Complete `test/Proposal.sol`
-- You can simulate the proposal's execution by running `forge test -vvvv --match-contract Simulate`
-- Eventually add tests to `test/Simulate.t.sol`
 
 ## System Architecture 🏘️
 
@@ -179,6 +173,12 @@ yarn coverage
 ```
 
 You'll need to install lcov `brew install lcov` to visualize the coverage report.
+
+### Simulate a Proposal
+
+- Complete `test/Proposal.sol`
+- You can simulate the proposal's execution by running `forge test -vvvv --match-contract Simulate`
+- Eventually add tests to `test/Simulate.t.sol`
 
 ---
 
