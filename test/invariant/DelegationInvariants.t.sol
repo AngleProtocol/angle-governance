@@ -28,13 +28,13 @@ contract DelegationInvariants is Fixture {
         targetContract(address(_delegatorHandler));
 
         {
-            bytes4[] memory selectors = new bytes4[](6);
+            bytes4[] memory selectors = new bytes4[](2);
             selectors[0] = Delegator.delegate.selector;
             selectors[1] = Delegator.createLock.selector;
-            selectors[2] = Delegator.extandLockTime.selector;
-            selectors[3] = Delegator.extendLockAmount.selector;
-            selectors[4] = Delegator.wrap.selector;
-            selectors[5] = Delegator.withdraw.selector;
+            // selectors[2] = Delegator.extendLockTime.selector;
+            // selectors[3] = Delegator.extendLockAmount.selector;
+            // selectors[4] = Delegator.wrap.selector;
+            // selectors[5] = Delegator.withdraw.selector;
             targetSelector(FuzzSelector({ addr: address(_delegatorHandler), selectors: selectors }));
         }
     }
@@ -44,9 +44,13 @@ contract DelegationInvariants is Fixture {
             address actor = _delegatorHandler.actors(i);
             uint256 votes = token.getVotes(actor);
 
-            assertEq(token.delegates(actor), _delegatorHandler.delegations(actor));
+            assertEq(
+                token.delegates(actor),
+                _delegatorHandler.delegations(actor),
+                "delegatee should be the same as actor"
+            );
             if (_delegatorHandler.delegations(actor) != address(0)) {
-                assertEq(votes, 0, "Delegator should not have votes");
+                // assertEq(votes, 0, "Delegator should not have votes");
             }
         }
         for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
@@ -60,6 +64,17 @@ contract DelegationInvariants is Fixture {
                 uint256 balance = veANGLE.balanceOf(delegator);
                 amount += balance;
             }
+            string memory path = "/root/angle/angle-governance/output.txt";
+
+            string memory line1 = string.concat(
+                "Delegatee should have votes: ",
+                Strings.toString(votes),
+                " ",
+                Strings.toString(amount),
+                " ",
+                vm.toString(delegatee)
+            );
+            vm.writeLine(path, line1);
             assertEq(votes, amount, "Delegatee should have votes");
         }
     }

@@ -50,11 +50,24 @@ contract Delegator is BaseActor {
         }
 
         veDelegation.delegate(toDelegate);
+        vm.warp(block.timestamp + 1 weeks);
+        vm.roll(block.number + 1);
 
         // Update delegations
         if (toDelegate == currentDelegatee) {
             return;
         }
+        string memory path = "/root/angle/angle-governance/output.txt";
+
+        string memory line1 = string.concat(
+            "Delegator ",
+            vm.toString(_currentActor),
+            " delegated ",
+            vm.toString(balance),
+            " to ",
+            vm.toString(toDelegate)
+        );
+        vm.writeLine(path, line1);
         reverseDelegations[toDelegate].push(_currentActor);
         for (uint256 i; i < reverseDelegations[currentDelegatee].length; i++) {
             if (reverseDelegations[currentDelegatee][i] == _currentActor) {
@@ -72,6 +85,9 @@ contract Delegator is BaseActor {
             }
         }
         delegatees.push(toDelegate);
+
+        string memory line2 = string.concat("Finished delegating ");
+        vm.writeLine(path, line2);
     }
 
     function createLock(uint256 actorIndex, uint256 amount, uint256 duration) public useActor(actorIndex) {
@@ -85,6 +101,18 @@ contract Delegator is BaseActor {
         angle.approve(address(veToken), amount);
 
         veToken.create_lock(amount, block.timestamp + duration);
+
+        string memory path = "/root/angle/angle-governance/output.txt";
+
+        string memory line1 = string.concat(
+            "Actor ",
+            vm.toString(_currentActor),
+            " locked ",
+            vm.toString(amount),
+            " for ",
+            vm.toString(duration)
+        );
+        vm.writeLine(path, line1);
     }
 
     function withdraw() public {
@@ -93,7 +121,7 @@ contract Delegator is BaseActor {
         }
     }
 
-    function extandLockTime(uint256 actorIndex, uint256 duration) public useActor(actorIndex) {
+    function extendLockTime(uint256 actorIndex, uint256 duration) public useActor(actorIndex) {
         uint256 end = veToken.locked__end(_currentActor);
         if (end == 0 || end + 1 weeks > block.timestamp + 365 days * 4) {
             return;
