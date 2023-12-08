@@ -119,10 +119,4 @@ contract Delegator is BaseActor {
         angle.approve(address(veToken), amount);
         veToken.increase_amount(amount);
     }
-
-    function wrap(uint256 timestamp) public {
-        timestamp = bound(timestamp, block.timestamp, 365 days * 5);
-        timestampStore.increaseCurrentTimestamp(timestamp);
-        vm.warp(timestampStore.currentTimestamp());
-    }
 }
