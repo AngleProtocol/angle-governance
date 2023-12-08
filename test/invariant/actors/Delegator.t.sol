@@ -7,6 +7,7 @@ import { MockANGLE } from "../../external/MockANGLE.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "contracts/utils/Errors.sol";
 import { console } from "forge-std/console.sol";
+import { TimestampStore } from "../stores/TimestampStore.sol";
 
 contract Delegator is BaseActor {
     IveANGLE public veToken;
@@ -20,15 +21,18 @@ contract Delegator is BaseActor {
     mapping(address => address) public delegations;
     mapping(address => address[]) public reverseDelegations;
     address[] public delegatees;
+    TimestampStore public timestampStore;
 
     constructor(
         uint256 _nbrActor,
         IERC20 _agToken,
         address _veToken,
-        address _veDelegation
+        address _veDelegation,
+        TimestampStore _timestampStore
     ) BaseActor(_nbrActor, "Delegator", _agToken) {
         veToken = IveANGLE(_veToken);
         veDelegation = IERC5805(_veDelegation);
+        timestampStore = _timestampStore;
     }
 
     function reverseDelegationsView(address locker) public view returns (address[] memory) {
@@ -50,24 +54,13 @@ contract Delegator is BaseActor {
         }
 
         veDelegation.delegate(toDelegate);
-        vm.warp(block.timestamp + 1 weeks);
-        vm.roll(block.number + 1);
+        timestampStore.increaseCurrentTimestamp(1 weeks);
+        vm.warp(timestampStore.currentTimestamp());
 
         // Update delegations
         if (toDelegate == currentDelegatee) {
             return;
         }
-        string memory path = "/root/angle/angle-governance/output.txt";
-
-        string memory line1 = string.concat(
-            "Delegator ",
-            vm.toString(_currentActor),
-            " delegated ",
-            vm.toString(balance),
-            " to ",
-            vm.toString(toDelegate)
-        );
-        vm.writeLine(path, line1);
         reverseDelegations[toDelegate].push(_currentActor);
         for (uint256 i; i < reverseDelegations[currentDelegatee].length; i++) {
             if (reverseDelegations[currentDelegatee][i] == _currentActor) {
@@ -85,9 +78,6 @@ contract Delegator is BaseActor {
             }
         }
         delegatees.push(toDelegate);
-
-        string memory line2 = string.concat("Finished delegating ");
-        vm.writeLine(path, line2);
     }
 
     function createLock(uint256 actorIndex, uint256 amount, uint256 duration) public useActor(actorIndex) {
@@ -95,24 +85,12 @@ contract Delegator is BaseActor {
             return;
         }
         duration = bound(duration, 1 weeks, 365 days * 4);
-        amount = bound(amount, 100e18, 1_500e18);
+        amount = bound(amount, 1e18, 100e18);
 
         MockANGLE(address(angle)).mint(_currentActor, amount);
         angle.approve(address(veToken), amount);
 
         veToken.create_lock(amount, block.timestamp + duration);
-
-        string memory path = "/root/angle/angle-governance/output.txt";
-
-        string memory line1 = string.concat(
-            "Actor ",
-            vm.toString(_currentActor),
-            " locked ",
-            vm.toString(amount),
-            " for ",
-            vm.toString(duration)
-        );
-        vm.writeLine(path, line1);
     }
 
     function withdraw() public {
@@ -135,7 +113,7 @@ contract Delegator is BaseActor {
         if (veToken.balanceOf(_currentActor) == 0) {
             return;
         }
-        amount = bound(amount, 100e18, 1_500e18);
+        amount = bound(amount, 1e18, 100e18);
 
         MockANGLE(address(angle)).mint(_currentActor, amount);
         angle.approve(address(veToken), amount);
@@ -144,6 +122,7 @@ contract Delegator is BaseActor {
 
     function wrap(uint256 timestamp) public {
         timestamp = bound(timestamp, block.timestamp, 365 days * 5);
-        vm.warp(timestamp);
+        timestampStore.increaseCurrentTimestamp(timestamp);
+        vm.warp(timestampStore.currentTimestamp());
     }
 }

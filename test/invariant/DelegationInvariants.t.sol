@@ -7,6 +7,7 @@ import { IERC20Metadata } from "oz/token/ERC20/extensions/IERC20Metadata.sol";
 import "oz/utils/Strings.sol";
 import { Delegator } from "./actors/Delegator.t.sol";
 import { Fixture, AngleGovernor } from "../Fixture.t.sol";
+import { TimestampStore } from "./stores/TimestampStore.sol";
 
 //solhint-disable
 import { console } from "forge-std/console.sol";
@@ -15,43 +16,47 @@ contract DelegationInvariants is Fixture {
     uint256 internal constant _NUM_DELEGATORS = 10;
 
     Delegator internal _delegatorHandler;
+    TimestampStore internal _timestampStore;
+
+    modifier useCurrentTimestamp() {
+        vm.warp(_timestampStore.currentTimestamp());
+        _;
+    }
 
     function setUp() public virtual override {
         super.setUp();
 
-        _delegatorHandler = new Delegator(_NUM_DELEGATORS, ANGLE, address(veANGLE), address(token));
+        _timestampStore = new TimestampStore();
+        _delegatorHandler = new Delegator(_NUM_DELEGATORS, ANGLE, address(veANGLE), address(token), _timestampStore);
 
         // Label newly created addresses
         for (uint256 i; i < _NUM_DELEGATORS; i++)
             vm.label(_delegatorHandler.actors(i), string.concat("Delegator ", Strings.toString(i)));
+        vm.label({ account: address(_timestampStore), newLabel: "TimestampStore" });
 
         targetContract(address(_delegatorHandler));
 
         {
-            bytes4[] memory selectors = new bytes4[](2);
+            bytes4[] memory selectors = new bytes4[](4);
             selectors[0] = Delegator.delegate.selector;
             selectors[1] = Delegator.createLock.selector;
             // selectors[2] = Delegator.extendLockTime.selector;
             // selectors[3] = Delegator.extendLockAmount.selector;
-            // selectors[4] = Delegator.wrap.selector;
-            // selectors[5] = Delegator.withdraw.selector;
+            selectors[2] = Delegator.wrap.selector;
+            selectors[3] = Delegator.withdraw.selector;
             targetSelector(FuzzSelector({ addr: address(_delegatorHandler), selectors: selectors }));
         }
     }
 
-    function invariant_wow() public {
+    function invariant_RightNumberOfVotesDelegated() public useCurrentTimestamp {
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             address actor = _delegatorHandler.actors(i);
-            uint256 votes = token.getVotes(actor);
 
             assertEq(
                 token.delegates(actor),
                 _delegatorHandler.delegations(actor),
                 "delegatee should be the same as actor"
             );
-            if (_delegatorHandler.delegations(actor) != address(0)) {
-                // assertEq(votes, 0, "Delegator should not have votes");
-            }
         }
         for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
             address delegatee = _delegatorHandler.delegatees(i);
