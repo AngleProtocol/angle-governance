@@ -13,11 +13,6 @@ contract Delegator is BaseActor {
     IveANGLE public veToken;
     IERC5805 public veDelegation;
 
-    struct Lock {
-        uint256 amount;
-        uint256 end;
-    }
-
     mapping(address => address) public delegations;
     mapping(address => address[]) public reverseDelegations;
     address[] public delegatees;
@@ -101,12 +96,15 @@ contract Delegator is BaseActor {
 
     function extendLockTime(uint256 actorIndex, uint256 duration) public useActor(actorIndex) {
         uint256 end = veToken.locked__end(_currentActor);
-        if (end == 0 || end + 1 weeks > block.timestamp + 365 days * 4) {
+        if (end == 0 || end < block.timestamp || end + 1 weeks > block.timestamp + 365 days * 4) {
             return;
         }
 
         duration = bound(duration, end + 1 weeks, block.timestamp + 365 days * 4);
         veToken.increase_unlock_time(duration);
+        if (delegations[_currentActor] != address(0)) {
+            veDelegation.delegate(delegations[_currentActor]);
+        }
     }
 
     function extendLockAmount(uint256 actorIndex, uint256 amount) public useActor(actorIndex) {
@@ -118,5 +116,8 @@ contract Delegator is BaseActor {
         MockANGLE(address(angle)).mint(_currentActor, amount);
         angle.approve(address(veToken), amount);
         veToken.increase_amount(amount);
+        if (delegations[_currentActor] != address(0)) {
+            veDelegation.delegate(delegations[_currentActor]);
+        }
     }
 }

@@ -21,9 +21,9 @@ contract Param is BaseActor {
         timestampStore = _timestampStore;
     }
 
-    function wrap(uint256 timestamp) public {
-        timestamp = bound(timestamp, block.timestamp, 365 days * 5);
-        timestampStore.increaseCurrentTimestamp(timestamp);
+    function wrap(uint256 duration) public {
+        duration = bound(duration, 0, 365 days * 5);
+        timestampStore.increaseCurrentTimestamp(duration);
         vm.warp(timestampStore.currentTimestamp());
     }
 }

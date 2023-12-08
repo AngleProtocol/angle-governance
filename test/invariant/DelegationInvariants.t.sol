@@ -43,12 +43,12 @@ contract DelegationInvariants is Fixture {
         targetContract(address(_paramHandler));
 
         {
-            bytes4[] memory selectors = new bytes4[](3);
+            bytes4[] memory selectors = new bytes4[](5);
             selectors[0] = Delegator.delegate.selector;
             selectors[1] = Delegator.createLock.selector;
             selectors[2] = Delegator.withdraw.selector;
-            // selectors[3] = Delegator.extendLockTime.selector;
-            // selectors[4] = Delegator.extendLockAmount.selector;
+            selectors[3] = Delegator.extendLockTime.selector;
+            selectors[4] = Delegator.extendLockAmount.selector;
             targetSelector(FuzzSelector({ addr: address(_delegatorHandler), selectors: selectors }));
         }
         {
@@ -79,17 +79,6 @@ contract DelegationInvariants is Fixture {
                 uint256 balance = veANGLE.balanceOf(delegator);
                 amount += balance;
             }
-            string memory path = "/root/angle/angle-governance/output.txt";
-
-            string memory line1 = string.concat(
-                "Delegatee should have votes: ",
-                Strings.toString(votes),
-                " ",
-                Strings.toString(amount),
-                " ",
-                vm.toString(delegatee)
-            );
-            vm.writeLine(path, line1);
             assertEq(votes, amount, "Delegatee should have votes");
         }
     }
