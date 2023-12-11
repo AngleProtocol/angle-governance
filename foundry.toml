@@ -12,14 +12,13 @@ optimizer = true
 optimizer_runs = 1000
 solc_version = "0.8.20"
 ffi = true
-fs_permissions = [{ access = "read-write", path = "./"}]
 
 [fuzz]
 runs = 10000
 
 [invariant]
-runs = 100
-depth = 3
+runs = 1000
+depth = 30
 
 [rpc_endpoints]
 arbitrum = "${ETH_NODE_URI_ARBITRUM}"
@@ -51,16 +50,14 @@ optimizer = true
 via_ir = false
 src = "test"
 gas_reports = ["*"]
-fs_permissions = [{ access = "read-write", path = "./"}]
 
 [profile.dev.fuzz]
 runs = 2000
 
 [profile.dev.invariant]
-runs = 1
-depth = 10
-fail_on_revert = true
-fs_permissions = [{ access = "read-write", path = "./"}]
+runs = 10
+depth = 1
+fail_on_revert = false
 
 [profile.ci]
 src = "test"

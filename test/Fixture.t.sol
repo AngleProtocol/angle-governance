@@ -56,11 +56,8 @@ contract Fixture is Test {
         vm.label(sweeper, "Sweeper");
 
         vm.roll(block.number + FORK_BLOCK_NUMBER);
-        console.log("timepstamp", block.timestamp);
 
         vm.warp(block.timestamp + FORK_BLOCK_TIMSESTAMP);
-
-        console.log("timepstamp", block.timestamp);
 
         // Deploy necessary contracts - for governance to be deployed
         vyperDeployer = new VyperDeployer();
