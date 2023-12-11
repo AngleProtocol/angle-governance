@@ -25,8 +25,7 @@ contract BaseActor is Test {
     uint256 public nbrActor;
     address internal _currentActor;
 
-    IVotes public agToken;
-    AngleGovernor internal _angleGovernor;
+    IERC20 public angle;
 
     modifier countCall(bytes32 key) {
         calls[key]++;
@@ -35,17 +34,17 @@ contract BaseActor is Test {
 
     modifier useActor(uint256 actorIndexSeed) {
         _currentActor = actors[bound(actorIndexSeed, 0, actors.length - 1)];
-        vm.startPrank(_currentActor);
+        vm.startPrank(_currentActor, _currentActor);
         _;
         vm.stopPrank();
     }
 
-    constructor(uint256 _nbrActor, string memory actorType, AngleGovernor angleGovernor) {
+    constructor(uint256 _nbrActor, string memory actorType, IERC20 _angle) {
         for (uint256 i; i < _nbrActor; ++i) {
             address actor = address(uint160(uint256(keccak256(abi.encodePacked("actor", actorType, i)))));
             actors.push(actor);
         }
         nbrActor = _nbrActor;
-        _angleGovernor = angleGovernor;
+        angle = _angle;
     }
 }

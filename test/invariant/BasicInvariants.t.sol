@@ -21,7 +21,7 @@ contract BasicInvariants is Fixture {
     function setUp() public virtual override {
         super.setUp();
 
-        _voterHandler = new Voter(angleGovernor, _NUM_VOTER);
+        _voterHandler = new Voter(angleGovernor, ANGLE, _NUM_VOTER);
 
         // Label newly created addresses
         for (uint256 i; i < _NUM_VOTER; i++)
