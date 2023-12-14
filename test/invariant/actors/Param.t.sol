@@ -25,5 +25,6 @@ contract Param is BaseActor {
         duration = bound(duration, 0, 365 days * 5);
         timestampStore.increaseCurrentTimestamp(duration);
         vm.warp(timestampStore.currentTimestamp());
+        vm.roll(timestampStore.currentBlockNumber());
     }
 }

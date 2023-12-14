@@ -21,8 +21,9 @@ contract DelegationInvariants is Fixture {
     Param internal _paramHandler;
     TimestampStore internal _timestampStore;
 
-    modifier useCurrentTimestamp() {
+    modifier useCurrentTimestampBlock() {
         vm.warp(_timestampStore.currentTimestamp());
+        vm.roll(_timestampStore.currentBlockNumber());
         _;
     }
 
@@ -58,7 +59,7 @@ contract DelegationInvariants is Fixture {
         }
     }
 
-    function invariant_RightNumberOfVotesDelegated() public useCurrentTimestamp {
+    function invariant_RightNumberOfVotesDelegated() public useCurrentTimestampBlock {
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             address actor = _delegatorHandler.actors(i);
 
@@ -81,5 +82,81 @@ contract DelegationInvariants is Fixture {
             }
             assertEq(votes, amount, "Delegatee should have votes");
         }
+    }
+
+    function invariant_DelegatorsHaveNullVote() public useCurrentTimestampBlock {
+        for (uint256 i; i < _NUM_DELEGATORS; i++) {
+            address actor = _delegatorHandler.actors(i);
+            address delegatee = _delegatorHandler.delegations(actor);
+            if (delegatee != address(0) && delegatee != actor)
+                assertEq(token.getVotes(actor), 0, "Delegator should have null vote");
+        }
+    }
+
+    function invariant_CanOnlyDelegateOnceAtATime() public useCurrentTimestampBlock {
+        uint256[] memory occurencesDelegator = new uint256[](_NUM_DELEGATORS);
+        for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
+            address delegatee = _delegatorHandler.delegatees(i);
+            address[] memory delegators = _delegatorHandler.reverseDelegationsView(delegatee);
+            for (uint256 j; j < delegators.length; j++) {
+                uint256 index = _delegatorHandler.addressToIndex(delegators[j]);
+                occurencesDelegator[index]++;
+                assertLe(occurencesDelegator[index], 1, "Delegator should only delegate once at a time");
+            }
+        }
+    }
+
+    function invariant_SumDelegationExternalEqualTotalSupply() public useCurrentTimestampBlock {
+        uint256 totalVotes = token.getVotes(alice) +
+            token.getVotes(bob) +
+            token.getVotes(charlie) +
+            token.getVotes(dylan);
+
+        for (uint256 i; i < _NUM_DELEGATORS; i++) {
+            address actor = _delegatorHandler.actors(i);
+            totalVotes += token.getVotes(actor);
+        }
+        for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
+            address delegatee = _delegatorHandler.delegatees(i);
+            totalVotes += token.getVotes(delegatee);
+        }
+
+        assertEq(
+            totalVotes,
+            veANGLE.totalSupplyAt(block.number),
+            "The sum of voting power should be equal to the totalSupply"
+        );
+
+        assertEq(
+            totalVotes,
+            veANGLE.totalSupply(block.timestamp),
+            "The sum of voting power should be equal to the totalSupply"
+        );
+    }
+
+    function invariant_SumDelegationInternalEqualTotalSupply() public useCurrentTimestampBlock {
+        uint256 totalVotes = token.getVotes(alice) +
+            token.getVotes(bob) +
+            token.getVotes(charlie) +
+            token.getVotes(dylan);
+
+        for (uint256 i; i < _NUM_DELEGATORS; i++) {
+            address actor = _delegatorHandler.actors(i);
+            totalVotes += token.getVotes(actor);
+            address delegatee = token.delegates(actor);
+            totalVotes += token.getVotes(delegatee);
+        }
+
+        assertEq(
+            totalVotes,
+            veANGLE.totalSupplyAt(block.number),
+            "The sum of voting power should be equal to the totalSupply"
+        );
+
+        assertEq(
+            totalVotes,
+            veANGLE.totalSupply(block.timestamp),
+            "The sum of voting power should be equal to the totalSupply"
+        );
     }
 }
