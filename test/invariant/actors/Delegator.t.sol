@@ -49,7 +49,7 @@ contract Delegator is BaseActor {
         }
 
         veDelegation.delegate(toDelegate);
-        timestampStore.increaseCurrentTimestamp(1 weeks);
+        timestampStore.increaseCurrentTimestamp(1 days);
         vm.warp(timestampStore.currentTimestamp());
         vm.roll(timestampStore.currentBlockNumber());
 
