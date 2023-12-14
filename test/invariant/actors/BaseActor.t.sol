@@ -21,6 +21,7 @@ contract BaseActor is Test {
     uint256 internal _maxWallet = 10 ** (18 + 12); // in base 18
 
     mapping(bytes32 => uint256) public calls;
+    mapping(address => uint256) public addressToIndex;
     address[] public actors;
     uint256 public nbrActor;
     address internal _currentActor;
@@ -43,6 +44,7 @@ contract BaseActor is Test {
         for (uint256 i; i < _nbrActor; ++i) {
             address actor = address(uint160(uint256(keccak256(abi.encodePacked("actor", actorType, i)))));
             actors.push(actor);
+            addressToIndex[actor] = i;
         }
         nbrActor = _nbrActor;
         angle = _angle;
