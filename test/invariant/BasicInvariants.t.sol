@@ -2,30 +2,32 @@
 
 pragma solidity ^0.8.19;
 
-import { IERC20 } from "oz/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "oz/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "oz/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "oz/token/ERC20/extensions/IERC20Metadata.sol";
 import "oz/utils/Strings.sol";
-import { Voter } from "./actors/Voter.t.sol";
-import { Fixture, AngleGovernor } from "../Fixture.t.sol";
+import {Voter} from "./actors/Voter.t.sol";
+import {Fixture, AngleGovernor} from "../Fixture.t.sol";
+import {ProposalStore} from "./stores/ProposalStore.sol";
 
 //solhint-disable
-import { console } from "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 contract BasicInvariants is Fixture {
     uint256 internal constant _NUM_VOTER = 10;
 
     Voter internal _voterHandler;
     // Keep track of current proposals
-    uint256[] internal _proposals;
+    ProposalStore internal _proposalStore;
 
     function setUp() public virtual override {
         super.setUp();
 
-        _voterHandler = new Voter(angleGovernor, ANGLE, _NUM_VOTER);
+        _voterHandler = new Voter(angleGovernor, ANGLE, _NUM_VOTER, _proposalStore);
 
         // Label newly created addresses
-        for (uint256 i; i < _NUM_VOTER; i++)
+        for (uint256 i; i < _NUM_VOTER; i++) {
             vm.label(_voterHandler.actors(i), string.concat("Trader ", Strings.toString(i)));
+        }
 
         targetContract(address(_voterHandler));
 
