@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.19 <0.9.0;
 
-import {StdUtils} from "forge-std/StdUtils.sol";
+import { StdUtils } from "forge-std/StdUtils.sol";
 
 struct Proposal {
     address[] target;
@@ -18,16 +18,22 @@ contract ProposalStore is StdUtils {
 
     constructor() {}
 
-    function addProposal(address[] memory target, uint256[] memory value, bytes[] memory data, bytes32 description)
-        external
-    {
-        proposals.push(Proposal({target: target, value: value, data: data, description: description}));
+    function addProposal(
+        address[] memory target,
+        uint256[] memory value,
+        bytes[] memory data,
+        bytes32 description
+    ) external {
+        proposals.push(Proposal({ target: target, value: value, data: data, description: description }));
     }
 
-    function addOldProposal(address[] memory target, uint256[] memory value, bytes[] memory data, bytes32 description)
-        external
-    {
-        oldProposals.push(Proposal({target: target, value: value, data: data, description: description}));
+    function addOldProposal(
+        address[] memory target,
+        uint256[] memory value,
+        bytes[] memory data,
+        bytes32 description
+    ) external {
+        oldProposals.push(Proposal({ target: target, value: value, data: data, description: description }));
     }
 
     function removeProposal(uint256 proposalHash) external {
@@ -62,7 +68,10 @@ contract ProposalStore is StdUtils {
             uint256 proposalId = uint256(
                 keccak256(
                     abi.encode(
-                        oldProposals[i].target, oldProposals[i].value, oldProposals[i].data, oldProposals[i].description
+                        oldProposals[i].target,
+                        oldProposals[i].value,
+                        oldProposals[i].data,
+                        oldProposals[i].description
                     )
                 )
             );
