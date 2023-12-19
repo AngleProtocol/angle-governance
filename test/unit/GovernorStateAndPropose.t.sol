@@ -3,7 +3,6 @@
 pragma solidity ^0.8.9;
 
 import { IGovernor } from "oz/governance/IGovernor.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
 import { Strings } from "oz/utils/Strings.sol";
 
@@ -14,6 +13,7 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
+import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
 import "../Utils.t.sol";
@@ -29,7 +29,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
     ProposalSender public proposalSender;
     AngleGovernor public angleGovernor;
     IVotes public veANGLEDelegation;
-    TimelockController public mainnetTimelock;
+    TimelockControllerWithCounter public mainnetTimelock;
 
     address public alice = vm.addr(1);
     address public bob = vm.addr(2);
@@ -43,7 +43,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
         vm.warp(block.timestamp + 10 days);
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
 
-        mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
+        mainnetTimelock = new TimelockControllerWithCounter(1 days, proposers, executors, address(this));
         angleGovernor = new AngleGovernor(
             veANGLEDelegation,
             address(mainnetTimelock),
