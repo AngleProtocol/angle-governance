@@ -18,7 +18,7 @@ contract TimelockControllerWithCounter is TimelockController {
     /// @notice Counter on the number of proposals created
     uint256 public counterProposals;
     /// @notice Mapping between index and proposal ID
-    mapping(uint256 => uint256) public proposalIds;
+    mapping(uint256 => bytes32) public proposalIds;
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                       CONSTRUCTOR                                                   
@@ -36,6 +36,7 @@ contract TimelockControllerWithCounter is TimelockController {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc TimelockController
+    /// @dev No role check as it is done in the parent contract
     function schedule(
         address target,
         uint256 value,
@@ -43,13 +44,14 @@ contract TimelockControllerWithCounter is TimelockController {
         bytes32 predecessor,
         bytes32 salt,
         uint256 delay
-    ) public virtual onlyRole(PROPOSER_ROLE) {
+    ) public override {
         super.schedule(target, value, data, predecessor, salt, delay);
         bytes32 id = hashOperation(target, value, data, predecessor, salt);
-        proposalIds[counterProposals++] = uint256(id);
+        proposalIds[counterProposals++] = id;
     }
 
     /// @inheritdoc TimelockController
+    /// @dev No role check as it is done in the parent contract
     function scheduleBatch(
         address[] calldata targets,
         uint256[] calldata values,
@@ -57,9 +59,9 @@ contract TimelockControllerWithCounter is TimelockController {
         bytes32 predecessor,
         bytes32 salt,
         uint256 delay
-    ) public virtual onlyRole(PROPOSER_ROLE) {
+    ) public override {
         super.scheduleBatch(targets, values, payloads, predecessor, salt, delay);
         bytes32 id = hashOperationBatch(targets, values, payloads, predecessor, salt);
-        proposalIds[counterProposals++] = uint256(id);
+        proposalIds[counterProposals++] = id;
     }
 }
