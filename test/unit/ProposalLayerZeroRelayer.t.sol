@@ -3,7 +3,6 @@
 pragma solidity ^0.8.9;
 
 import { IGovernor } from "oz/governance/IGovernor.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
 import { IAccessControl } from "oz/access/IAccessControl.sol";
 import { Strings } from "oz/utils/Strings.sol";
@@ -15,6 +14,7 @@ import { Vm } from "forge-std/Vm.sol";
 import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender, Ownable } from "contracts/ProposalSender.sol";
+import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
 
 import { SubCall } from "./Proposal.sol";
 import { SimulationSetup } from "./SimulationSetup.t.sol";
@@ -30,38 +30,40 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
     address public bob = vm.addr(2);
 
     function test_SetRelayerReceiver() public {
-        vm.selectFork(forkIdentifier[10]);
-        ProposalReceiver newReceiverOptimism = new ProposalReceiver(address(lzEndPoint(10)));
-        newReceiverOptimism.setTrustedRemoteAddress(getLZChainId(1), abi.encodePacked(proposalSender()));
-        newReceiverOptimism.transferOwnership(address(timelock(10)));
+        uint256 srcChain = 1;
+        uint256 destChain = 10;
+        vm.selectFork(forkIdentifier[destChain]);
+        ProposalReceiver newReceiverOptimism = new ProposalReceiver(address(lzEndPoint(destChain)));
+        newReceiverOptimism.setTrustedRemoteAddress(getLZChainId(srcChain), abi.encodePacked(proposalSender()));
+        newReceiverOptimism.transferOwnership(address(timelock(destChain)));
 
         {
             SubCall[] memory p = new SubCall[](2);
             p[0] = SubCall({
-                chainId: 10,
-                target: address(timelock(10)),
+                chainId: destChain,
+                target: address(timelock(destChain)),
                 value: 0,
                 data: abi.encodeWithSelector(
-                    timelock(10).grantRole.selector,
-                    timelock(10).PROPOSER_ROLE(),
+                    timelock(destChain).grantRole.selector,
+                    timelock(destChain).PROPOSER_ROLE(),
                     address(newReceiverOptimism)
                 )
             });
             p[1] = SubCall({
-                chainId: 10,
-                target: address(timelock(10)),
+                chainId: destChain,
+                target: address(timelock(destChain)),
                 value: 0,
                 data: abi.encodeWithSelector(
-                    timelock(10).revokeRole.selector,
-                    timelock(10).PROPOSER_ROLE(),
-                    address(proposalReceiver(10))
+                    timelock(destChain).revokeRole.selector,
+                    timelock(destChain).PROPOSER_ROLE(),
+                    address(proposalReceiver(destChain))
                 )
             });
             string memory description = "Updating relayer receiver on Optimism";
-            _crossChainProposal(10, p, description, 0.1 ether, hex"", address(0));
+            _crossChainProposal(destChain, p, description, 0.1 ether, hex"", address(0));
         }
 
-        vm.selectFork(forkIdentifier[1]);
+        vm.selectFork(forkIdentifier[srcChain]);
 
         address[] memory targets = new address[](1);
         uint256[] memory values = new uint256[](1);
@@ -70,41 +72,40 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         values[0] = 0;
         calldatas[0] = abi.encodeWithSelector(
             proposalSender().setTrustedRemoteAddress.selector,
-            getLZChainId(10),
+            getLZChainId(destChain),
             abi.encodePacked(address(newReceiverOptimism))
         );
 
         string memory description = "Updating trustedRemote relayer on Optimism";
-        _shortcutProposal(1, description, targets, values, calldatas);
+        _shortcutProposal(srcChain, description, targets, values, calldatas);
 
-        vm.selectFork(forkIdentifier[1]);
+        vm.selectFork(forkIdentifier[srcChain]);
         assertEq(
-            proposalSender().trustedRemoteLookup(getLZChainId(10)),
-            abi.encodePacked(address(proposalReceiver(10)), address(proposalSender()))
+            proposalSender().trustedRemoteLookup(getLZChainId(destChain)),
+            abi.encodePacked(address(proposalReceiver(destChain)), address(proposalSender()))
         );
         governor().execute(targets, values, calldatas, keccak256(bytes(description)));
         assertEq(
-            proposalSender().trustedRemoteLookup(getLZChainId(10)),
+            proposalSender().trustedRemoteLookup(getLZChainId(destChain)),
             abi.encodePacked(address(newReceiverOptimism), address(proposalSender()))
         );
 
         // now passing a tx on Optimism should go through the new receiver
-        _proposalReceivers[10] = newReceiverOptimism;
+        _proposalReceivers[destChain] = newReceiverOptimism;
         {
             SubCall[] memory p = new SubCall[](1);
             p[0] = SubCall({
-                chainId: 10,
-                target: address(timelock(10)),
+                chainId: destChain,
+                target: address(timelock(destChain)),
                 value: 0,
-                data: abi.encodeWithSelector(timelock(10).updateDelay.selector, 100)
+                data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
             });
             description = "Updating delay on Optimism";
-            vm.selectFork(forkIdentifier[10]);
-            assertEq(timelock(10).getMinDelay() != 100, true);
-
-            _crossChainProposal(10, p, description, 0.1 ether, hex"", address(0));
-            vm.selectFork(forkIdentifier[10]);
-            assertEq(timelock(10).getMinDelay() == 100, true);
+            vm.selectFork(forkIdentifier[destChain]);
+            assertEq(timelock(destChain).getMinDelay() != 100, true);
+            _crossChainProposal(destChain, p, description, 0.1 ether, hex"", address(0));
+            vm.selectFork(forkIdentifier[destChain]);
+            assertEq(timelock(destChain).getMinDelay() == 100, true);
         }
     }
 
@@ -222,6 +223,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
     function test_RetryExecuteSimple() public {
         uint256 destChain = 137;
+        uint256 srcChain = 1;
 
         SubCall[] memory p = new SubCall[](1);
         p[0] = SubCall({
@@ -231,19 +233,19 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, 100)
         });
         string memory description = "Updating delay on Optimism";
-        vm.selectFork(forkIdentifier[1]);
+        vm.selectFork(forkIdentifier[srcChain]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(lzEndPoint(srcChain)),
+            abi.encodeWithSelector(lzEndPoint(srcChain).send.selector),
             abi.encode("REVERT")
         );
         bytes
             memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
-        (uint256 nativeFee, ) = proposalSender().estimateFees(getLZChainId(137), payload, adapterParams);
+        (uint256 nativeFee, ) = proposalSender().estimateFees(getLZChainId(destChain), payload, adapterParams);
         assertLe(nativeFee, 0.1 ether);
-        _dummyProposal(1, p, description, 0.1 ether, hex"");
+        _dummyProposal(srcChain, p, description, 0.1 ether, hex"");
         vm.clearMockedCalls();
         // We need to execute with an address to get the eth refund
         vm.startPrank(alice);
@@ -254,7 +256,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[destChain]);
         hoax(address(lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            getLZChainId(srcChain),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload
@@ -704,7 +706,12 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         address[] memory proposers = new address[](0);
         address[] memory executors = new address[](1);
         executors[0] = address(0); // Means everyone can execute
-        TimelockController timelock2 = new TimelockController(1 days, proposers, executors, address(this));
+        TimelockControllerWithCounter timelock2 = new TimelockControllerWithCounter(
+            1 days,
+            proposers,
+            executors,
+            address(this)
+        );
         AngleGovernor governor2 = new AngleGovernor(
             veANGLEDelegation,
             address(timelock2),
@@ -761,7 +768,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         // Set in current contract storage the governor and timelock
         AngleGovernor realGovernor = governor();
-        TimelockController realTimelock = timelock(1);
+        TimelockControllerWithCounter realTimelock = timelock(1);
         _governor = governor2;
         _timelocks[1] = timelock2;
 

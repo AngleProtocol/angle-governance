@@ -3,7 +3,6 @@
 pragma solidity ^0.8.9;
 
 import { IGovernor } from "oz/governance/IGovernor.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
 import { Strings } from "oz/utils/Strings.sol";
 
@@ -14,6 +13,7 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
+import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
 import "../Utils.t.sol";
@@ -33,7 +33,7 @@ contract AngleGovernorTest is Test, Utils {
     ProposalSender public proposalSender;
     AngleGovernor public angleGovernor;
     IVotes public veANGLEDelegation;
-    TimelockController public mainnetTimelock;
+    TimelockControllerWithCounter public mainnetTimelock;
 
     address public alice = vm.addr(1);
     address public bob = vm.addr(2);
@@ -47,7 +47,7 @@ contract AngleGovernorTest is Test, Utils {
         vm.warp(block.timestamp + 10 days);
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
 
-        mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
+        mainnetTimelock = new TimelockControllerWithCounter(1 days, proposers, executors, address(this));
         angleGovernor = new AngleGovernor(
             veANGLEDelegation,
             address(mainnetTimelock),
@@ -87,7 +87,12 @@ contract AngleGovernorTest is Test, Utils {
         executors[0] = address(0); // Means everyone can execute
 
         vm.startPrank(alice);
-        TimelockController mainnetTimelock2 = new TimelockController(1 days, proposers, executors, address(this));
+        TimelockControllerWithCounter mainnetTimelock2 = new TimelockControllerWithCounter(
+            1 days,
+            proposers,
+            executors,
+            address(this)
+        );
         vm.expectRevert(Errors.NotExecutor.selector);
         angleGovernor.updateTimelock(address(mainnetTimelock2));
         vm.expectRevert(Errors.NotExecutor.selector);
@@ -112,7 +117,12 @@ contract AngleGovernorTest is Test, Utils {
         address[] memory proposers = new address[](0);
         address[] memory executors = new address[](1);
         executors[0] = address(0); // Means everyone can execute
-        TimelockController mainnetTimelock2 = new TimelockController(1 days, proposers, executors, address(this));
+        TimelockControllerWithCounter mainnetTimelock2 = new TimelockControllerWithCounter(
+            1 days,
+            proposers,
+            executors,
+            address(this)
+        );
 
         vm.expectRevert(Errors.ZeroAddress.selector);
         hoax(address(mainnetTimelock));

@@ -3,7 +3,6 @@
 pragma solidity ^0.8.9;
 
 import { IGovernor } from "oz/governance/IGovernor.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
 import { Strings } from "oz/utils/Strings.sol";
 
@@ -15,6 +14,7 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
+import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
 
 import { Proposal, SubCall } from "./Proposal.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
@@ -32,7 +32,7 @@ contract SimulationSetup is Test {
     mapping(uint256 => string) mapChainIds;
 
     mapping(uint256 => uint256) forkIdentifier;
-    mapping(uint256 => TimelockController) internal _timelocks;
+    mapping(uint256 => TimelockControllerWithCounter) internal _timelocks;
     mapping(uint256 => ProposalReceiver) internal _proposalReceivers;
     ProposalSender internal _proposalSender;
     AngleGovernor public _governor;
@@ -69,7 +69,12 @@ contract SimulationSetup is Test {
                 address[] memory executors = new address[](1);
                 executors[0] = address(0); // Means everyone can execute
 
-                _timelocks[chainIds[i]] = new TimelockController(1 days, proposers, executors, address(this));
+                _timelocks[chainIds[i]] = new TimelockControllerWithCounter(
+                    1 days,
+                    proposers,
+                    executors,
+                    address(this)
+                );
                 _governor = new AngleGovernor(
                     veANGLEDelegation,
                     address(_timelocks[chainIds[i]]),
@@ -91,7 +96,12 @@ contract SimulationSetup is Test {
                 address[] memory executors = new address[](1);
                 executors[0] = address(0); // Means everyone can execute
 
-                _timelocks[chainIds[i]] = new TimelockController(1 days, proposers, executors, address(this));
+                _timelocks[chainIds[i]] = new TimelockControllerWithCounter(
+                    1 days,
+                    proposers,
+                    executors,
+                    address(this)
+                );
                 _proposalReceivers[chainIds[i]] = new ProposalReceiver(address(lzEndPoint(chainIds[i])));
                 _timelocks[chainIds[i]].grantRole(
                     _timelocks[chainIds[i]].PROPOSER_ROLE(),
@@ -122,7 +132,7 @@ contract SimulationSetup is Test {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     /// TODO Replace with functions fetching the address from the sdk
-    function timelock(uint256 chainId) public view returns (TimelockController) {
+    function timelock(uint256 chainId) public view returns (TimelockControllerWithCounter) {
         return _timelocks[chainId];
     }
 
@@ -405,7 +415,7 @@ contract SimulationSetup is Test {
         uint256 valueEther,
         bytes memory error,
         address addressExecutor
-    ) public {
+    ) public returns (bytes32 id) {
         vm.selectFork(forkIdentifier[1]);
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = wrap(p);
 
@@ -452,8 +462,13 @@ contract SimulationSetup is Test {
         (targets, values, calldatas) = filterChainSubCalls(chainId, p);
         if (addressExecutor != address(0)) vm.prank(addressExecutor);
         if (keccak256(error) != keccak256(nullBytes)) vm.expectRevert(error);
-        if (targets.length == 1) timelock(chainId).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
-        else timelock(chainId).executeBatch(targets, values, calldatas, bytes32(0), 0);
+        if (targets.length == 1) {
+            timelock(chainId).execute(targets[0], values[0], calldatas[0], bytes32(0), 0);
+            id = timelock(chainId).hashOperation(targets[0], values[0], calldatas[0], bytes32(0), 0);
+        } else {
+            timelock(chainId).executeBatch(targets, values, calldatas, bytes32(0), 0);
+            id = timelock(chainId).hashOperationBatch(targets, values, calldatas, bytes32(0), 0);
+        }
     }
 
     function _dummyProposal(

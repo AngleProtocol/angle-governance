@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import { IveANGLEVotingDelegation } from "contracts/interfaces/IveANGLEVotingDelegation.sol";
 import { Test, stdError } from "forge-std/Test.sol";
 import { deployMockANGLE, deployVeANGLE } from "../../scripts/test/DeployANGLE.s.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
 import { ERC20 } from "oz/token/ERC20/ERC20.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "../external/VyperDeployer.sol";
@@ -13,6 +12,7 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 import { VeANGLEVotingDelegation, ECDSA } from "contracts/VeANGLEVotingDelegation.sol";
+import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 import "../Constants.t.sol";
 import "../Utils.t.sol";
@@ -43,7 +43,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
     AngleGovernor public angleGovernor;
     AngleGovernor public receiver;
     VeANGLEVotingDelegation public token;
-    TimelockController public mainnetTimelock;
+    TimelockControllerWithCounter public mainnetTimelock;
 
     function setUp() public virtual {
         // Set more realistic timestamps and block numbers
@@ -88,7 +88,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         vm.warp(block.timestamp + 10 days);
         token = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
 
-        mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
+        mainnetTimelock = new TimelockControllerWithCounter(1 days, proposers, executors, address(this));
         angleGovernor = new AngleGovernor(
             token,
             address(mainnetTimelock),

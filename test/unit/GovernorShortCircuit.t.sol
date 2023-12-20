@@ -3,7 +3,6 @@
 pragma solidity ^0.8.9;
 
 import { IGovernor } from "oz/governance/IGovernor.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
 import { GovernorCountingSimple } from "oz/governance/extensions/GovernorCountingSimple.sol";
 import { Strings } from "oz/utils/Strings.sol";
@@ -17,6 +16,7 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
+import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
 import "../Utils.t.sol";
@@ -31,7 +31,7 @@ contract GovernorShortCircuitTest is Test, Utils {
     AngleGovernor public angleGovernor;
     MockANGLE public ANGLE;
     IVotes public veANGLEDelegation;
-    TimelockController public mainnetTimelock;
+    TimelockControllerWithCounter public mainnetTimelock;
 
     address public alice = vm.addr(1);
     address public bob = vm.addr(2);
@@ -49,7 +49,7 @@ contract GovernorShortCircuitTest is Test, Utils {
         ANGLE = MockANGLE(_mockANGLE);
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
 
-        mainnetTimelock = new TimelockController(1 days, proposers, executors, address(this));
+        mainnetTimelock = new TimelockControllerWithCounter(1 days, proposers, executors, address(this));
         angleGovernor = new AngleGovernor(
             veANGLEDelegation,
             address(mainnetTimelock),
