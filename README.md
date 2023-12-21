@@ -1,7 +1,7 @@
-# <img src=".github/assets/logo.svg" alt="Angle" height="40px"> Angle Project Boilerplate
+# <img src=".github/assets/logo.svg" alt="Angle" height="40px"> Angle Governance
 
-[![CI](https://github.com/AngleProtocol/boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/AngleProtocol/boilerplate/actions)
-[![Coverage](https://codecov.io/gh/AngleProtocol/boilerplate/branch/main/graph/badge.svg)](https://codecov.io/gh/AngleProtocol/boilerplate)
+[![CI](https://github.com/AngleProtocol/angle-governance/actions/workflows/ci.yml/badge.svg)](https://github.com/AngleProtocol/angle-governance/actions)
+[![Coverage](https://codecov.io/gh/AngleProtocol/angle-governance/branch/main/graph/badge.svg)](https://codecov.io/gh/AngleProtocol/angle-governance)
 
 ## About this repository 🤔
 
