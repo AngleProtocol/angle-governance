@@ -20,10 +20,11 @@ contract Voter is BaseActor {
         proposalStore = _proposalStore;
     }
 
-    function vote(uint256 proposalSeed) public useActor(1) {
+    function vote(uint256 proposalSeed, uint256 voteOutcome) public useActor(1) {
         if (proposalStore.nbProposals() == 0) {
             return;
         }
+        voteOutcome = bound(voteOutcome, 0, 1);
         Proposal memory proposal = proposalStore.getRandomProposal(proposalSeed);
         uint256 proposalHash = _angleGovernor.hashProposal(
             proposal.target,
@@ -42,7 +43,7 @@ contract Voter is BaseActor {
                 )
             );
         }
-        _angleGovernor.castVote(proposalHash, 1);
+        _angleGovernor.castVote(proposalHash, uint8(voteOutcome));
         proposalStore.removeProposal(proposalHash);
     }
 }
