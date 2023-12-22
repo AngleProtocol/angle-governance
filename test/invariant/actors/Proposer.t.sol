@@ -70,8 +70,8 @@ contract Proposer is BaseActor {
         timestampStore.increaseCurrentBlockNumber(
             _angleGovernor.$snapshotTimestampToSnapshotBlockNumber(proposalSnapshot)
         );
-        vm.warp(_angleGovernor.proposalDeadline(proposalHash) + 1);
-        vm.roll(_angleGovernor.$snapshotTimestampToSnapshotBlockNumber(proposalSnapshot) + 1);
+        vm.warp(timestampStore.currentTimestamp());
+        vm.roll(timestampStore.currentBlockNumber());
         IGovernor.ProposalState currentState = _angleGovernor.state(proposalHash);
         if (currentState != IGovernor.ProposalState.Succeeded) {
             vm.expectRevert(
