@@ -78,6 +78,8 @@ contract Proposer is BaseActor {
         );
         _angleGovernor.castVote(proposalHash, 1);
         _angleGovernor.execute(proposal.target, proposal.value, proposal.data, proposal.description);
+        proposalStore.removeProposal(proposalHash);
+        proposalStore.addOldProposal(proposal.target, proposal.value, proposal.data, proposal.description);
     }
 
     function execute(uint256 proposalId) public useActor(1) {

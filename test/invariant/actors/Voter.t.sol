@@ -24,7 +24,7 @@ contract Voter is BaseActor {
         if (proposalStore.nbProposals() == 0) {
             return;
         }
-        voteOutcome = bound(voteOutcome, 0, 1);
+        voteOutcome = bound(voteOutcome, 0, 2);
         Proposal memory proposal = proposalStore.getRandomProposal(proposalSeed);
         uint256 proposalHash = _angleGovernor.hashProposal(
             proposal.target,
@@ -44,6 +44,5 @@ contract Voter is BaseActor {
             );
         }
         _angleGovernor.castVote(proposalHash, uint8(voteOutcome));
-        proposalStore.removeProposal(proposalHash);
     }
 }
