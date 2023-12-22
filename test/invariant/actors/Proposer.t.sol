@@ -126,6 +126,5 @@ contract Proposer is BaseActor {
         timestampStore.increaseCurrentTimestamp(_angleGovernor.votingDelay() + 1);
         vm.warp(block.timestamp + _angleGovernor.votingDelay() + 1);
         vm.roll(block.number + 1);
-        console.log("block", block.number, timestampStore.currentBlockNumber());
     }
 }

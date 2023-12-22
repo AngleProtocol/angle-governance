@@ -117,7 +117,6 @@ contract MainnetGovernorInvariants is Fixture {
             IGovernor.ProposalState currentState = angleGovernor.state(proposalHash);
             uint256 snapshot = angleGovernor.proposalSnapshot(proposalHash);
             uint256 deadline = angleGovernor.proposalDeadline(proposalHash);
-            console.log(block.number);
             uint256 quorum = angleGovernor.quorum(snapshot);
             (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = angleGovernor.proposalVotes(proposalHash);
             uint256 shortCircuitThreshold = angleGovernor.shortCircuitThreshold(snapshot);
