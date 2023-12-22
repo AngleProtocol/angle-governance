@@ -6,22 +6,26 @@ import { console } from "forge-std/console.sol";
 import { IGovernor } from "oz/governance/IGovernor.sol";
 import { ProposalStore, Proposal } from "../stores/ProposalStore.sol";
 import { IERC5805 } from "oz/interfaces/IERC5805.sol";
+import { TimestampStore } from "../stores/TimestampStore.sol";
 
 contract Proposer is BaseActor {
     AngleGovernor internal _angleGovernor;
     ProposalStore public proposalStore;
     IERC5805 public veANGLEDelegation;
+    TimestampStore public timestampStore;
 
     constructor(
         AngleGovernor angleGovernor,
         IERC20 _agToken,
         uint256 nbrVoter,
         ProposalStore _proposalStore,
-        IERC5805 _veANGLEDelegation
+        IERC5805 _veANGLEDelegation,
+        TimestampStore _timestampStore
     ) BaseActor(nbrVoter, "Proposer", _agToken) {
         _angleGovernor = angleGovernor;
         proposalStore = _proposalStore;
         veANGLEDelegation = _veANGLEDelegation;
+        timestampStore = _timestampStore;
     }
 
     function propose(uint256 value) public useActor(1) {
@@ -50,38 +54,6 @@ contract Proposer is BaseActor {
         proposalStore.addProposal(targets, values, datas, keccak256(bytes(description)));
     }
 
-    function shortCircuit(uint256 proposalId) public useActor(1) {
-        if (proposalStore.nbProposals() == 0) {
-            return;
-        }
-        Proposal memory proposal = proposalStore.getRandomProposal(proposalId);
-        uint256 proposalHash = _angleGovernor.hashProposal(
-            proposal.target,
-            proposal.value,
-            proposal.data,
-            proposal.description
-        );
-        IGovernor.ProposalState currentState = _angleGovernor.state(proposalHash);
-        if (currentState != IGovernor.ProposalState.Active) {
-            return;
-        }
-
-        uint256 timeElapsed = _angleGovernor.votingDelay() + 1;
-        uint256 blocksElapsed = (_angleGovernor.votingDelay() + 1) / 12;
-        vm.warp(block.timestamp + timeElapsed);
-        vm.roll(block.number + blocksElapsed + 1);
-
-        vm.mockCall(
-            address(veANGLEDelegation),
-            abi.encodeWithSelector(veANGLEDelegation.getPastVotes.selector, _currentActor),
-            abi.encode(_angleGovernor.shortCircuitThreshold(_angleGovernor.proposalSnapshot(proposalHash)) + 1)
-        );
-        _angleGovernor.castVote(proposalHash, 1);
-        _angleGovernor.execute(proposal.target, proposal.value, proposal.data, proposal.description);
-        proposalStore.removeProposal(proposalHash);
-        proposalStore.addOldProposal(proposal.target, proposal.value, proposal.data, proposal.description);
-    }
-
     function execute(uint256 proposalId) public useActor(1) {
         if (proposalStore.nbProposals() == 0) {
             return;
@@ -94,8 +66,13 @@ contract Proposer is BaseActor {
             proposal.description
         );
         uint256 proposalSnapshot = _angleGovernor.proposalSnapshot(proposalHash);
+        timestampStore.increaseCurrentTimestamp(_angleGovernor.proposalDeadline(proposalHash));
+        timestampStore.increaseCurrentBlockNumber(
+            _angleGovernor.$snapshotTimestampToSnapshotBlockNumber(proposalSnapshot)
+        );
         vm.warp(_angleGovernor.proposalDeadline(proposalHash) + 1);
         vm.roll(_angleGovernor.$snapshotTimestampToSnapshotBlockNumber(proposalSnapshot) + 1);
+        console.log("block", block.number, timestampStore.currentBlockNumber());
         IGovernor.ProposalState currentState = _angleGovernor.state(proposalHash);
         if (currentState != IGovernor.ProposalState.Succeeded) {
             vm.expectRevert(
@@ -114,6 +91,9 @@ contract Proposer is BaseActor {
     }
 
     function skipVotingDelay() public useActor(1) {
+        timestampStore.increaseCurrentTimestamp(_angleGovernor.votingDelay() + 1);
         vm.warp(block.timestamp + _angleGovernor.votingDelay() + 1);
+        vm.roll(block.number + 1);
+        console.log("block", block.number, timestampStore.currentBlockNumber());
     }
 }

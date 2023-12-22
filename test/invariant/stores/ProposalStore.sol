@@ -63,6 +63,10 @@ contract ProposalStore is StdUtils {
         return proposals;
     }
 
+    function getOldProposals() external view returns (Proposal[] memory) {
+        return oldProposals;
+    }
+
     function doesOldProposalExists(uint256 proposalHash) external view returns (bool) {
         for (uint256 i = 0; i < oldProposals.length; i++) {
             uint256 proposalId = uint256(
