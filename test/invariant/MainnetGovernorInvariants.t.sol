@@ -77,8 +77,9 @@ contract MainnetGovernorInvariants is Fixture {
             targetSelector(FuzzSelector({ addr: address(_proposerHandler), selectors: selectors }));
         }
         {
-            bytes4[] memory selectors = new bytes4[](1);
+            bytes4[] memory selectors = new bytes4[](2);
             selectors[0] = BadVoter.voteNonExistantProposal.selector;
+            selectors[1] = BadVoter.queueNewlyCreatedProposal.selector;
             targetSelector(FuzzSelector({ addr: address(_badVoterHandler), selectors: selectors }));
         }
     }
