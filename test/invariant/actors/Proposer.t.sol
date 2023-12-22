@@ -72,7 +72,6 @@ contract Proposer is BaseActor {
         );
         vm.warp(_angleGovernor.proposalDeadline(proposalHash) + 1);
         vm.roll(_angleGovernor.$snapshotTimestampToSnapshotBlockNumber(proposalSnapshot) + 1);
-        console.log("block", block.number, timestampStore.currentBlockNumber());
         IGovernor.ProposalState currentState = _angleGovernor.state(proposalHash);
         if (currentState != IGovernor.ProposalState.Succeeded) {
             vm.expectRevert(
@@ -86,8 +85,41 @@ contract Proposer is BaseActor {
             );
         }
         _angleGovernor.execute(proposal.target, proposal.value, proposal.data, proposal.description);
-        proposalStore.removeProposal(proposalHash);
-        proposalStore.addOldProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+        if (currentState == IGovernor.ProposalState.Succeeded) {
+            proposalStore.removeProposal(proposalHash);
+            proposalStore.addOldProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+        }
+    }
+
+    function tryToExecute(uint256 proposalId) public useActor(1) {
+        if (proposalStore.nbProposals() == 0) {
+            return;
+        }
+        Proposal memory proposal = proposalStore.getRandomProposal(proposalId);
+        uint256 proposalHash = _angleGovernor.hashProposal(
+            proposal.target,
+            proposal.value,
+            proposal.data,
+            proposal.description
+        );
+        uint256 proposalSnapshot = _angleGovernor.proposalSnapshot(proposalHash);
+        IGovernor.ProposalState currentState = _angleGovernor.state(proposalHash);
+        if (currentState != IGovernor.ProposalState.Succeeded) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IGovernor.GovernorUnexpectedProposalState.selector,
+                    proposalHash,
+                    currentState,
+                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded)) |
+                        bytes32(1 << uint8(IGovernor.ProposalState.Queued))
+                )
+            );
+        }
+        _angleGovernor.execute(proposal.target, proposal.value, proposal.data, proposal.description);
+        if (currentState == IGovernor.ProposalState.Succeeded) {
+            proposalStore.removeProposal(proposalHash);
+            proposalStore.addOldProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+        }
     }
 
     function skipVotingDelay() public useActor(1) {
