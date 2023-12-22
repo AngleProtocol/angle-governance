@@ -62,7 +62,33 @@ contract BadVoter is BaseActor {
                     bytes32(1 << uint8(IGovernor.ProposalState.Succeeded))
                 )
             );
-            _angleGovernor.queue(proposalHash);
+            _angleGovernor.queue(proposal.target, proposal.value, proposal.data, proposal.description);
+        }
+    }
+
+    function executeNonReadyProposals(uint256 actorIndexSeed, uint256 proposalId) public useActor(actorIndexSeed) {
+        if (proposalStore.nbProposals() == 0) {
+            return;
+        }
+        Proposal[] memory proposals = proposalStore.getProposals();
+        Proposal memory proposal = proposalStore.getRandomProposal(proposalId);
+        uint256 proposalHash = _angleGovernor.hashProposal(
+            proposal.target,
+            proposal.value,
+            proposal.data,
+            proposal.description
+        );
+        if (_angleGovernor.state(proposalHash) != IGovernor.ProposalState.Succeeded) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IGovernor.GovernorUnexpectedProposalState.selector,
+                    proposalHash,
+                    _angleGovernor.state(proposalHash),
+                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded)) |
+                        bytes32(1 << uint8(IGovernor.ProposalState.Queued))
+                )
+            );
+            _angleGovernor.execute(proposal.target, proposal.value, proposal.data, proposal.description);
         }
     }
 }
