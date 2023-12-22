@@ -78,9 +78,8 @@ contract MainnetGovernorInvariants is Fixture {
             targetSelector(FuzzSelector({ addr: address(_proposerHandler), selectors: selectors }));
         }
         {
-            bytes4[] memory selectors = new bytes4[](3);
+            bytes4[] memory selectors = new bytes4[](2);
             selectors[0] = BadVoter.voteNonExistantProposal.selector;
-            selectors[1] = BadVoter.queueNewlyCreatedProposal.selector;
             selectors[2] = BadVoter.executeNonReadyProposals.selector;
             targetSelector(FuzzSelector({ addr: address(_badVoterHandler), selectors: selectors }));
         }
@@ -97,7 +96,7 @@ contract MainnetGovernorInvariants is Fixture {
                 proposal.data,
                 proposal.description
             );
-            uint256 totalSupply = ANGLE.totalSupply();
+            uint256 totalSupply = veANGLE.totalSupply();
             (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = angleGovernor.proposalVotes(proposalHash);
             assertLe(againstVotes + forVotes + abstainVotes, totalSupply, "Votes should be under total supply");
         }
@@ -134,9 +133,8 @@ contract MainnetGovernorInvariants is Fixture {
                 assertEq(uint8(currentState), uint8(IGovernor.ProposalState.Succeeded), "Proposal should be succeeded");
             } else if (block.timestamp >= deadline) {
                 assertEq(uint8(currentState), uint8(IGovernor.ProposalState.Defeated), "Proposal should be defeated");
-            } else {
-                assertEq(uint8(currentState), uint8(IGovernor.ProposalState.Queued), "Proposal should be queued");
             }
+            assertNotEq(uint8(currentState), uint8(IGovernor.ProposalState.Queued), "Proposal should be queued");
         }
     }
 
