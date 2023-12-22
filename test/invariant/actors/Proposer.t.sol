@@ -16,12 +16,12 @@ contract Proposer is BaseActor {
 
     constructor(
         AngleGovernor angleGovernor,
-        IERC20 _agToken,
+        IERC20 angle,
         uint256 nbrVoter,
         ProposalStore _proposalStore,
         IERC5805 _veANGLEDelegation,
         TimestampStore _timestampStore
-    ) BaseActor(nbrVoter, "Proposer", _agToken) {
+    ) BaseActor(nbrVoter, "Proposer", angle) {
         _angleGovernor = angleGovernor;
         proposalStore = _proposalStore;
         veANGLEDelegation = _veANGLEDelegation;
