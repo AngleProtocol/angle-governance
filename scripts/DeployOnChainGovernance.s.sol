@@ -74,9 +74,6 @@ contract DeployOnChainGovernance is Utils {
         );
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(angleGovernor));
         timelock.grantRole(timelock.CANCELLER_ROLE(), safeMultiSig);
-
-        timelock.grantRole(timelock.PROPOSER_ROLE(), address(angleGovernor));
-        timelock.grantRole(timelock.CANCELLER_ROLE(), safeMultiSig);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), address(deployer));
 
         proposalSender = new ProposalSender(lzEndPoint(srcChainId));
