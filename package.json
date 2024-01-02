@@ -7,7 +7,7 @@
     "coverage": "FOUNDRY_PROFILE=dev forge coverage --report lcov && yarn lcov:clean && yarn lcov:generate-html",
     "compile": "forge build",
     "compile:dev": "FOUNDRY_PROFILE=dev forge build",
-    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url polygon scripts/DeploySideChainGovernance.s.sol",
+    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url gnosis scripts/DeployOnChainGovernance.s.sol",
     "deploy:fork": "source .env && forge script --skip test  --slow --fork-url fork --broadcast scripts/DeploySideChainGovernance.s.sol -vvvv",
     "gas": "yarn test --gas-report",
     "fork": "bash helpers/fork.sh",

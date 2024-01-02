@@ -5,12 +5,23 @@ pragma solidity ^0.8.9;
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
 
+/*
 uint256 constant timelockDelay = 1 days;
 uint48 constant initialVotingDelay = 1 days;
 uint256 constant initialVotingDelayBlocks = 1 days / 12;
 uint32 constant initialVotingPeriod = 4 days;
 uint256 constant initialProposalThreshold = 100_000e18;
 uint48 constant initialVoteExtension = 3 hours;
+*/
+
+uint256 constant timelockDelayTest = 300;
+uint48 constant initialVotingDelayTest = 300;
+uint256 constant initialVotingDelayBlocksTest = 60;
+uint32 constant initialVotingPeriodTest = 3600;
+uint256 constant initialProposalThresholdTest = 100_000e18;
+uint48 constant initialVoteExtensionTest = 60;
+
+// TODO: update so we deploy with small values and later increase back up
 uint256 constant initialQuorumNumerator = 20;
 uint256 constant initialShortCircuitNumerator = 75;
 bytes constant nullBytes = hex"";

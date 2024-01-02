@@ -45,6 +45,7 @@ contract DeployOnChainGovernance is Utils {
         address deployer = vm.addr(deployerPrivateKey);
         vm.label(deployer, "Deployer");
 
+        /*
         // If not already - deploy the voting tokens
         vyperDeployer = new VyperDeployer();
         vm.allowCheatcodes(address(vyperDeployer));
@@ -56,26 +57,29 @@ contract DeployOnChainGovernance is Utils {
 
         // Deploy Governance source chain
         token = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
+        */
+        token = VeANGLEVotingDelegation(0xD622c71aba9060F393FEC67D3e2B9335292bf23B);
 
-        address[] memory proposers = new address[](0);
+        address[] memory proposers = new address[](2);
         address[] memory executors = new address[](1);
         executors[0] = address(0); // Means everyone can execute
-        timelock = new TimelockController(timelockDelay, proposers, executors, address(deployer));
+        proposers[0] = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
+        proposers[1] = 0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091;
+        timelock = new TimelockController(timelockDelayTest, proposers, executors, address(deployer));
         angleGovernor = new AngleGovernor(
             token,
             address(timelock),
-            initialVotingDelay,
-            initialVotingPeriod,
-            initialProposalThreshold,
-            initialVoteExtension,
+            initialVotingDelayTest,
+            initialVotingPeriodTest,
+            initialProposalThresholdTest,
+            initialVoteExtensionTest,
             initialQuorumNumerator,
             initialShortCircuitNumerator,
-            initialVotingDelayBlocks
+            initialVotingDelayBlocksTest
         );
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(angleGovernor));
         timelock.grantRole(timelock.CANCELLER_ROLE(), safeMultiSig);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), address(deployer));
-
         proposalSender = new ProposalSender(lzEndPoint(srcChainId));
         proposalSender.transferOwnership(address(angleGovernor));
 
