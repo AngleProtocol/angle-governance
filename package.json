@@ -8,6 +8,7 @@
     "compile": "forge build",
     "compile:dev": "FOUNDRY_PROFILE=dev forge build",
     "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url gnosis scripts/DeployOnChainGovernance.s.sol",
+    "deploy:test": "FOUNDRY_PROFILE=dev forge script --skip test --broadcast --verify --slow -vvvv --rpc-url gnosis scripts/DeployOnChainGovernance.s.sol",
     "deploy:fork": "source .env && forge script --skip test  --slow --fork-url fork --broadcast scripts/DeploySideChainGovernance.s.sol -vvvv",
     "gas": "yarn test --gas-report",
     "fork": "bash helpers/fork.sh",

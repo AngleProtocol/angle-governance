@@ -7,7 +7,7 @@ import "stringutils/strings.sol";
 import "./Utils.s.sol";
 import "oz/interfaces/IERC20.sol";
 
-import { TimelockController } from "oz/governance/TimelockController.sol";
+import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
 import { ERC20 } from "oz/token/ERC20/ERC20.sol";
 
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
@@ -20,7 +20,7 @@ contract DeploySideChainGovernance is Utils {
     using strings for *;
 
     ProposalReceiver public proposalReceiver;
-    TimelockController public timelock;
+    TimelockControllerWithCounter public timelock;
 
     function run() external {
         uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_POLYGON"), "m/44'/60'/0'/0/", 0);
@@ -39,7 +39,7 @@ contract DeploySideChainGovernance is Utils {
         address[] memory executors = new address[](1);
         executors[0] = address(0); // Means everyone can execute
 
-        timelock = new TimelockController(timelockDelay, proposers, executors, deployer);
+        timelock = new TimelockControllerWithCounter(timelockDelayTest, proposers, executors, deployer);
         proposalReceiver = new ProposalReceiver(address(lzEndPoint(destChainId)));
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(proposalReceiver));
         timelock.grantRole(timelock.CANCELLER_ROLE(), destSafeMultiSig);

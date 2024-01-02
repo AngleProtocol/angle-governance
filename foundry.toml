@@ -22,7 +22,7 @@ depth = 30
 
 [rpc_endpoints]
 arbitrum = "${ETH_NODE_URI_ARBITRUM}"
-gnosis = "${ETH_NODE_URI_GNOSIS}"
+gnosis = "https://gnosis.publicnode.com"
 mainnet = "${ETH_NODE_URI_MAINNET}"
 optimism = "${ETH_NODE_URI_OPTIMISM}"
 polygon = "${ETH_NODE_URI_POLYGON}"
