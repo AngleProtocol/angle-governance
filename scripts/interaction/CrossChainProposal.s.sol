@@ -18,9 +18,7 @@ contract CrossChainProposal is Utils {
         address deployer = vm.addr(deployerPrivateKey);
         vm.label(deployer, "Deployer");
 
-        TimelockControllerWithCounter timelockDestChain = TimelockControllerWithCounter(payable(timelockPolygon));
-        address(lzEndPoint(destChainId));
-        address(lzEndPoint(CHAIN_GNOSIS));
+        TimelockControllerWithCounter timelockDestChain = TimelockControllerWithCounter(payable(timelock(destChainId)));
 
         address[] memory timelockTargets = new address[](1);
         uint256[] memory timelockValues = new uint256[](1);
@@ -33,14 +31,14 @@ contract CrossChainProposal is Utils {
 
             batchTargets[0] = address(timelockDestChain);
             batchValues[0] = 0;
-            batchCalldatas[0] = abi.encodeWithSelector(timelockDestChain.updateDelay.selector, 250);
+            batchCalldatas[0] = abi.encodeWithSelector(timelockDestChain.updateDelay.selector, 200);
 
             batchTargets[1] = address(timelockDestChain);
             batchValues[1] = 0;
             batchCalldatas[1] = abi.encodeWithSelector(
                 timelockDestChain.grantRole.selector,
                 0xd8aa0f3194971a2a116679f7c2090f6939c8d4e01a2a8d7e41d55e5351469e63, //timelockDestChain.EXECUTOR_ROLE(),
-                deployer
+                address(0)
             );
 
             timelockTargets[0] = address(timelockDestChain);
@@ -59,11 +57,13 @@ contract CrossChainProposal is Utils {
         address[] memory targets = new address[](1);
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
-        string memory description = "Add new proposal Receiver on Polygon";
+        string
+            memory description = "Test Cross chain proposals (redue updateDelay to 200 + remove executor role) higher fee";
 
         ProposalSender sender = proposalSender();
+        uint256 feeLZ = 1 ether;
         targets[0] = address(sender);
-        values[0] = 0.01 ether;
+        values[0] = feeLZ;
         calldatas[0] = abi.encodeWithSelector(
             sender.execute.selector,
             getLZChainId(destChainId),
@@ -72,10 +72,9 @@ contract CrossChainProposal is Utils {
         );
 
         // uint256 proposalId = governor().propose(targets, values, calldatas, description);
-        // uint256 proposalId = 0x8cc9f2050d964038be759e6cfc02907bd88a9dc56d64923f116407ef038093f3;
-        uint256 proposalId = 0xf947913bbb93cb082d3f9799c813152b583efce34cccf6d0fa8361a156ada8ac;
+        uint256 proposalId = 0x7f3a7bfba6ab7cdc0f85cfaa8bc2b03178c4d28dabbf53a1908604d2cb2d6891;
         governor().castVote(proposalId, 1);
 
-        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
+        governor().execute{ value: feeLZ }(targets, values, calldatas, keccak256(bytes(description)));
     }
 }

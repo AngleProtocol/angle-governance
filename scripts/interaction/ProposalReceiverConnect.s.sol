@@ -7,7 +7,7 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 
-contract ConnectProposalReceiver is Utils {
+contract ProposalReceiverConnect is Utils {
     function run() external {
         // TODO can be modified to deploy on any chain
         uint256 destChainId = CHAIN_POLYGON;
@@ -29,13 +29,13 @@ contract ConnectProposalReceiver is Utils {
         calldatas[0] = abi.encodeWithSelector(
             sender.setTrustedRemoteAddress.selector,
             getLZChainId(destChainId),
-            abi.encodePacked(proposalReceiverPolygon)
+            abi.encodePacked(proposalReceiver(destChainId))
         );
 
         // uint256 proposalId = governor().propose(targets, values, calldatas, description);
 
-        // uint256 proposalId = 0x16ce056680a50ff416e0f846aa4e1e5d86461daafe597cdaed44776e850c2869;
-        // governor().castVote(proposalId, 1);
+        uint256 proposalId = 0x5af180d896738e85d65edfa0f75944289b65485e86ee38fd0776e140a89634d4;
+        governor().castVote(proposalId, 1);
 
         governor().execute(targets, values, calldatas, keccak256(bytes(description)));
     }
