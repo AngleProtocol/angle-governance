@@ -33,6 +33,9 @@ address constant SAFE_POLYGON = 0x3b9D32D0822A6351F415BeaB05251c1457FF6f8D;
 
 uint256 constant CHAIN_GNOSIS = 100;
 uint256 constant CHAIN_POLYGON = 137;
+uint256 constant CHAIN_OPTIMISM = 10;
 
 // TODO update when deployed
-address constant proposalSender = address(0x2AAaE852a35332BBA4abAd69bbf9B256b683624c);
+// address constant proposalSender = address(0x499C86959a330Eb860FdFFf6e87896d4298a4F4E);
+address constant proposalReceiverPolygon = address(0x060246eD061999F7e128Fd8355d84467d6726b71);
+address constant timelockPolygon = address(0x0d17B69fF7D30F7EC13A9447d1E5624b601a730b);

@@ -7,9 +7,9 @@
     "coverage": "FOUNDRY_PROFILE=dev forge coverage --report lcov && yarn lcov:clean && yarn lcov:generate-html",
     "compile": "forge build",
     "compile:dev": "FOUNDRY_PROFILE=dev forge build",
-    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url gnosis scripts/DeployOnChainGovernance.s.sol",
+    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url gnosis scripts/interaction/CrossChainProposal.s.sol",
     "deploy:test": "FOUNDRY_PROFILE=dev forge script --skip test --broadcast --verify --slow -vvvv --rpc-url gnosis scripts/DeployOnChainGovernance.s.sol",
-    "deploy:fork": "source .env && forge script --skip test  --slow --fork-url fork --broadcast scripts/DeploySideChainGovernance.s.sol -vvvv",
+    "deploy:fork": "FOUNDRY_PROFILE=dev forge script --skip test  --slow --fork-url fork --broadcast scripts/interaction/CrossChainProposal.s.sol -vvvv",
     "gas": "yarn test --gas-report",
     "fork": "bash helpers/fork.sh",
     "run": "docker run -it --rm -v $(pwd):/app -w /app ghcr.io/foundry-rs/foundry sh",
@@ -26,7 +26,8 @@
     "prettier": "prettier --write '**/*.sol'",
     "lint": "yarn lint:check --fix",
     "lint:check": "solhint --max-warnings 20 \"**/*.sol\"",
-    "verify": "forge verify-contract --chain-id 100 --watch 0x9b4c3f0eb7e732a64c549ec989d62ec82b00d37b VyperDeployer"
+    "verify": "forge verify-contract --chain-id 137 --watch --constructor-args $(cast abi-encode 'constructor(uint256,address[] memory,address[] memory,address)' 300 ['0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185','0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091'] ['0x0000000000000000000000000000000000000000'] '0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185') 0x0d17b69ff7d30f7ec13a9447d1e5624b601a730b TimelockControllerWithCounter",
+    "verify:receiver": "forge verify-contract --chain-id 137 --watch --constructor-args $(cast abi-encode 'constructor(address)' '0x3c2269811836af69497e5f486a85d7316753cf62') 0x060246eD061999F7e128Fd8355d84467d6726b71 ProposalReceiver"
   },
   "keywords": [],
   "author": "Angle Core Team",
@@ -35,7 +36,7 @@
     "url": "https://github.com/AngleProtocol/boilerplate/issues"
   },
   "devDependencies": {
-    "@angleprotocol/sdk": "0.3.0",
+    "@angleprotocol/sdk": "0.20.0",
     "@layerzerolabs/lz-sdk": "^0.0.30",
     "prettier": "^2.0.0",
     "prettier-plugin-solidity": "^1.1.3",

@@ -17,4 +17,5 @@ const parsedInput = isNaN(Number(chainInput)) ? chainInput : Number(chainInput);
 
 // Call the function with the input
 const result = layerZeroChainIds[parsedInput];
+if(!result) process.exit(1);
 console.log(result);

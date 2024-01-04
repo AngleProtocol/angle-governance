@@ -35,9 +35,11 @@ contract DeploySideChainGovernance is Utils {
         // END
 
         // Deploy relayer receiver and Timelock on end chain
-        address[] memory proposers = new address[](0);
+        address[] memory proposers = new address[](2);
         address[] memory executors = new address[](1);
         executors[0] = address(0); // Means everyone can execute
+        proposers[0] = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
+        proposers[1] = 0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091;
 
         timelock = new TimelockControllerWithCounter(timelockDelayTest, proposers, executors, deployer);
         proposalReceiver = new ProposalReceiver(address(lzEndPoint(destChainId)));
@@ -45,7 +47,7 @@ contract DeploySideChainGovernance is Utils {
         timelock.grantRole(timelock.CANCELLER_ROLE(), destSafeMultiSig);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), deployer);
 
-        proposalReceiver.setTrustedRemoteAddress(getLZChainId(srcChainId), abi.encodePacked(proposalSender));
+        proposalReceiver.setTrustedRemoteAddress(getLZChainId(srcChainId), abi.encodePacked(proposalSender()));
         proposalReceiver.transferOwnership(address(timelock));
 
         vm.stopBroadcast();
