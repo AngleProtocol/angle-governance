@@ -7,8 +7,9 @@
     "coverage": "FOUNDRY_PROFILE=dev forge coverage --report lcov && yarn lcov:clean && yarn lcov:generate-html",
     "compile": "forge build",
     "compile:dev": "FOUNDRY_PROFILE=dev forge build",
-    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url mainnet scripts/DeployMockAgEUR.s.sol",
-    "deploy:fork": "source .env && forge script --skip test  --slow --fork-url fork --broadcast scripts/DeployMockAgEUR.s.sol -vvvv",
+    "deploy": "forge script --skip test --broadcast --verify --slow -vvvv --rpc-url polygon scripts/interaction/TimelockExecute.s.sol",
+    "deploy:test": "FOUNDRY_PROFILE=dev forge script --skip test --broadcast --verify --slow -vvvv --rpc-url gnosis scripts/DeployOnChainGovernance.s.sol",
+    "deploy:fork": "FOUNDRY_PROFILE=dev forge script --skip test  --slow --fork-url fork --broadcast scripts/interaction/TimelockExecute.s.sol -vvvv",
     "gas": "yarn test --gas-report",
     "fork": "bash helpers/fork.sh",
     "run": "docker run -it --rm -v $(pwd):/app -w /app ghcr.io/foundry-rs/foundry sh",
@@ -24,7 +25,10 @@
     "size:dev": "FOUNDRY_PROFILE=dev forge build --skip test --sizes",
     "prettier": "prettier --write '**/*.sol'",
     "lint": "yarn lint:check --fix",
-    "lint:check": "solhint --max-warnings 20 \"**/*.sol\""
+    "lint:check": "solhint --max-warnings 20 \"**/*.sol\"",
+    "verify": "forge verify-contract --chain-id 100 --watch --constructor-args $(cast abi-encode 'constructor(address,address,uint48,uint32,uint256,uint48,uint256,uint256,uint256)' '0xD622c71aba9060F393FEC67D3e2B9335292bf23B' '0x769A713bF0589d495008e5a7c78fABafb9C35F39' 300 3600 100000000000000000000000 60 20 75 60) 0x882dD02d7F2F06B7e968ECb97B1B62Bf51B3af4a AngleGovernor",
+    "verify:governor": "forge verify-contract --chain-id 100 --watch --constructor-args 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd0553476bf02ef2726e8ce5ced78d63e26e602e4a2257b1f559418e24b4633997dd2b8b2d874e19a344cba53b9fb534ea748ef117ed4b75c67569a79486454193000000000000000000000000d622c71aba9060f393fec67d3e2b9335292bf23b000000000000000000000000769a713bf0589d495008e5a7c78fabafb9c35f39000000000000000000000000000000000000000000000000000000000000012c0000000000000000000000000000000000000000000000000000000000000e1000000000000000000000000000000000000000000000152d02c7e14af6800000000000000000000000000000000000000000000000000000000000000000003c0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000004b000000000000000000000000000000000000000000000000000000000000003c 0x882dD02d7F2F06B7e968ECb97B1B62Bf51B3af4a AngleGovernor",
+    "verify:sender": "forge verify-contract --chain-id 100 --watch --constructor-args $(cast abi-encode 'constructor(address)' '0x9740FF91F1985D8d2B71494aE1A2f723bb3Ed9E4') 0xdE8e46cc73d9D1C94f9b99cE518Cf69A7a7615A3 ProposalSender"
   },
   "keywords": [],
   "author": "Angle Core Team",
@@ -33,7 +37,7 @@
     "url": "https://github.com/AngleProtocol/boilerplate/issues"
   },
   "devDependencies": {
-    "@angleprotocol/sdk": "0.3.0",
+    "@angleprotocol/sdk": "0.20.0",
     "@layerzerolabs/lz-sdk": "^0.0.30",
     "prettier": "^2.0.0",
     "prettier-plugin-solidity": "^1.1.3",

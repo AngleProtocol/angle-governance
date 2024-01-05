@@ -14,8 +14,12 @@ if (process.argv.length < 3) {
 const chainInput = process.argv[2];
 
 // Try to parse the input as a number if possible
-const parsedInput = isNaN(Number(chainInput)) ? chainInput : Number(chainInput);
+if(isNaN(Number(chainInput))) process.exit(1);
 
+const parsedInput = Number(chainInput);
+const multisig = registry(parsedInput)?.Governor;
+
+if(!multisig) process.exit(1);
 // Call the function with the input
-const result = ethers.utils.getAddress(registry(parsedInput).Governor).toString().slice(2);
+const result = ethers.utils.getAddress(multisig)?.toString()?.slice(2);
 console.log(result);

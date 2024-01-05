@@ -88,7 +88,7 @@ contract SimulationSetup is Test {
                 );
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].PROPOSER_ROLE(), address(governor()));
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].CANCELLER_ROLE(), multisig(chainIds[i]));
-                // _timelocks[chainIds[i]].renounceRole(_timelocks[chainIds[i]].TIMELOCK_ADMIN_ROLE(), address(this));
+                _timelocks[chainIds[i]].renounceRole(_timelocks[chainIds[i]].DEFAULT_ADMIN_ROLE(), address(this));
                 _proposalSender = new ProposalSender(lzEndPoint(chainIds[i]));
             } else {
                 vm.selectFork(forkIdentifier[chainIds[i]]);
