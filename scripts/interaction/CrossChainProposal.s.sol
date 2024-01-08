@@ -12,6 +12,7 @@ contract CrossChainProposal is Utils {
         // TODO can be modified to deploy on any chain
         uint256 srcChainId = CHAIN_ETHEREUM;
         uint256 destChainId = CHAIN_POLYGON;
+        uint256 srcChainId = CHAIN_GNOSIS;
         // END
 
         uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_GNOSIS"), "m/44'/60'/0'/0/", 0);
@@ -75,8 +76,8 @@ contract CrossChainProposal is Utils {
             abi.encodePacked(uint16(1), uint256(300000))
         );
 
-        // uint256 proposalId = governor.propose(targets, values, calldatas, description);
-        uint256 proposalId = 0x7f3a7bfba6ab7cdc0f85cfaa8bc2b03178c4d28dabbf53a1908604d2cb2d6891;
+        uint256 proposalId = governor.propose(targets, values, calldatas, description);
+        // uint256 proposalId = 0x7f3a7bfba6ab7cdc0f85cfaa8bc2b03178c4d28dabbf53a1908604d2cb2d6891;
         governor.castVote(proposalId, 1);
 
         governor.execute{ value: feeLZ }(targets, values, calldatas, keccak256(bytes(description)));

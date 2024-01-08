@@ -12,6 +12,7 @@ contract ProposalReceiverConnect is Utils {
         // TODO can be modified to deploy on any chain
         uint256 srcChainId = CHAIN_ETHEREUM;
         uint256 destChainId = CHAIN_POLYGON;
+        uint256 srcChainId = CHAIN_GNOSIS;
         // END
 
         uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_GNOSIS"), "m/44'/60'/0'/0/", 0);
@@ -39,8 +40,8 @@ contract ProposalReceiverConnect is Utils {
         );
 
         // uint256 proposalId = governor.propose(targets, values, calldatas, description);
-
         uint256 proposalId = 0x5af180d896738e85d65edfa0f75944289b65485e86ee38fd0776e140a89634d4;
+
         governor.castVote(proposalId, 1);
 
         governor.execute(targets, values, calldatas, keccak256(bytes(description)));

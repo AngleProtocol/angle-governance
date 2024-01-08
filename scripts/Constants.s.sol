@@ -4,6 +4,14 @@ pragma solidity ^0.8.9;
 
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
+import { ITransmuter } from "transmuter/interfaces/ITransmuter.sol";
+import { IAgToken } from "borrow/interfaces/IAgToken.sol";
+import { ProxyAdmin } from "oz/proxy/transparent/ProxyAdmin.sol";
+import { Ownable } from "oz/access/Ownable.sol";
+import { CoreBorrow } from "borrow/coreBorrow/CoreBorrow.sol";
+import { ITreasury } from "borrow/interfaces/ITreasury.sol";
+import { AngleGovernor } from "contracts/AngleGovernor.sol";
+import "./Interfaces.s.sol";
 
 enum ContractType {
     Timelock,
@@ -15,7 +23,6 @@ enum ContractType {
     TransmuterAgEUR,
     CoreBorrow,
     GovernorMultisig,
-    GuardianMultisig,
     ProxyAdmin,
     Angle,
     veANGLE,
@@ -25,6 +32,13 @@ enum ContractType {
     AngleDistributor,
     AngleMiddleman,
     FeeDistributor
+}
+
+struct SubCall {
+    uint256 chainId;
+    address target;
+    uint256 value;
+    bytes data;
 }
 
 uint256 constant timelockDelay = 1 days;
@@ -52,3 +66,9 @@ uint256 constant CHAIN_BASE = 8453;
 uint256 constant CHAIN_LINEA = 59144;
 uint256 constant CHAIN_MANTLE = 5000;
 uint256 constant CHAIN_AURORA = 1313161554;
+uint256 constant BASE_18 = 1e18;
+uint256 constant BASE_9 = 1e9;
+
+uint64 constant twoPoint5Rate = 782997666703977344;
+uint64 constant fourRate = 1243680713969297408;
+uint64 constant fourPoint3Rate = 1335019428339023872;
