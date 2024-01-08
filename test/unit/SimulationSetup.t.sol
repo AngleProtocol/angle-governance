@@ -204,6 +204,7 @@ contract SimulationSetup is Test {
                                                         HELPERS                                                     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
+    // TODO USE IT
     /// @notice Build the governor proposal based on all the transaction that need to be executed
     function wrap(
         SubCall[] memory prop
@@ -229,6 +230,7 @@ contract SimulationSetup is Test {
             }
 
             if (chainId == 1) {
+                // TODO cannot use a select fork
                 vm.selectFork(forkIdentifier[1]);
 
                 (

@@ -18,7 +18,9 @@ contract TimelockExecute is Utils {
         address deployer = vm.addr(deployerPrivateKey);
         vm.label(deployer, "Deployer");
 
-        TimelockControllerWithCounter timelockDestChain = TimelockControllerWithCounter(payable(timelock(chainId)));
+        TimelockControllerWithCounter timelockDestChain = TimelockControllerWithCounter(
+            payable(_chainToContract(chainId, ContractType.Timelock))
+        );
 
         address[] memory targets = new address[](2);
         uint256[] memory values = new uint256[](2);
