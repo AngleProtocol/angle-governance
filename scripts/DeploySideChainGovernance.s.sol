@@ -47,7 +47,10 @@ contract DeploySideChainGovernance is Utils {
         timelock.grantRole(timelock.CANCELLER_ROLE(), destSafeMultiSig);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), deployer);
 
-        proposalReceiver.setTrustedRemoteAddress(getLZChainId(srcChainId), abi.encodePacked(proposalSender()));
+        proposalReceiver.setTrustedRemoteAddress(
+            getLZChainId(srcChainId),
+            abi.encodePacked(_chainToContract(srcChainId, ContractType.ProposalSender))
+        );
         proposalReceiver.transferOwnership(address(timelock));
 
         vm.stopBroadcast();

@@ -11,6 +11,7 @@ contract ProposalReceiverConnect is Utils {
     function run() external {
         // TODO can be modified to deploy on any chain
         uint256 destChainId = CHAIN_POLYGON;
+        uint256 srcChainId = CHAIN_GNOSIS;
         // END
 
         uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_GNOSIS"), "m/44'/60'/0'/0/", 0);
@@ -23,20 +24,21 @@ contract ProposalReceiverConnect is Utils {
         bytes[] memory calldatas = new bytes[](1);
         string memory description = "Add new proposal Receiver on Polygon";
 
-        ProposalSender sender = proposalSender();
+        ProposalSender sender = ProposalSender(_chainToContract(srcChainId, ContractType.ProposalSender));
         targets[0] = address(sender);
         values[0] = 0;
         calldatas[0] = abi.encodeWithSelector(
             sender.setTrustedRemoteAddress.selector,
             getLZChainId(destChainId),
-            abi.encodePacked(proposalReceiver(destChainId))
+            abi.encodePacked(_chainToContract(destChainId, ContractType.ProposalReceiver))
         );
 
-        // uint256 proposalId = governor().propose(targets, values, calldatas, description);
+        AngleGovernor governor = AngleGovernor(payable(_chainToContract(srcChainId, ContractType.Governor)));
 
-        uint256 proposalId = 0x5af180d896738e85d65edfa0f75944289b65485e86ee38fd0776e140a89634d4;
-        governor().castVote(proposalId, 1);
+        uint256 proposalId = governor.propose(targets, values, calldatas, description);
+        // uint256 proposalId = 0x5af180d896738e85d65edfa0f75944289b65485e86ee38fd0776e140a89634d4;
+        governor.castVote(proposalId, 1);
 
-        governor().execute(targets, values, calldatas, keccak256(bytes(description)));
+        governor.execute(targets, values, calldatas, keccak256(bytes(description)));
     }
 }
