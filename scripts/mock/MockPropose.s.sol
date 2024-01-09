@@ -7,7 +7,7 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { TimelockController } from "oz/governance/TimelockController.sol";
 import "../../contracts/utils/Errors.sol" as Errors;
 
-contract Propose is Script {
+contract MockPropose is Script {
     error WrongCall();
 
     AngleGovernor angleGovernor = AngleGovernor(payable(0xc8C22F59A931768FAE6B12708F450B4FAB6dd6FE));
