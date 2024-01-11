@@ -20,7 +20,7 @@ const parsedInput = Number(chainInput);
 
 let contract
 
-if(contracTtype == "governor") contract =  registry(parsedInput)?.AngleGovernor;
+if(contracTtype == "governor") contract =  registry(parsedInput)?.Governor;
 else if(contracTtype == "proposalReceiver")  contract = registry(parsedInput)?.ProposalReceiver;
 else if(contracTtype == "timelock") contract = registry(parsedInput)?.Timelock;
 else if(contracTtype == "proposalSender") contract = registry(parsedInput)?.ProposalSender;

@@ -19,19 +19,15 @@ contract Propose is Utils {
     function run() external {
         uint256 chainId = vm.envUint("CHAIN_ID");
 
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/scripts/proposals.json");
-        string memory json = vm.readFile(path);
-        bytes memory proposalDetails = json.parseRaw(string.concat(".", vm.toString(chainId)));
-        Proposal memory rawProposal = abi.decode(proposalDetails, (Proposal));
+        (
+            bytes[] memory calldatas,
+            string memory description,
+            address[] memory targets,
+            uint256[] memory values
+        ) = _deserializeJson(chainId);
 
         AngleGovernor governor = AngleGovernor(payable(_chainToContract(chainId, ContractType.Governor)));
-        uint256 proposalId = governor.propose(
-            rawProposal.targets,
-            rawProposal.values,
-            rawProposal.calldatas,
-            rawProposal.description
-        );
+        uint256 proposalId = governor.propose(targets, values, calldatas, description);
         console.log("Proposal id: %d", proposalId);
     }
 }

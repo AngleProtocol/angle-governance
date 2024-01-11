@@ -21,6 +21,11 @@ contract Utils is Script {
     uint256 public gnosisFork;
     uint256 public polygonFork;
 
+    bytes[] private calldatas;
+    string private description;
+    address[] private targets;
+    uint256[] private values;
+
     function setUp() public {
         arbitrumFork = vm.createFork(vm.envString("ETH_NODE_URI_ARBITRUM"));
         avalancheFork = vm.createFork(vm.envString("ETH_NODE_URI_AVALANCHE"));
@@ -328,6 +333,48 @@ contract Utils is Script {
             mstore(values, finalPropLength)
             mstore(calldatas, finalPropLength)
         }
+    }
+
+    function _deserializeJson(
+        uint256 chainId
+    ) internal returns (bytes[] memory, string memory, address[] memory, uint256[] memory) {
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/scripts/proposals.json");
+        string memory json = vm.readFile(path);
+
+        bytes memory encodedStruct = vm.parseJson(json, string.concat(".", vm.toString(chainId), ".description"));
+        description = abi.decode(encodedStruct, (string));
+        {
+            string memory calldataKey = string.concat(".", vm.toString(chainId), ".calldatas");
+            string[] memory keys = vm.parseJsonKeys(json, calldataKey);
+            // Iterate over the encoded structs
+            for (uint256 i = 0; i < keys.length; ++i) {
+                string memory structKey = string.concat(calldataKey, ".", keys[i]);
+                bytes memory encodedStruct = vm.parseJson(json, structKey);
+                calldatas.push(abi.decode(encodedStruct, (bytes)));
+            }
+        }
+        {
+            string memory targetsKey = string.concat(".", vm.toString(chainId), ".targets");
+            string[] memory keys = vm.parseJsonKeys(json, targetsKey);
+            // Iterate over the encoded structs
+            for (uint256 i = 0; i < keys.length; ++i) {
+                string memory structKey = string.concat(targetsKey, ".", keys[i]);
+                bytes memory encodedStruct = vm.parseJson(json, structKey);
+                targets.push(abi.decode(encodedStruct, (address)));
+            }
+        }
+        {
+            string memory valuesKey = string.concat(".", vm.toString(chainId), ".values");
+            string[] memory keys = vm.parseJsonKeys(json, valuesKey);
+            // Iterate over the encoded structs
+            for (uint256 i = 0; i < keys.length; ++i) {
+                string memory structKey = string.concat(valuesKey, ".", keys[i]);
+                bytes memory encodedStruct = vm.parseJson(json, structKey);
+                values.push(abi.decode(encodedStruct, (uint256)));
+            }
+        }
+        return (calldatas, description, targets, values);
     }
 
     // TODO don't overwrite the file each time
