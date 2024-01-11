@@ -13,6 +13,30 @@ import "./Constants.s.sol";
 /// @title Utils
 /// @author Angle Labs, Inc.
 contract Utils is Script {
+    mapping(uint256 => uint256) forkIdentifier;
+    uint256 public arbitrumFork;
+    uint256 public avalancheFork;
+    uint256 public ethereumFork;
+    uint256 public optimismFork;
+    uint256 public gnosisFork;
+    uint256 public polygonFork;
+
+    function setUp() public {
+        arbitrumFork = vm.createFork(vm.envString("ETH_NODE_URI_ARBITRUM"));
+        avalancheFork = vm.createFork(vm.envString("ETH_NODE_URI_AVALANCHE"));
+        ethereumFork = vm.createFork(vm.envString("ETH_NODE_URI_MAINNET"));
+        optimismFork = vm.createFork(vm.envString("ETH_NODE_URI_OPTIMISM"));
+        gnosisFork = vm.createFork(vm.envString("ETH_NODE_URI_GNOSIS"));
+        polygonFork = vm.createFork(vm.envString("ETH_NODE_URI_POLYGON"));
+
+        forkIdentifier[CHAIN_ARBITRUM] = arbitrumFork;
+        forkIdentifier[CHAIN_AVALANCHE] = avalancheFork;
+        forkIdentifier[CHAIN_ETHEREUM] = ethereumFork;
+        forkIdentifier[CHAIN_OPTIMISM] = optimismFork;
+        forkIdentifier[CHAIN_GNOSIS] = gnosisFork;
+        forkIdentifier[CHAIN_POLYGON] = polygonFork;
+    }
+
     function lzEndPoint(uint256 chainId) public returns (ILayerZeroEndpoint) {
         // TODO temporary check if LZ updated their sdk
         if (chainId == CHAIN_GNOSIS) {
@@ -93,27 +117,6 @@ contract Utils is Script {
         return uint16(stringToUint(string(res)));
     }
 
-    enum ContractType {
-        Timelock,
-        ProposalSender,
-        Governor,
-        ProposalReceiver,
-        TreasuryAgEUR,
-        StEUR,
-        TransmuterAgEUR,
-        CoreBorrow,
-        GovernorMultisig,
-        ProxyAdmin,
-        Angle,
-        veANGLE,
-        SmartWalletWhitelist,
-        veBoostProxy,
-        GaugeController,
-        AngleDistributor,
-        AngleMiddleman,
-        FeeDistributor
-    }
-
     function _chainToContract(uint256 chainId, ContractType name) internal returns (address) {
         string[] memory cmd = new string[](4);
         cmd[0] = "node";
@@ -143,7 +146,6 @@ contract Utils is Script {
         bytes memory res = vm.ffi(cmd);
         // When process exit code is 1, it will return an empty bytes "0x"
         if (res.length == 0) revert("Chain not supported");
-        console.log(address(bytes20(res)));
         return address(bytes20(res));
     }
 
@@ -328,7 +330,7 @@ contract Utils is Script {
         }
     }
 
-    // TODO fix it so we can use array
+    // TODO don't overwrite the file each time
     function _serializeJson(
         uint256 chainId,
         address[] memory targets,
@@ -336,22 +338,38 @@ contract Utils is Script {
         bytes[] memory calldatas,
         string memory description
     ) internal {
-        string memory json = "";
-        vm.serializeString(json, "description", description);
-        for (uint256 i; i < targets.length; i++) {
-            vm.serializeAddress(json, string.concat("targets[", vm.toString(i), "]"), targets[i]);
-        }
-        for (uint256 i; i < values.length; i++) {
-            vm.serializeUint(json, string.concat("values[", vm.toString(i), "]"), values[i]);
-        }
-        for (uint256 i; i < calldatas.length; i++) {
-            vm.serializeBytes(json, string.concat("calldatas[", vm.toString(i), "]"), calldatas[i]);
-        }
-        string memory obj1 = "";
-        string memory finalJson = vm.serializeString(obj1, vm.toString(chainId), json);
+        string memory json = "chain";
 
+        {
+            string memory jsonTargets = "targets";
+            string memory targetsOutput;
+            for (uint256 i; i < targets.length; i++) {
+                targetsOutput = vm.serializeAddress(jsonTargets, vm.toString(i), targets[i]);
+            }
+            vm.serializeString(json, "targets", targetsOutput);
+        }
+        {
+            string memory jsonValues = "values";
+            string memory valuesOutput;
+            for (uint256 i; i < values.length; i++) {
+                valuesOutput = vm.serializeUint(jsonValues, vm.toString(i), values[i]);
+            }
+            vm.serializeString(json, "values", valuesOutput);
+        }
+        {
+            string memory jsonCalldatas = "calldatas";
+            string memory calldatasOutput;
+            for (uint256 i; i < calldatas.length; i++) {
+                calldatasOutput = vm.serializeBytes(jsonCalldatas, vm.toString(i), calldatas[i]);
+            }
+            vm.serializeString(json, "calldatas", calldatasOutput);
+        }
+        string memory chainOutput = vm.serializeString(json, "description", description);
+
+        string memory jsonFinal = "final";
+        string memory output = vm.serializeString(jsonFinal, vm.toString(chainId), chainOutput);
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/scripts/proposals.json");
-        vm.writeJson(finalJson, path);
+        vm.writeJson(output, path);
     }
 }
