@@ -38,7 +38,7 @@
     "url": "https://github.com/AngleProtocol/boilerplate/issues"
   },
   "devDependencies": {
-    "@angleprotocol/sdk": "0.20.0",
+    "@angleprotocol/sdk": "^0.23.1",
     "@layerzerolabs/lz-sdk": "^0.0.30",
     "prettier": "^2.0.0",
     "prettier-plugin-solidity": "^1.1.3",

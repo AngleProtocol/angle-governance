@@ -36,13 +36,7 @@ contract PauseVaultManagers is Utils {
             }
         }
 
-        // TODO find a way to switch to the destination chain
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = _wrap(subCalls);
-        AngleGovernor governor = AngleGovernor(payable(_chainToContract(chainId, ContractType.Governor)));
-        uint256 proposalId = governor.propose(targets, values, calldatas, description);
-
-        // bytes memory payloadMultiSend = abi.encodeWithSelector(MultiSend.multiSend.selector, transactions);
-        // address multiSend = address(_chainToMultiSend(chainId));
-        // _serializeJson(chainId, multiSend, 0, payloadMultiSend, Enum.Operation.DelegateCall, additionalData);
+        _serializeJson(chainId, targets, values, calldatas, description);
     }
 }

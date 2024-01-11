@@ -230,7 +230,6 @@ contract SimulationSetup is Test {
             }
 
             if (chainId == 1) {
-                // TODO cannot use a select fork
                 vm.selectFork(forkIdentifier[1]);
 
                 (

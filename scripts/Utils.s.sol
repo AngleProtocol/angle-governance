@@ -114,8 +114,8 @@ contract Utils is Script {
         FeeDistributor
     }
 
-    function _chainToContract(uint256 chainId, ContractType name) internal view returns (address) {
-        string[] memory cmd = new string[](3);
+    function _chainToContract(uint256 chainId, ContractType name) internal returns (address) {
+        string[] memory cmd = new string[](4);
         cmd[0] = "node";
         cmd[1] = "utils/contractAddress.js";
         cmd[2] = vm.toString(chainId);
@@ -150,7 +150,7 @@ contract Utils is Script {
     function wrapTimelock(
         uint256 chainId,
         SubCall[] memory p
-    ) public view returns (address target, uint256 value, bytes memory data) {
+    ) public returns (address target, uint256 value, bytes memory data) {
         TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
             payable(_chainToContract(chainId, ContractType.Timelock))
         );
@@ -191,7 +191,7 @@ contract Utils is Script {
         }
     }
 
-    function computeSalt(uint256 chainId, SubCall[] memory p) internal view returns (uint256 salt) {
+    function computeSalt(uint256 chainId, SubCall[] memory p) internal returns (uint256 salt) {
         TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
             payable(_chainToContract(chainId, ContractType.Timelock))
         );
@@ -279,6 +279,7 @@ contract Utils is Script {
             }
 
             if (chainId == 1) {
+                vm.selectFork(forkIdentifier[1]);
                 (
                     address[] memory batchTargets,
                     uint256[] memory batchValues,
@@ -291,6 +292,7 @@ contract Utils is Script {
                 finalPropLength += 1;
                 i += count;
             } else {
+                vm.selectFork(forkIdentifier[chainId]);
                 (
                     address[] memory batchTargets,
                     uint256[] memory batchValues,
@@ -324,5 +326,32 @@ contract Utils is Script {
             mstore(values, finalPropLength)
             mstore(calldatas, finalPropLength)
         }
+    }
+
+    // TODO fix it so we can use array
+    function _serializeJson(
+        uint256 chainId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) internal {
+        string memory json = "";
+        vm.serializeString(json, "description", description);
+        for (uint256 i; i < targets.length; i++) {
+            vm.serializeAddress(json, string.concat("targets[", vm.toString(i), "]"), targets[i]);
+        }
+        for (uint256 i; i < values.length; i++) {
+            vm.serializeUint(json, string.concat("values[", vm.toString(i), "]"), values[i]);
+        }
+        for (uint256 i; i < calldatas.length; i++) {
+            vm.serializeBytes(json, string.concat("calldatas[", vm.toString(i), "]"), calldatas[i]);
+        }
+        string memory obj1 = "";
+        string memory finalJson = vm.serializeString(obj1, vm.toString(chainId), json);
+
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/scripts/proposals.json");
+        vm.writeJson(finalJson, path);
     }
 }
