@@ -36,51 +36,35 @@ contract DeployOnChainGovernance is Utils {
 
     function run() external {
         // TODO can be modified to deploy on any chain
-        uint256 srcChainId = CHAIN_GNOSIS;
-        address safeMultiSig = SAFE_GNOSIS;
+        uint256 srcChainId = CHAIN_ETHEREUM;
         // END
 
-        uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_GNOSIS"), "m/44'/60'/0'/0/", 0);
+        uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_MAINNET"), "m/44'/60'/0'/0/", 0);
         vm.startBroadcast(deployerPrivateKey);
         address deployer = vm.addr(deployerPrivateKey);
         vm.label(deployer, "Deployer");
 
-        /*
-        // If not already - deploy the voting tokens
-        vyperDeployer = new VyperDeployer();
-        vm.allowCheatcodes(address(vyperDeployer));
-        (address _mockANGLE, , ) = deployMockANGLE();
-        ANGLE = ERC20(_mockANGLE);
-
-        (address _mockVeANGLE, , ) = deployVeANGLE(vyperDeployer, _mockANGLE, safeMultiSig);
-        veANGLE = IveANGLE(_mockVeANGLE);
-
-        // Deploy Governance source chain
+        address safeMultiSig = _chainToContract(srcChainId, ContractType.GuardianMultisig);
+        veANGLE = IveANGLE(_chainToContract(srcChainId, ContractType.veANGLE));
         token = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
-        */
-        token = VeANGLEVotingDelegation(0xD622c71aba9060F393FEC67D3e2B9335292bf23B);
 
-        address[] memory proposers = new address[](2);
+        address[] memory proposers = new address[](0);
         address[] memory executors = new address[](1);
-        executors[0] = address(0); // Means everyone can execute
-        proposers[0] = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
-        proposers[1] = 0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091;
-        timelock = new TimelockControllerWithCounter(timelockDelayTest, proposers, executors, address(deployer));
+        executors[0] = safeMultiSig; // Means everyone can execute
+        timelock = new TimelockControllerWithCounter(timelockDelay, proposers, executors, address(deployer));
         angleGovernor = new AngleGovernor(
             token,
             address(timelock),
-            initialVotingDelayTest,
-            initialVotingPeriodTest,
-            initialProposalThresholdTest,
-            initialVoteExtensionTest,
+            initialVotingDelay,
+            initialVotingPeriod,
+            initialProposalThreshold,
+            initialVoteExtension,
             initialQuorumNumerator,
             initialShortCircuitNumerator,
-            initialVotingDelayBlocksTest
+            initialVotingDelayBlocks
         );
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(angleGovernor));
         timelock.grantRole(timelock.CANCELLER_ROLE(), safeMultiSig);
-        timelock.grantRole(timelock.CANCELLER_ROLE(), 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185);
-        timelock.grantRole(timelock.CANCELLER_ROLE(), 0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), address(deployer));
         proposalSenderDeployed = new ProposalSender(lzEndPoint(srcChainId));
         proposalSenderDeployed.transferOwnership(address(angleGovernor));

@@ -34,6 +34,9 @@ function option_to_uri {
     "10")
         echo $ETH_NODE_URI_OPTIMISM
         ;;
+    "11")
+        echo $ETH_NODE_URI_LINEA
+        ;;
     *)
       ;;
   esac
@@ -57,6 +60,7 @@ function main {
     echo "- 8: Celo"
     echo "- 9: Polygon ZkEvm"
     echo "- 10: Optimism"
+    echo "- 11: Linea"
 
     read option
 

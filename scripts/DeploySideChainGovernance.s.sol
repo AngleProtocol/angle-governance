@@ -29,25 +29,26 @@ contract DeploySideChainGovernance is Utils {
         vm.label(deployer, "Deployer");
 
         // TODO can be modified to deploy on any chain
-        uint256 srcChainId = CHAIN_GNOSIS;
-        uint256 destChainId = CHAIN_POLYGON;
-        address destSafeMultiSig = SAFE_POLYGON;
+        uint256 srcChainId = CHAIN_ETHEREUM;
+        uint256 destChainId = CHAIN_LINEA;
         // END
 
+        address destSafeMultiSig = _chainToContract(destChainId, ContractType.GuardianMultisig);
+        ProposalSender proposalSender = ProposalSender(_chainToContract(srcChainId, ContractType.ProposalSender));
         // Deploy relayer receiver and Timelock on end chain
-        address[] memory proposers = new address[](2);
+        address[] memory proposers = new address[](0);
         address[] memory executors = new address[](1);
-        executors[0] = address(0); // Means everyone can execute
-        proposers[0] = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
-        proposers[1] = 0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091;
+        executors[0] = destSafeMultiSig; // Means everyone can execute
 
-        timelock = new TimelockControllerWithCounter(timelockDelayTest, proposers, executors, deployer);
-        proposalReceiver = new ProposalReceiver(address(lzEndPoint(destChainId)));
+        // timelock = new TimelockControllerWithCounter(timelockDelay, proposers, executors, deployer);
+        // proposalReceiver = new ProposalReceiver(address(lzEndPoint(destChainId)));
+        timelock = TimelockControllerWithCounter(payable(0xd23B51d6F2cB3eC7ca9599D4332a2F10C3CFDF85));
+        proposalReceiver = ProposalReceiver(payable(0x4A44f77978Daa3E92Eb3D97210bd11645cF935Ab));
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(proposalReceiver));
         timelock.grantRole(timelock.CANCELLER_ROLE(), destSafeMultiSig);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), deployer);
 
-        proposalReceiver.setTrustedRemoteAddress(getLZChainId(srcChainId), abi.encodePacked(proposalSender()));
+        proposalReceiver.setTrustedRemoteAddress(getLZChainId(srcChainId), abi.encodePacked(proposalSender));
         proposalReceiver.transferOwnership(address(timelock));
 
         vm.stopBroadcast();
