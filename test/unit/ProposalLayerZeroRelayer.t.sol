@@ -1033,22 +1033,22 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             value: 0,
             data: abi.encodeWithSelector(timelock(destChain).updateDelay.selector, newDelay)
         });
-        string memory description = "Updating delay on Optimism";
-        _crossChainProposal(destChain, p, description, 0.1 ether, hex"", address(0));
-        assertEq(timelock(destChain).getMinDelay() == newDelay, true);
+        {
+            string memory description = "Updating delay on Optimism";
+            _crossChainProposal(destChain, p, description, 0.1 ether, hex"", address(0));
+            assertEq(timelock(destChain).getMinDelay() == newDelay, true);
 
-        p[0].data = abi.encodeWithSelector(timelock(destChain).updateDelay.selector, oldDelay);
-        vm.selectFork(forkIdentifier[1]);
-        // Making the call revert to force replay
-        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
-        _dummyProposal(1, p, description, 0.1 ether, hex"");
-        assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+            p[0].data = abi.encodeWithSelector(timelock(destChain).updateDelay.selector, oldDelay);
+            vm.selectFork(forkIdentifier[1]);
+            // Making the call revert to force replay
+            assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+            _dummyProposal(1, p, description, 0.1 ether, hex"");
+            assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
+        }
 
         vm.selectFork(forkIdentifier[destChain]);
         bytes
             memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-        bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
-        bytes memory execution = abi.encode(getLZChainId(destChain), payload, adapterParams, 0.1 ether);
         vm.mockCallRevert(
             address(timelock(destChain)),
             abi.encodeWithSelector(timelock(destChain).schedule.selector),
