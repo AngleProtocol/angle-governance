@@ -27,7 +27,7 @@ contract Utils is Script {
     uint256[] private values;
     uint256[] private chainIds;
 
-    function setUp() public {
+    function setUp() public virtual {
         arbitrumFork = vm.createFork(vm.envString("ETH_NODE_URI_ARBITRUM"));
         avalancheFork = vm.createFork(vm.envString("ETH_NODE_URI_AVALANCHE"));
         ethereumFork = vm.createFork(vm.envString("ETH_NODE_URI_MAINNET"));

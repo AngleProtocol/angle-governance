@@ -176,7 +176,6 @@ function main {
     if [ $? -ne 0 ]; then
         echo ""
         echo "Script failed"
-        continue
     fi
 
     testPath=$(echo $script | sed 's|scripts|test|g' | sed 's|.s.sol|.t.sol|g')

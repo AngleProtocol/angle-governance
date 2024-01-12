@@ -16,6 +16,8 @@ struct Proposal {
 contract Propose is Utils {
     using stdJson for string;
 
+    function setUp() public virtual override {}
+
     function run() external {
         (
             bytes[] memory calldatas,
