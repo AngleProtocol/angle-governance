@@ -34,7 +34,7 @@ uint32 constant initialVotingPeriod = 4 days;
 uint256 constant initialProposalThreshold = 100_000e18;
 uint48 constant initialVoteExtension = 3 hours;
 
-// TODO: update so we deploy with small values and later increase back up
+// TODO: increase quorum numbers back up
 uint256 constant initialQuorumNumerator = 5;
 uint256 constant initialShortCircuitNumerator = 10;
 bytes constant nullBytes = hex"";
