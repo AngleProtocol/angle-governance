@@ -25,6 +25,7 @@ contract Utils is Script {
     string private description;
     address[] private targets;
     uint256[] private values;
+    uint256[] private chainIds;
 
     function setUp() public {
         arbitrumFork = vm.createFork(vm.envString("ETH_NODE_URI_ARBITRUM"));
@@ -264,10 +265,14 @@ contract Utils is Script {
 
     function _wrap(
         SubCall[] memory prop
-    ) internal returns (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) {
+    )
+        internal
+        returns (address[] memory targets, uint256[] memory values, bytes[] memory calldatas, uint256[] memory chainIds)
+    {
         targets = new address[](prop.length);
         values = new uint256[](prop.length);
         calldatas = new bytes[](prop.length);
+        chainIds = new uint256[](prop.length);
 
         uint256 finalPropLength;
         uint256 i;
@@ -292,6 +297,7 @@ contract Utils is Script {
                     chainId,
                     prop
                 );
+                chainIds[finalPropLength] = chainId;
                 finalPropLength += 1;
                 i += count;
             } else {
@@ -309,6 +315,7 @@ contract Utils is Script {
                 ProposalSender proposalSender = ProposalSender(_chainToContract(chainId, ContractType.ProposalSender));
                 targets[finalPropLength] = address(proposalSender);
                 values[finalPropLength] = 0.1 ether;
+                chainIds[finalPropLength] = chainId;
                 calldatas[finalPropLength] = abi.encodeWithSelector(
                     proposalSender.execute.selector,
                     getLZChainId(chainId),
@@ -326,7 +333,10 @@ contract Utils is Script {
         }
     }
 
-    function _deserializeJson() internal returns (bytes[] memory, string memory, address[] memory, uint256[] memory) {
+    function _deserializeJson()
+        internal
+        returns (bytes[] memory, string memory, address[] memory, uint256[] memory, uint256[] memory)
+    {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/scripts/proposals.json");
         string memory json = vm.readFile(path);
@@ -363,13 +373,24 @@ contract Utils is Script {
                 values.push(abi.decode(encodedStruct, (uint256)));
             }
         }
-        return (calldatas, description, targets, values);
+        {
+            string memory chainIdsKey = ".chainIds";
+            string[] memory keys = vm.parseJsonKeys(json, chainIdsKey);
+            // Iterate over the encoded structs
+            for (uint256 i = 0; i < keys.length; ++i) {
+                string memory structKey = string.concat(chainIdsKey, ".", keys[i]);
+                bytes memory encodedStruct = vm.parseJson(json, structKey);
+                chainIds.push(abi.decode(encodedStruct, (uint256)));
+            }
+        }
+        return (calldatas, description, targets, values, chainIds);
     }
 
     function _serializeJson(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
+        uint256[] memory chainIds,
         string memory description
     ) internal {
         string memory json = "chain";
@@ -397,6 +418,14 @@ contract Utils is Script {
                 calldatasOutput = vm.serializeBytes(jsonCalldatas, vm.toString(i), calldatas[i]);
             }
             vm.serializeString(json, "calldatas", calldatasOutput);
+        }
+        {
+            string memory jsonChainIds = "chainIds";
+            string memory chainIdsOutput;
+            for (uint256 i; i < chainIds.length; i++) {
+                chainIdsOutput = vm.serializeUint(jsonChainIds, vm.toString(i), chainIds[i]);
+            }
+            vm.serializeString(json, "chainIds", chainIdsOutput);
         }
         string memory output = vm.serializeString(json, "description", description);
 

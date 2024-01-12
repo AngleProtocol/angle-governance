@@ -10,6 +10,7 @@ import { ProxyAdmin } from "oz/proxy/transparent/ProxyAdmin.sol";
 import { Ownable } from "oz/access/Ownable.sol";
 import { CoreBorrow } from "borrow/coreBorrow/CoreBorrow.sol";
 import { ITreasury } from "borrow/interfaces/ITreasury.sol";
+import { TimelockController } from "oz/governance/TimelockController.sol";
 import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import "./Interfaces.s.sol";
 

@@ -179,7 +179,7 @@ function main {
         continue
     fi
 
-    testPath=$(echo $script | sed 's|scripts/foundry|test|g' | sed 's|.s.sol|.t.sol|g' | cut -d':' -f1)
+    testPath=$(echo $script | sed 's|scripts|test|g' | sed 's|.s.sol|.t.sol|g')
     if [ -f $testPath ]; then
         echo ""
         echo "Running test"

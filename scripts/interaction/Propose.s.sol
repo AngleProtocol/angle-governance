@@ -21,7 +21,8 @@ contract Propose is Utils {
             bytes[] memory calldatas,
             string memory description,
             address[] memory targets,
-            uint256[] memory values
+            uint256[] memory values,
+            uint256[] memory chainIds
         ) = _deserializeJson();
 
         AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_ETHEREUM, ContractType.Governor)));

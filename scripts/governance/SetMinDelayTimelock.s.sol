@@ -8,26 +8,28 @@ import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol"
 import { Utils } from "../Utils.s.sol";
 import "../Constants.s.sol";
 
-contract SavingsSetRate is Utils {
+contract SetMinDelayTimelock is Utils {
     SubCall[] private subCalls;
 
-    function _setRateSavings(uint256 chainId, uint208 rate) private {
+    function _setMinDelay(uint256 chainId, uint256 minDelay) private {
         vm.selectFork(forkIdentifier[chainId]);
-        address stEUR = _chainToContract(chainId, ContractType.StEUR);
+        address timelock = _chainToContract(chainId, ContractType.Timelock);
 
-        subCalls.push(SubCall(chainId, stEUR, 0, abi.encodeWithSelector(ISavings.setRate.selector, rate)));
+        subCalls.push(
+            SubCall(chainId, timelock, 0, abi.encodeWithSelector(TimelockController.updateDelay.selector, minDelay))
+        );
     }
 
     function run() external {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
-        string memory description = "Set rate for all savings";
+        string memory description = "Set min delay for timelock";
 
         /** TODO  complete */
-        uint208 rate = uint208(uint256(fourPoint3Rate));
+        uint256 minDelay = uint256(1 weeks);
         /** END  complete */
 
         for (uint256 i = 0; i < chainIds.length; i++) {
-            _setRateSavings(chainIds[i], rate);
+            _setMinDelay(chainIds[i], minDelay);
         }
 
         (

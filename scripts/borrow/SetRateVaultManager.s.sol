@@ -51,7 +51,12 @@ contract SetRateVaultManager is Utils {
             _setRateVaultManager(chainIds[i]);
         }
 
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = _wrap(subCalls);
-        _serializeJson(targets, values, calldatas, description);
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            uint256[] memory chainIds2
+        ) = _wrap(subCalls);
+        _serializeJson(targets, values, calldatas, chainIds2, description);
     }
 }
