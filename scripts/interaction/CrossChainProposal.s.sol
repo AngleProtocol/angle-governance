@@ -10,6 +10,7 @@ import { ProposalSender } from "contracts/ProposalSender.sol";
 contract CrossChainProposal is Utils {
     function run() external {
         // TODO can be modified to deploy on any chain
+        uint256 srcChainId = CHAIN_ETHEREUM;
         uint256 destChainId = CHAIN_POLYGON;
         // END
 
@@ -18,7 +19,11 @@ contract CrossChainProposal is Utils {
         address deployer = vm.addr(deployerPrivateKey);
         vm.label(deployer, "Deployer");
 
-        TimelockControllerWithCounter timelockDestChain = TimelockControllerWithCounter(payable(timelock(destChainId)));
+        AngleGovernor governor = AngleGovernor(payable(_chainToContract(destChainId, ContractType.Governor)));
+        ProposalSender sender = ProposalSender(payable(_chainToContract(srcChainId, ContractType.ProposalSender)));
+        TimelockControllerWithCounter timelockDestChain = TimelockControllerWithCounter(
+            payable(_chainToContract(destChainId, ContractType.Timelock))
+        );
 
         address[] memory timelockTargets = new address[](1);
         uint256[] memory timelockValues = new uint256[](1);
@@ -50,7 +55,7 @@ contract CrossChainProposal is Utils {
                 batchCalldatas,
                 bytes32(0),
                 bytes32(0),
-                timelockDelayTest
+                timelockDelay
             );
         }
 
@@ -60,7 +65,6 @@ contract CrossChainProposal is Utils {
         string
             memory description = "Test Cross chain proposals (redue updateDelay to 200 + remove executor role) higher fee";
 
-        ProposalSender sender = proposalSender();
         uint256 feeLZ = 1 ether;
         targets[0] = address(sender);
         values[0] = feeLZ;
@@ -71,10 +75,10 @@ contract CrossChainProposal is Utils {
             abi.encodePacked(uint16(1), uint256(300000))
         );
 
-        // uint256 proposalId = governor().propose(targets, values, calldatas, description);
+        // uint256 proposalId = governor.propose(targets, values, calldatas, description);
         uint256 proposalId = 0x7f3a7bfba6ab7cdc0f85cfaa8bc2b03178c4d28dabbf53a1908604d2cb2d6891;
-        governor().castVote(proposalId, 1);
+        governor.castVote(proposalId, 1);
 
-        governor().execute{ value: feeLZ }(targets, values, calldatas, keccak256(bytes(description)));
+        governor.execute{ value: feeLZ }(targets, values, calldatas, keccak256(bytes(description)));
     }
 }
