@@ -157,42 +157,42 @@ function main {
 
     mainnet_uri=$(chain_to_uri 1)
 
+    chainIds=""
     for chain in $(echo $chains | sed "s/,/ /g")
     do
-        echo ""
-        echo "Running on chain $chain"
-        uri=$(chain_to_uri $chain)
-
-        if [ -z "$uri" ]; then
-            echo ""
-            echo "Invalid chain"
-            continue
-        fi
-
-        export CHAIN_ID=$(chain_to_chainId $chain)
-        forge script $script --fork-url $mainnet_uri
-
-        if [ $? -ne 0 ]; then
-            echo ""
-            echo "Script failed"
-            continue
-        fi
-
-        testPath=$(echo $script | sed 's|scripts/foundry|test|g' | sed 's|.s.sol|.t.sol|g' | cut -d':' -f1)
-        if [ -f $testPath ]; then
-            echo ""
-            echo "Running test"
-            forge test --match-path $testPath -vvv
-        fi
-
-        echo ""
-        echo "Would you like to execute the script ? (yes/no)"
-        read execute
-
-        if [[ $execute == "yes" ]]; then
-            forge script scripts/interaction/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+        if [[ -z $chainIds ]]; then
+            chainIds="$(chain_to_chainId $chain)"
+        else
+            chainIds="$chainIds,$(chain_to_chainId $chain)"
         fi
     done
+
+    echo ""
+    echo "Running on chains $chainIds"
+
+    export CHAIN_IDS=$chainIds
+    forge script $script
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "Script failed"
+        continue
+    fi
+
+    testPath=$(echo $script | sed 's|scripts/foundry|test|g' | sed 's|.s.sol|.t.sol|g' | cut -d':' -f1)
+    if [ -f $testPath ]; then
+        echo ""
+        echo "Running test"
+        forge test --match-path $testPath -vvv
+    fi
+
+    echo ""
+    echo "Would you like to create the proposal ? (yes/no)"
+    read execute
+
+    if [[ $execute == "yes" ]]; then
+        forge script scripts/interaction/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+    fi
 }
 
 main $@

@@ -31,6 +31,6 @@ contract SavingsSetRate is Utils {
         }
 
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = _wrap(subCalls);
-        serializeJson(chainId, targets, values, calldatas, description);
+        _serializeJson(targets, values, calldatas, description);
     }
 }

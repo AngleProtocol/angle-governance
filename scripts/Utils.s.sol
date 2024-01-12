@@ -326,17 +326,15 @@ contract Utils is Script {
         }
     }
 
-    function _deserializeJson(
-        uint256 chainId
-    ) internal returns (bytes[] memory, string memory, address[] memory, uint256[] memory) {
+    function _deserializeJson() internal returns (bytes[] memory, string memory, address[] memory, uint256[] memory) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/scripts/proposals.json");
         string memory json = vm.readFile(path);
 
-        bytes memory encodedStruct = vm.parseJson(json, string.concat(".", vm.toString(chainId), ".description"));
+        bytes memory encodedStruct = vm.parseJson(json, ".description");
         description = abi.decode(encodedStruct, (string));
         {
-            string memory calldataKey = string.concat(".", vm.toString(chainId), ".calldatas");
+            string memory calldataKey = ".calldatas";
             string[] memory keys = vm.parseJsonKeys(json, calldataKey);
             // Iterate over the encoded structs
             for (uint256 i = 0; i < keys.length; ++i) {
@@ -346,7 +344,7 @@ contract Utils is Script {
             }
         }
         {
-            string memory targetsKey = string.concat(".", vm.toString(chainId), ".targets");
+            string memory targetsKey = ".targets";
             string[] memory keys = vm.parseJsonKeys(json, targetsKey);
             // Iterate over the encoded structs
             for (uint256 i = 0; i < keys.length; ++i) {
@@ -356,7 +354,7 @@ contract Utils is Script {
             }
         }
         {
-            string memory valuesKey = string.concat(".", vm.toString(chainId), ".values");
+            string memory valuesKey = ".values";
             string[] memory keys = vm.parseJsonKeys(json, valuesKey);
             // Iterate over the encoded structs
             for (uint256 i = 0; i < keys.length; ++i) {

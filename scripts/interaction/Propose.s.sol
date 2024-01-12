@@ -17,16 +17,14 @@ contract Propose is Utils {
     using stdJson for string;
 
     function run() external {
-        uint256 chainId = vm.envUint("CHAIN_ID");
-
         (
             bytes[] memory calldatas,
             string memory description,
             address[] memory targets,
             uint256[] memory values
-        ) = _deserializeJson(chainId);
+        ) = _deserializeJson();
 
-        AngleGovernor governor = AngleGovernor(payable(_chainToContract(chainId, ContractType.Governor)));
+        AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_ETHEREUM, ContractType.Governor)));
         uint256 proposalId = governor.propose(targets, values, calldatas, description);
         console.log("Proposal id: %d", proposalId);
     }
