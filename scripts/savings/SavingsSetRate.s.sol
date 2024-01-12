@@ -9,11 +9,9 @@ import { Utils } from "../Utils.s.sol";
 import "../Constants.s.sol";
 
 contract SavingsSetRate is Utils {
-    function run() external {
-        bytes memory transactions;
-        uint8 isDelegateCall = 0;
-        uint256 value = 0;
+    SubCall[] private subCalls;
 
+    function run() external {
         uint256 chainId = vm.envUint("CHAIN_ID");
 
         /** TODO  complete */
@@ -21,20 +19,9 @@ contract SavingsSetRate is Utils {
         /** END  complete */
         address stEUR = _chainToContract(chainId, ContractType.StEUR);
 
-        bytes memory data = abi.encodeWithSelector(ISavings.setRate.selector, rate);
-        uint256 dataLength = data.length;
-        address to = stEUR;
-        bytes memory internalTx = abi.encodePacked(isDelegateCall, to, value, dataLength, data);
-        transactions = abi.encodePacked(transactions, internalTx);
+        subCalls.push(SubCall(chainId, stEUR, 0, abi.encodeWithSelector(ISavings.setRate.selector, rate)));
 
-        // bytes memory payloadMultiSend = abi.encodeWithSelector(MultiSend.multiSend.selector, transactions);
-
-        // // Verify that the calls will succeed
-        // address multiSend = address(_chainToMultiSend(chainId));
-        // address guardian = address(_chainToContract(chainId, ContractType.GuardianMultisig));
-        // vm.startBroadcast(guardian);
-        // address(multiSend).delegatecall(payloadMultiSend);
-        // vm.stopBroadcast();
-        // _serializeJson(chainId, multiSend, 0, payloadMultiSend, Enum.Operation.DelegateCall, data);
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = _wrap(subCalls);
+        _serializeJson(chainId, targets, values, calldatas, description);
     }
 }

@@ -14,10 +14,7 @@ contract PauseVaultManagers is Utils {
     SubCall[] private subCalls;
 
     function run() external {
-        bytes memory transactions;
-        uint8 isDelegateCall = 0;
-        uint256 value = 0;
-        string memory description = "Pause all vault managers";
+        string memory description = "Pause all vaults";
 
         uint256 chainId = vm.envUint("CHAIN_ID");
 

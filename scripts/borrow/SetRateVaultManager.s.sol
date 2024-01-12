@@ -8,14 +8,14 @@ import { IVaultManagerGovernance } from "scripts/Interfaces.s.sol";
 import "../Constants.s.sol";
 
 contract SetRateVaultManager is Utils {
+    SubCall[] private subCalls;
+
     function run() external {
         uint256 chainId = vm.envUint("CHAIN_ID");
 
         ITreasury treasury = ITreasury(_chainToContract(chainId, ContractType.TreasuryAgEUR));
 
-        bytes memory transactions;
-        uint8 isDelegateCall = 0;
-        uint256 value = 0;
+        string memory description = "Set rate for all vaults";
 
         uint256 i;
         while (true) {
@@ -30,12 +30,14 @@ contract SetRateVaultManager is Utils {
                 string memory name = IERC721Metadata(vault).name();
                 console.log("Setting rate %s", name);
                 {
-                    address to = vault;
-                    bytes32 what = "IR";
-                    bytes memory data = abi.encodeWithSelector(IVaultManagerGovernance.setUint64.selector, rate, what);
-                    uint256 dataLength = data.length;
-                    bytes memory internalTx = abi.encodePacked(isDelegateCall, to, value, dataLength, data);
-                    transactions = abi.encodePacked(transactions, internalTx);
+                    subCalls.push(
+                        SubCall(
+                            chainId,
+                            vault,
+                            0,
+                            abi.encodeWithSelector(IVaultManagerGovernance.setUint64.selector, rate, "IR")
+                        )
+                    );
                 }
                 i++;
             } catch {
@@ -43,15 +45,7 @@ contract SetRateVaultManager is Utils {
             }
         }
 
-        // bytes memory payloadMultiSend = abi.encodeWithSelector(MultiSend.multiSend.selector, transactions);
-        //
-        // address multiSend = address(_chainToMultiSend(chainId));
-        // address guardian = address(_chainToContract(chainId, ContractType.GuardianMultisig));
-        // // Verify that the calls will succeed
-        // vm.startBroadcast(guardian);
-        // address(multiSend).delegatecall(payloadMultiSend);
-        // vm.stopBroadcast();
-
-        // _serializeJson(chainId, multiSend, 0, payloadMultiSend, Enum.Operation.DelegateCall, hex"");
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = _wrap(subCalls);
+        _serializeJson(chainId, targets, values, calldatas, description);
     }
 }
