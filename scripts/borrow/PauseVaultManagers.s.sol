@@ -13,12 +13,10 @@ import "../Constants.s.sol";
 contract PauseVaultManagers is Utils {
     SubCall[] private subCalls;
 
-    function run() external {
-        string memory description = "Pause all vaults";
-
-        uint256 chainId = vm.envUint("CHAIN_ID");
-
+    function _pauseVaultManagers(uint256 chainId) private {
+        vm.selectFork(forkIdentifier[chainId]);
         ITreasury treasury = ITreasury(_chainToContract(chainId, ContractType.TreasuryAgEUR));
+
         uint256 i;
         while (true) {
             try treasury.vaultManagerList(i) returns (address vault) {
@@ -32,8 +30,17 @@ contract PauseVaultManagers is Utils {
                 break;
             }
         }
+    }
+
+    function run() external {
+        uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
+        string memory description = "Pause all vaults";
+
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            _pauseVaultManagers(chainIds[i]);
+        }
 
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = _wrap(subCalls);
-        _serializeJson(chainId, targets, values, calldatas, description);
+        _serializeJson(targets, values, calldatas, description);
     }
 }

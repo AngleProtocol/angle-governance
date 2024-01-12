@@ -10,12 +10,9 @@ import "../Constants.s.sol";
 contract SetRateVaultManager is Utils {
     SubCall[] private subCalls;
 
-    function run() external {
-        uint256 chainId = vm.envUint("CHAIN_ID");
-
+    function _setRateVaultManager(uint256 chainId) internal {
+        vm.selectFork(forkIdentifier[chainId]);
         ITreasury treasury = ITreasury(_chainToContract(chainId, ContractType.TreasuryAgEUR));
-
-        string memory description = "Set rate for all vaults";
 
         uint256 i;
         while (true) {
@@ -44,8 +41,17 @@ contract SetRateVaultManager is Utils {
                 break;
             }
         }
+    }
+
+    function run() external {
+        uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
+        string memory description = "Set rate for all vaults";
+
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            _setRateVaultManager(chainIds[i]);
+        }
 
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = _wrap(subCalls);
-        _serializeJson(chainId, targets, values, calldatas, description);
+        _serializeJson(targets, values, calldatas, description);
     }
 }

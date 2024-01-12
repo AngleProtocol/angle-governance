@@ -13,7 +13,7 @@ import "./Constants.s.sol";
 /// @title Utils
 /// @author Angle Labs, Inc.
 contract Utils is Script {
-    mapping(uint256 => uint256) forkIdentifier;
+    mapping(uint256 => uint256) internal forkIdentifier;
     uint256 public arbitrumFork;
     uint256 public avalancheFork;
     uint256 public ethereumFork;
@@ -268,6 +268,7 @@ contract Utils is Script {
         targets = new address[](prop.length);
         values = new uint256[](prop.length);
         calldatas = new bytes[](prop.length);
+
         uint256 finalPropLength;
         uint256 i;
         while (i < prop.length) {
@@ -287,11 +288,6 @@ contract Utils is Script {
 
             if (chainId == 1) {
                 vm.selectFork(forkIdentifier[1]);
-                (
-                    address[] memory batchTargets,
-                    uint256[] memory batchValues,
-                    bytes[] memory batchCalldatas
-                ) = filterChainSubCalls(chainId, prop);
                 (targets[finalPropLength], values[finalPropLength], calldatas[finalPropLength]) = wrapTimelock(
                     chainId,
                     prop
@@ -300,18 +296,13 @@ contract Utils is Script {
                 i += count;
             } else {
                 vm.selectFork(forkIdentifier[chainId]);
-                (
-                    address[] memory batchTargets,
-                    uint256[] memory batchValues,
-                    bytes[] memory batchCalldatas
-                ) = filterChainSubCalls(chainId, prop);
                 (address target, uint256 value, bytes memory data) = wrapTimelock(chainId, prop);
 
-                batchTargets = new address[](1);
+                address[] memory batchTargets = new address[](1);
                 batchTargets[0] = target;
-                batchValues = new uint256[](1);
+                uint256[] memory batchValues = new uint256[](1);
                 batchValues[0] = value;
-                batchCalldatas = new bytes[](1);
+                bytes[] memory batchCalldatas = new bytes[](1);
                 batchCalldatas[0] = data;
 
                 // Wrap for proposal sender
@@ -377,9 +368,7 @@ contract Utils is Script {
         return (calldatas, description, targets, values);
     }
 
-    // TODO don't overwrite the file each time
     function _serializeJson(
-        uint256 chainId,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -411,10 +400,8 @@ contract Utils is Script {
             }
             vm.serializeString(json, "calldatas", calldatasOutput);
         }
-        string memory chainOutput = vm.serializeString(json, "description", description);
+        string memory output = vm.serializeString(json, "description", description);
 
-        string memory jsonFinal = "final";
-        string memory output = vm.serializeString(jsonFinal, vm.toString(chainId), chainOutput);
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/scripts/proposals.json");
         vm.writeJson(output, path);
