@@ -4,6 +4,15 @@ pragma solidity ^0.8.9;
 
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
+import { ITransmuter } from "transmuter/interfaces/ITransmuter.sol";
+import { IAgToken } from "borrow/interfaces/IAgToken.sol";
+import { ProxyAdmin } from "oz/proxy/transparent/ProxyAdmin.sol";
+import { Ownable } from "oz/access/Ownable.sol";
+import { CoreBorrow } from "borrow/coreBorrow/CoreBorrow.sol";
+import { ITreasury } from "borrow/interfaces/ITreasury.sol";
+import { TimelockController } from "oz/governance/TimelockController.sol";
+import { AngleGovernor } from "contracts/AngleGovernor.sol";
+import "./Interfaces.s.sol";
 
 enum ContractType {
     Timelock,
@@ -27,6 +36,13 @@ enum ContractType {
     FeeDistributor
 }
 
+struct SubCall {
+    uint256 chainId;
+    address target;
+    uint256 value;
+    bytes data;
+}
+
 uint256 constant timelockDelay = 1 days;
 uint48 constant initialVotingDelay = 1 days;
 uint256 constant initialVotingDelayBlocks = 1 days / 12;
@@ -47,8 +63,20 @@ uint256 constant CHAIN_POLYGON = 137;
 uint256 constant CHAIN_GNOSIS = 100;
 uint256 constant CHAIN_BNB = 56;
 uint256 constant CHAIN_CELO = 42220;
-uint256 constant CHAIN_ZKEVMPOLYGON = 1101;
+uint256 constant CHAIN_POLYGONZKEVM = 1101;
 uint256 constant CHAIN_BASE = 8453;
 uint256 constant CHAIN_LINEA = 59144;
 uint256 constant CHAIN_MANTLE = 5000;
 uint256 constant CHAIN_AURORA = 1313161554;
+uint256 constant CHAIN_SOURCE = CHAIN_ETHEREUM;
+
+uint256 constant BASE_18 = 1e18;
+uint256 constant BASE_9 = 1e9;
+
+uint64 constant twoPoint5Rate = 782997666703977344;
+uint64 constant fourRate = 1243680713969297408;
+uint64 constant fourPoint3Rate = 1335019428339023872;
+
+string constant pathProposal = "/scripts/proposals/payload.json";
+address constant proposer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
+address constant whale = 0x41Bc7d0687e6Cea57Fa26da78379DfDC5627C56d;

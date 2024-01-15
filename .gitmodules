@@ -17,3 +17,18 @@
 	path = lib/solidity-stringutils
 	url = https://github.com/Arachnid/solidity-stringutils
 	ignore = dirty
+[submodule "lib/angle-transmuter"]
+	path = lib/angle-transmuter
+	url = https://github.com/AngleProtocol/angle-transmuter
+[submodule "lib/borrow-contracts"]
+	path = lib/borrow-contracts
+	url = https://github.com/AngleProtocol/borrow-contracts
+[submodule "lib/new-oz"]
+	path = lib/new-oz
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "lib/new-oz-upgradeable"]
+	path = lib/new-oz-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "lib/chainlink"]
+	path = lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink

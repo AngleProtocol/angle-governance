@@ -4,14 +4,14 @@ pragma solidity ^0.8.19;
 import { console } from "forge-std/console.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 import "stringutils/strings.sol";
-import "./Utils.s.sol";
+import "../Utils.s.sol";
 import "oz/interfaces/IERC20.sol";
 
 import { IveANGLEVotingDelegation } from "contracts/interfaces/IveANGLEVotingDelegation.sol";
-import { deployMockANGLE, deployVeANGLE } from "./test/DeployANGLE.s.sol";
+import { deployMockANGLE, deployVeANGLE } from "../test/DeployANGLE.s.sol";
 import { ERC20 } from "oz/token/ERC20/ERC20.sol";
 import "contracts/interfaces/IveANGLE.sol";
-import "../test/external/VyperDeployer.sol";
+import "../../test/external/VyperDeployer.sol";
 
 import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";

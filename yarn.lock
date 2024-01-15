@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@angleprotocol/sdk@0.20.0":
-  version "0.20.0"
-  resolved "https://npm.pkg.github.com/download/@angleprotocol/sdk/0.20.0/5905906aef82e97cd217b3e63881323f9379b205#5905906aef82e97cd217b3e63881323f9379b205"
-  integrity sha512-IHGbHsywZn7W42d6pm/btj6a3ZeWyCxZd36Fubl+Fq9EMYqHjc+nfeclmMkHfMQJwihOpbMrCAohy8MfeL5usw==
+"@angleprotocol/sdk@^0.25.0":
+  version "0.25.0"
+  resolved "https://npm.pkg.github.com/download/@angleprotocol/sdk/0.25.0/5ae64a565f6bfc3459ce1442360539fc9438decc#5ae64a565f6bfc3459ce1442360539fc9438decc"
+  integrity sha512-AX3MAfmLOrPnP/rfhWF6djEWlcFOIL/mEEKIJY6h8kKUMJjVm2NQyGmrryJD0aCyi5/0MaB9dQNOAqj5yhkx+w==
   dependencies:
     "@apollo/client" "^3.7.17"
     "@typechain/ethers-v5" "^10.0.0"
