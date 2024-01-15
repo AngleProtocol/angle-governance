@@ -179,6 +179,7 @@ function main {
         echo "Script failed"
     fi
 
+    # TODO if the test fails we should abort
     testContract="${script}Test"
     echo ""
     echo "Running test"

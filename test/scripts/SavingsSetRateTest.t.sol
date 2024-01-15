@@ -8,10 +8,10 @@ import "../../scripts/Constants.s.sol";
 import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 
-contract SetMinDelayTimelockTest is ScriptHelpers {
+contract SavingsSetRateTest is ScriptHelpers {
     using stdJson for string;
 
-    uint256 constant newMinDelay = uint256(1 weeks);
+    uint256 constant newRate = fourPoint3Rate;
 
     function setUp() public override {
         super.setUp();
@@ -23,12 +23,10 @@ contract SetMinDelayTimelockTest is ScriptHelpers {
         // Now test that everything is as expected
         for (uint256 i; i < chainIds.length; i++) {
             uint256 chainId = chainIds[i];
-            TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
-                payable(_chainToContract(chainId, ContractType.Timelock))
-            );
+            ISavings stEUR = ISavings(payable(_chainToContract(chainId, ContractType.StEUR)));
             vm.selectFork(forkIdentifier[chainId]);
-            uint256 minDelay = timelock.getMinDelay();
-            assertEq(minDelay, newMinDelay);
+            uint256 rate = stEUR.rate();
+            assertEq(rate, newRate);
         }
     }
 }

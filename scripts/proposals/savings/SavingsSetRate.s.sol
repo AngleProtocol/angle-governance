@@ -2,9 +2,6 @@
 pragma solidity ^0.8.20;
 
 import { console } from "forge-std/console.sol";
-import { IVaultManagerFunctions } from "borrow/interfaces/IVaultManager.sol";
-import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol";
-
 import { Wrapper } from "../Wrapper.s.sol";
 import "../../Constants.s.sol";
 
