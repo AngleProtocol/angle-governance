@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import { console } from "forge-std/console.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 import "stringutils/strings.sol";
-import "./Utils.s.sol";
+import "../Utils.s.sol";
 import "oz/interfaces/IERC20.sol";
 
 import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";

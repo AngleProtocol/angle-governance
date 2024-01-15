@@ -153,7 +153,7 @@ contract Utils is Script {
         else if (name == ContractType.TransmuterAgEUR) cmd[3] = "transmuterAgEUR";
         else if (name == ContractType.CoreBorrow) cmd[3] = "coreBorrow";
         else if (name == ContractType.GovernorMultisig) cmd[3] = "governorMultisig";
-        else if (name == ContractType.GuardianMultisig) cmd[3] = "guardianMultisig";
+        else if (name == ContractType.GuardianMultisig) cmd[3] = "guardian";
         else if (name == ContractType.ProxyAdmin) cmd[3] = "proxyAdmin";
         else if (name == ContractType.Angle) cmd[3] = "angle";
         else if (name == ContractType.veANGLE) cmd[3] = "veANGLE";

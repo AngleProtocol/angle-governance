@@ -5,7 +5,7 @@ import { console } from "forge-std/console.sol";
 import { IVaultManagerFunctions } from "borrow/interfaces/IVaultManager.sol";
 import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol";
 import { ITreasury, Wrapper } from "../Wrapper.s.sol";
-import "../Constants.s.sol";
+import "../../Constants.s.sol";
 
 /** This script suppose that the state of all the vaultManager on the chain are identical (all paused or unpause) 
 /** Otherwise behaviour is chaotic
