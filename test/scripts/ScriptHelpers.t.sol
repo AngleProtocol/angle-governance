@@ -44,6 +44,7 @@ contract ScriptHelpers is Test, Utils {
             hoax(whale);
             governor.execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description)));
         }
+        Vm.Log[] memory entries = vm.getRecordedLogs();
 
         for (uint256 chainCount; chainCount < chainIds.length; chainCount++) {
             uint256 chainId = chainIds[chainCount];
@@ -65,7 +66,6 @@ contract ScriptHelpers is Test, Utils {
                     bytes memory payload;
 
                     {
-                        Vm.Log[] memory entries = vm.getRecordedLogs();
                         for (uint256 i; i < entries.length; i++) {
                             if (
                                 entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&

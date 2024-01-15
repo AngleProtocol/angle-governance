@@ -171,6 +171,7 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
+    # TODO if the script fails we should abort
     FOUNDRY_PROFILE=dev forge script $script
 
     if [ $? -ne 0 ]; then
