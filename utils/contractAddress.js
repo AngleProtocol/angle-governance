@@ -30,6 +30,7 @@ else if(contracTtype == "stEUR") contract = registry(parsedInput)?.agEUR?.Saving
 else if(contracTtype == "transmuterAgEUR") contract = registry(parsedInput)?.agEUR?.Transmuter;
 else if(contracTtype == "coreBorrow") contract = registry(parsedInput)?.CoreBorrow;
 else if(contracTtype == "governorMultisig") contract = registry(parsedInput)?.Governor;
+else if(contracTtype == "guardianMultisig") contract = registry(parsedInput)?.Guardian;
 else if(contracTtype == "proxyAdmin") contract = registry(parsedInput)?.ProxyAdmin;
 else if(contracTtype == "angle") contract = registry(parsedInput)?.ANGLE;
 else if(contracTtype == "veANGLE") contract = registry(parsedInput)?.veANGLE;

@@ -26,25 +26,24 @@ contract ScriptHelpers is Test, Utils {
         ) = _deserializeJson();
 
         vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
-        AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_SOURCE, ContractType.Governor)));
-        ProposalSender proposalSender = ProposalSender(
-            payable(_chainToContract(CHAIN_SOURCE, ContractType.ProposalSender))
-        );
-
         {
-            hoax(whale);
-            uint256 proposalId = governor.propose(targets, values, calldatas, description);
-            vm.warp(block.timestamp + governor.votingDelay() + 1);
-            vm.roll(block.number + governor.$votingDelayBlocks() + 1);
+            AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_SOURCE, ContractType.Governor)));
 
+            {
+                hoax(whale);
+                uint256 proposalId = governor.propose(targets, values, calldatas, description);
+                vm.warp(block.timestamp + governor.votingDelay() + 1);
+                vm.roll(block.number + governor.$votingDelayBlocks() + 1);
+
+                hoax(whale);
+                governor.castVote(proposalId, 1);
+                vm.warp(block.timestamp + governor.votingPeriod() + 1);
+            }
+
+            vm.recordLogs();
             hoax(whale);
-            governor.castVote(proposalId, 1);
-            vm.warp(block.timestamp + governor.votingPeriod() + 1);
+            governor.execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description)));
         }
-
-        vm.recordLogs();
-        hoax(whale);
-        governor.execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description)));
 
         for (uint256 chainCount; chainCount < chainIds.length; chainCount++) {
             uint256 chainId = chainIds[chainCount];
@@ -52,13 +51,19 @@ contract ScriptHelpers is Test, Utils {
                 payable(_chainToContract(chainId, ContractType.Timelock))
             );
 
-            if (chainId == CHAIN_SOURCE) {} else {
-                ProposalReceiver proposalReceiver = ProposalReceiver(
-                    payable(_chainToContract(chainId, ContractType.ProposalReceiver))
-                );
-
+            if (chainId == CHAIN_SOURCE) {
+                vm.warp(block.timestamp + timelock.getMinDelay() + 1);
+                _executeTimelock(chainId, timelock, targets[chainCount], calldatas[chainCount]);
+            } else {
                 {
+                    ProposalSender proposalSender = ProposalSender(
+                        payable(_chainToContract(CHAIN_SOURCE, ContractType.ProposalSender))
+                    );
+                    ProposalReceiver proposalReceiver = ProposalReceiver(
+                        payable(_chainToContract(chainId, ContractType.ProposalReceiver))
+                    );
                     bytes memory payload;
+
                     {
                         Vm.Log[] memory entries = vm.getRecordedLogs();
                         for (uint256 i; i < entries.length; i++) {
@@ -83,47 +88,59 @@ contract ScriptHelpers is Test, Utils {
                 }
 
                 vm.warp(block.timestamp + timelock.getMinDelay() + 1);
-                // (targets, values, calldatas) = filterChainSubCalls(chainId, p);
-                (address[] memory chainTargets, , , bytes[] memory chainCalldatas) = abi.decode(
-                    calldatas[chainCount],
-                    (address[], uint256[], string[], bytes[])
-                );
+                address[] memory chainTargets;
+                bytes[] memory chainCalldatas;
+                {
+                    console.logBytes(calldatas[chainCount]);
+                    (, bytes memory senderData, ) = abi.decode(
+                        // calldatas[chainCount],
+                        slice(calldatas[chainCount], 4, calldatas[chainCount].length - 4),
+                        (uint16, bytes, bytes)
+                    );
+                    console.logBytes(senderData);
+                    (chainTargets, , , chainCalldatas) = abi.decode(
+                        senderData,
+                        (address[], uint256[], string[], bytes[])
+                    );
+                }
+
                 for (uint256 i; i < chainTargets.length; i++) {
-                    // We only consider when transaction is sent to the chain timelock, as the other case shouldn't ask for another execute call
-                    if (chainTargets[i] == address(timelock)) {
-                        if (TimelockControllerWithCounter.schedule.selector == bytes4(slice(chainCalldatas[i], 0, 4))) {
-                            (
-                                address target,
-                                uint256 value,
-                                bytes memory data,
-                                bytes32 predecessor,
-                                bytes32 salt,
-
-                            ) = abi.decode(
-                                    slice(chainCalldatas[i], 4, chainCalldatas[i].length - 4),
-                                    (address, uint256, bytes, bytes32, bytes32, uint256)
-                                );
-                            timelock.execute(target, value, data, predecessor, salt);
-                            // id = timelock.hashOperation(target, value, data, predecessor, salt);
-                        } else {
-                            (
-                                address[] memory tmpTargets,
-                                uint256[] memory tmpValues,
-                                bytes[] memory tmpCalldatas,
-                                bytes32 predecessor,
-                                bytes32 salt,
-
-                            ) = abi.decode(
-                                    slice(chainCalldatas[i], 4, chainCalldatas[i].length - 4),
-                                    (address[], uint256[], bytes[], bytes32, bytes32, uint256)
-                                );
-                            timelock.executeBatch(tmpTargets, tmpValues, tmpCalldatas, predecessor, salt);
-                            // id = timelock.hashOperationBatch(targets, values, calldatas, predecessor, salt);
-                        }
-                    }
+                    _executeTimelock(chainId, timelock, chainTargets[i], chainCalldatas[i]);
                 }
             }
         }
         return chainIds;
+    }
+
+    function _executeTimelock(
+        uint256 chainId,
+        TimelockControllerWithCounter timelock,
+        address target,
+        bytes memory rawData
+    ) public returns (uint256[] memory) {
+        // We only consider when transaction is sent to the chain timelock, as the other case shouldn't ask for another execute call
+        if (target == address(timelock)) {
+            vm.prank(_chainToContract(chainId, ContractType.GuardianMultisig));
+            if (TimelockControllerWithCounter.schedule.selector == bytes4(slice(rawData, 0, 4))) {
+                (address target, uint256 value, bytes memory data, bytes32 predecessor, bytes32 salt, ) = abi.decode(
+                    slice(rawData, 4, rawData.length - 4),
+                    (address, uint256, bytes, bytes32, bytes32, uint256)
+                );
+                timelock.execute(target, value, data, predecessor, salt);
+            } else {
+                (
+                    address[] memory tmpTargets,
+                    uint256[] memory tmpValues,
+                    bytes[] memory tmpCalldatas,
+                    bytes32 predecessor,
+                    bytes32 salt,
+
+                ) = abi.decode(
+                        slice(rawData, 4, rawData.length - 4),
+                        (address[], uint256[], bytes[], bytes32, bytes32, uint256)
+                    );
+                timelock.executeBatch(tmpTargets, tmpValues, tmpCalldatas, predecessor, salt);
+            }
+        }
     }
 }

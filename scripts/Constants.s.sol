@@ -24,6 +24,7 @@ enum ContractType {
     TransmuterAgEUR,
     CoreBorrow,
     GovernorMultisig,
+    GuardianMultisig,
     ProxyAdmin,
     Angle,
     veANGLE,
