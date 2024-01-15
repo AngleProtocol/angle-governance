@@ -8,9 +8,19 @@ import { ISettersGuardian } from "transmuter/interfaces/ISetters.sol";
 import { Utils } from "../Utils.s.sol";
 import "../Constants.s.sol";
 
-contract PauseTransmuter is Utils {
+contract TransmuterSetRedemptionParams is Utils {
+    SubCall[] private subCalls;
+
+    function setRedemptionParams(uint256 chainId, uint64[] memory xFee, int64[] memory yFee) private {
+        ITransmuter transmuter = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgEUR));
+
+        bytes memory data = abi.encodeWithSelector(ISettersGuardian.setRedemptionCurveParams.selector, xFee, yFee);
+        subCalls.push(SubCall(chainId, address(transmuter), 0, data));
+    }
+
     function run() external {
-        uint256 chainId = vm.envUint("CHAIN_ID");
+        uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
+        string memory description = "Set redemption params for transmuter";
 
         /** TODO  complete */
         uint64[] memory xFee = new uint64[](2);
@@ -22,21 +32,15 @@ contract PauseTransmuter is Utils {
         yFee[1] = 0;
         /** END  complete */
 
-        ITransmuter transmuter = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgEUR));
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            setRedemptionParams(chainIds[i], xFee, yFee);
+        }
 
-        bytes memory transactions;
-        uint8 isDelegateCall = 0;
-        address to = address(transmuter);
-        uint256 value = 0;
-
-        bytes memory data = abi.encodeWithSelector(ISettersGuardian.setRedemptionCurveParams.selector, xFee, yFee);
-        uint256 dataLength = data.length;
-        bytes memory internalTx = abi.encodePacked(isDelegateCall, to, value, dataLength, data);
-        transactions = abi.encodePacked(transactions, internalTx);
-
-        // bytes memory payloadMultiSend = abi.encodeWithSelector(MultiSend.multiSend.selector, transactions);
-        // console.logBytes(payloadMultiSend);
-        // address multiSend = address(_chainToMultiSend(chainId));
-        // _serializeJson(chainId, multiSend, 0, payloadMultiSend, Enum.Operation.DelegateCall, hex"");
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            uint256[] memory chainIds2
+        ) = _wrap(subCalls);
     }
 }
