@@ -12,7 +12,7 @@ import "./Constants.s.sol";
 
 /// @title Utils
 /// @author Angle Labs, Inc.
-contract Utils is Script, HelpersAddress, HelpersJson {
+contract Utils is Script {
     mapping(uint256 => uint256) internal forkIdentifier;
     uint256 public arbitrumFork;
     uint256 public avalancheFork;
