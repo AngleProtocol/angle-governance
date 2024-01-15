@@ -3,8 +3,8 @@ pragma solidity ^0.8.19;
 
 import { stdJson } from "forge-std/StdJson.sol";
 import { console } from "forge-std/console.sol";
-import { ScriptHelpers } from "./ScriptHelpers.t.sol";
-import "../../scripts/Constants.s.sol";
+import { ScriptHelpers } from "../ScriptHelpers.t.sol";
+import "../../../scripts/Constants.s.sol";
 import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 
