@@ -3,11 +3,11 @@ pragma solidity ^0.8.20;
 
 import { console } from "forge-std/console.sol";
 import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol";
-import { ITreasury, Utils } from "../Utils.s.sol";
+import { ITreasury, Wrapper } from "../Wrapper.s.sol";
 import { IVaultManagerGovernance } from "scripts/Interfaces.s.sol";
 import "../Constants.s.sol";
 
-contract SetRateVaultManager is Utils {
+contract SetRateVaultManager is Wrapper {
     SubCall[] private subCalls;
 
     function _setRateVaultManager(uint256 chainId) internal {

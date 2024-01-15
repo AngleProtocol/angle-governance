@@ -5,10 +5,10 @@ import { console } from "forge-std/console.sol";
 import { IVaultManagerFunctions } from "borrow/interfaces/IVaultManager.sol";
 import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol";
 
-import { Utils } from "../Utils.s.sol";
+import { Wrapper } from "../Wrapper.s.sol";
 import "../Constants.s.sol";
 
-contract SavingsSetRate is Utils {
+contract SavingsSetRate is Wrapper {
     SubCall[] private subCalls;
 
     function _setRateSavings(uint256 chainId, uint208 rate) private {

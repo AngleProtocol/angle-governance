@@ -5,10 +5,10 @@ import { console } from "forge-std/console.sol";
 import "transmuter/transmuter/Storage.sol" as Storage;
 import { ISettersGuardian } from "transmuter/interfaces/ISetters.sol";
 
-import { Utils } from "../Utils.s.sol";
+import { Wrapper } from "../Wrapper.s.sol";
 import "../Constants.s.sol";
 
-contract TransmuterSetRedemptionParams is Utils {
+contract TransmuterSetRedemptionParams is Wrapper {
     SubCall[] private subCalls;
 
     function setRedemptionParams(uint256 chainId, uint64[] memory xFee, int64[] memory yFee) private {
