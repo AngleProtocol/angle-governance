@@ -73,3 +73,7 @@ uint256 constant BASE_9 = 1e9;
 uint64 constant twoPoint5Rate = 782997666703977344;
 uint64 constant fourRate = 1243680713969297408;
 uint64 constant fourPoint3Rate = 1335019428339023872;
+
+string constant pathProposal = "/scripts/proposals.json";
+address constant proposer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
+address constant whale = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;

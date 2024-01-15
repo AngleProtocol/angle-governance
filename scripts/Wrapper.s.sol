@@ -140,7 +140,7 @@ contract Wrapper is Utils {
                 }
             }
 
-            if (chainId == 1) {
+            if (chainId == CHAIN_SOURCE) {
                 vm.selectFork(forkIdentifier[1]);
                 (targets[finalPropLength], values[finalPropLength], calldatas[finalPropLength]) = wrapTimelock(
                     chainId,
@@ -161,12 +161,14 @@ contract Wrapper is Utils {
                 batchCalldatas[0] = data;
 
                 // Wrap for proposal sender
-                ProposalSender proposalSender = ProposalSender(_chainToContract(chainId, ContractType.ProposalSender));
+                ProposalSender proposalSender = ProposalSender(
+                    _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)
+                );
                 targets[finalPropLength] = address(proposalSender);
                 values[finalPropLength] = 0.1 ether;
                 chainIds[finalPropLength] = chainId;
                 calldatas[finalPropLength] = abi.encodeWithSelector(
-                    proposalSender.execute.selector,
+                    ProposalSender.execute.selector,
                     getLZChainId(chainId),
                     abi.encode(batchTargets, batchValues, new string[](1), batchCalldatas),
                     abi.encodePacked(uint16(1), uint256(300000))

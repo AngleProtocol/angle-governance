@@ -85,7 +85,7 @@ function chain_to_chainId {
 }
 
 function usage {
-  echo "bash createTx.sh <script> <chain>"
+  echo "bash createProposal.sh <script> <chain>"
   echo ""
   echo -e "script: path to the script to run"
   echo -e "chain: chain(s) to run the script on (separate with commas)"
@@ -171,27 +171,25 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    forge script $script
+    FOUNDRY_PROFILE=dev forge script $script
 
     if [ $? -ne 0 ]; then
         echo ""
         echo "Script failed"
     fi
 
-    testPath=$(echo $script | sed 's|scripts|test|g' | sed 's|.s.sol|.t.sol|g')
-    if [ -f $testPath ]; then
-        echo ""
-        echo "Running test"
-        forge test --match-path $testPath -vvv
-    fi
+    testContract="${script}Test"
+    echo ""
+    echo "Running test"
+    FOUNDRY_PROFILE=dev forge test --match-contract $testContract -vvv
 
     echo ""
     echo "Would you like to create the proposal ? (yes/no)"
     read execute
 
-    if [[ $execute == "yes" ]]; then
-        forge script scripts/interaction/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
-    fi
+    # if [[ $execute == "yes" ]]; then
+    #     forge script scripts/interaction/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+    # fi
 }
 
 main $@
