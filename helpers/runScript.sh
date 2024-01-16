@@ -2,8 +2,9 @@
 
 source helpers/common.sh
 
+
 function usage {
-  echo "bash createProposal.sh <script> <chain>"
+  echo "bash runScript.sh <script> <chain>"
   echo ""
   echo -e "script: path to the script to run"
   echo -e "chain: chain(s) to run the script on (separate with commas)"
@@ -89,26 +90,11 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    # TODO if the script fails we should abort
     FOUNDRY_PROFILE=dev forge script $script
 
     if [ $? -ne 0 ]; then
         echo ""
         echo "Script failed"
-    fi
-
-    # TODO if the test fails we should abort
-    testContract="${script}Test"
-    echo ""
-    echo "Running test"
-    FOUNDRY_PROFILE=dev forge test --match-contract $testContract -vvv
-
-    echo ""
-    echo "Would you like to create the proposal ? (yes/no)"
-    read execute
-
-    if [[ $execute == "yes" ]]; then
-        FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
     fi
 }
 

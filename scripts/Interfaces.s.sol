@@ -32,6 +32,10 @@ interface IGaugeController {
     function commit_transfer_ownership(address newAdmin) external;
 
     function apply_transfer_ownership() external;
+
+    function admin() external returns (address);
+
+    function future_admin() external returns (address);
 }
 
 interface ILiquidityGauge {
@@ -44,18 +48,30 @@ interface IVeBoost {
     function commit_transfer_ownership(address newAdmin) external;
 
     function apply_transfer_ownership() external;
+
+    function admin() external returns (address);
+
+    function future_admin() external returns (address);
 }
 
 interface IVeBoostProxy {
     function commit_admin(address newAdmin) external;
 
     function apply_transfer_ownership() external;
+
+    function admin() external returns (address);
+
+    function future_admin() external returns (address);
 }
 
 interface ISmartWalletWhitelist {
     function commitAdmin(address newAdmin) external;
 
     function applyAdmin() external;
+
+    function admin() external returns (address);
+
+    function future_admin() external returns (address);
 }
 
 interface IFeeDistributor {
