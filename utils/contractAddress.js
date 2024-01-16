@@ -20,25 +20,29 @@ const parsedInput = Number(chainInput);
 
 let contract
 
-if(contracTtype == "governor") contract =  registry(parsedInput)?.AngleGovernor;
-else if(contracTtype == "proposalReceiver")  contract = registry(parsedInput)?.ProposalReceiver;
-else if(contracTtype == "timelock") contract = registry(parsedInput)?.Timelock;
-else if(contracTtype == "proposalSender") contract = registry(parsedInput)?.ProposalSender;
-else if(contracTtype == "guardian") contract =  registry(parsedInput)?.Guardian;
-else if(contracTtype == "treasury") contract = registry(parsedInput)?.agEUR?.Treasury;
-else if(contracTtype == "stEUR") contract = registry(parsedInput)?.agEUR?.Savings;
-else if(contracTtype == "transmuterAgEUR") contract = registry(parsedInput)?.agEUR?.Transmuter;
-else if(contracTtype == "coreBorrow") contract = registry(parsedInput)?.CoreBorrow;
-else if(contracTtype == "governorMultisig") contract = registry(parsedInput)?.Governor;
-else if(contracTtype == "proxyAdmin") contract = registry(parsedInput)?.ProxyAdmin;
+if(contracTtype == "agEUR") contract = registry(parsedInput)?.agEUR?.agEUR;
 else if(contracTtype == "angle") contract = registry(parsedInput)?.ANGLE;
-else if(contracTtype == "veANGLE") contract = registry(parsedInput)?.veANGLE;
-else if(contracTtype == "smartWalletWhitelist") contract = registry(parsedInput)?.SmartWalletWhitelist;
-else if(contracTtype == "veBoostProxy") contract = registry(parsedInput)?.veBoostProxy;
-else if(contracTtype == "gaugeController") contract = registry(parsedInput)?.GaugeController;
 else if(contracTtype == "angleDistributor") contract = registry(parsedInput)?.AngleDistributor;
 else if(contracTtype == "angleMiddleman") contract = registry(parsedInput)?.Middleman;
+else if(contracTtype == "coreBorrow") contract = registry(parsedInput)?.CoreBorrow;
+else if(contracTtype == "distributionCreator") contract = registry(parsedInput)?.Merkl?.DistributionCreator;
 else if(contracTtype == "feeDistributor") contract = registry(parsedInput)?.FeeDistributor_sanUSDC_EUR;
+else if(contracTtype == "gaugeController") contract = registry(parsedInput)?.GaugeController;
+else if(contracTtype == "governor") contract =  registry(parsedInput)?.AngleGovernor;
+else if(contracTtype == "governorMultisig") contract = registry(parsedInput)?.Governor;
+else if(contracTtype == "guardianMultisig") contract =  registry(parsedInput)?.Guardian;
+else if(contracTtype == "merklMiddleman") contract = registry(parsedInput)?.MerklGaugeMiddleman;
+else if(contracTtype == "proposalReceiver")  contract = registry(parsedInput)?.ProposalReceiver;
+else if(contracTtype == "proposalSender") contract = registry(parsedInput)?.ProposalSender;
+else if(contracTtype == "proxyAdmin") contract = registry(parsedInput)?.ProxyAdmin;
+else if(contracTtype == "smartWalletWhitelist") contract = registry(parsedInput)?.SmartWalletWhitelist;
+else if(contracTtype == "stEUR") contract = registry(parsedInput)?.agEUR?.Savings;
+else if(contracTtype == "timelock") contract = registry(parsedInput)?.Timelock;
+else if(contracTtype == "transmuterAgEUR") contract = registry(parsedInput)?.agEUR?.Transmuter;
+else if(contracTtype == "treasury") contract = registry(parsedInput)?.agEUR?.Treasury;
+else if(contracTtype == "veANGLE") contract = registry(parsedInput)?.veANGLE;
+else if(contracTtype == "veBoost") contract = registry(parsedInput)?.veBoost;
+else if(contracTtype == "veBoostProxy") contract = registry(parsedInput)?.veBoostProxy;
 
 if(!contract) process.exit(1);
 // Call the function with the input

@@ -15,25 +15,29 @@ import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import "./Interfaces.s.sol";
 
 enum ContractType {
-    Timelock,
-    ProposalSender,
-    Governor,
-    ProposalReceiver,
-    TreasuryAgEUR,
-    StEUR,
-    TransmuterAgEUR,
-    CoreBorrow,
-    GovernorMultisig,
-    GuardianMultisig,
-    ProxyAdmin,
+    AgEUR,
     Angle,
-    veANGLE,
-    SmartWalletWhitelist,
-    veBoostProxy,
-    GaugeController,
     AngleDistributor,
     AngleMiddleman,
-    FeeDistributor
+    CoreBorrow,
+    DistributionCreator,
+    FeeDistributor,
+    GaugeController,
+    Governor,
+    GovernorMultisig,
+    GuardianMultisig,
+    MerklMiddleman,
+    ProposalReceiver,
+    ProposalSender,
+    ProxyAdmin,
+    SmartWalletWhitelist,
+    StEUR,
+    Timelock,
+    TransmuterAgEUR,
+    TreasuryAgEUR,
+    veANGLE,
+    veBoost,
+    veBoostProxy
 }
 
 struct SubCall {

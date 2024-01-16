@@ -23,6 +23,9 @@
 [submodule "lib/borrow-contracts"]
 	path = lib/borrow-contracts
 	url = https://github.com/AngleProtocol/borrow-contracts
+[submodule "lib/angle-router"]
+	path = lib/angle-router
+	url = https://github.com/AngleProtocol/angle-router
 [submodule "lib/new-oz"]
 	path = lib/new-oz
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts

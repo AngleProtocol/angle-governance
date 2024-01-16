@@ -14,12 +14,18 @@ interface ISavings {
 
 interface IAngle {
     function setMinter(address minter) external;
+
+    function minter() external returns (address);
 }
 
 interface IVeAngle {
     function commit_transfer_ownership(address newAdmin) external;
 
     function apply_transfer_ownership() external;
+
+    function admin() external returns (address);
+
+    function future_admin() external returns (address);
 }
 
 interface IGaugeController {
