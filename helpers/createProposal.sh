@@ -189,9 +189,9 @@ function main {
     echo "Would you like to create the proposal ? (yes/no)"
     read execute
 
-    # if [[ $execute == "yes" ]]; then
-    #     forge script scripts/interaction/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
-    # fi
+    if [[ $execute == "yes" ]]; then
+        FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+    fi
 }
 
 main $@

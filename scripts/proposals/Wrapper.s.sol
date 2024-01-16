@@ -141,7 +141,7 @@ contract Wrapper is Utils {
             }
 
             if (chainId == CHAIN_SOURCE) {
-                vm.selectFork(forkIdentifier[1]);
+                vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
                 (targets[finalPropLength], values[finalPropLength], calldatas[finalPropLength]) = wrapTimelock(
                     chainId,
                     prop
