@@ -44,16 +44,6 @@ interface ILiquidityGauge {
     function apply_transfer_ownership() external;
 }
 
-interface IVeBoost {
-    function commit_transfer_ownership(address newAdmin) external;
-
-    function apply_transfer_ownership() external;
-
-    function admin() external returns (address);
-
-    function future_admin() external returns (address);
-}
-
 interface IVeBoostProxy {
     function commit_admin(address newAdmin) external;
 

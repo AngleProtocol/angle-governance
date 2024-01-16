@@ -20,7 +20,7 @@ const parsedInput = Number(chainInput);
 
 let contract
 
-if(contracTtype == "agEUR") contract = registry(parsedInput)?.agEUR?.agEUR;
+if(contracTtype == "agEUR") contract = registry(parsedInput)?.agEUR?.AgToken;
 else if(contracTtype == "angle") contract = registry(parsedInput)?.ANGLE;
 else if(contracTtype == "angleDistributor") contract = registry(parsedInput)?.AngleDistributor;
 else if(contracTtype == "angleMiddleman") contract = registry(parsedInput)?.Middleman;

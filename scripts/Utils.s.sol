@@ -92,6 +92,7 @@ contract Utils is Script {
         else if (name == ContractType.Angle) cmd[3] = "angle";
         else if (name == ContractType.AngleDistributor) cmd[3] = "angleDistributor";
         else if (name == ContractType.AngleMiddleman) cmd[3] = "angleMiddleman";
+        else if (name == ContractType.AngleRouter) cmd[3] = "angleRouter";
         else if (name == ContractType.CoreBorrow) cmd[3] = "coreBorrow";
         else if (name == ContractType.DistributionCreator) cmd[3] = "distributionCreator";
         else if (name == ContractType.FeeDistributor) cmd[3] = "feeDistributor";
