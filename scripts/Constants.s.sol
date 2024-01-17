@@ -16,11 +16,18 @@ import "./Interfaces.s.sol";
 
 enum ContractType {
     AgEUR,
+    AgUSD,
+    AgEURLZ,
+    AgUSDLZ,
     Angle,
+    AngleLZ,
     AngleDistributor,
     AngleMiddleman,
+    AngleRouter,
     CoreBorrow,
+    CoreMerkl,
     DistributionCreator,
+    Distributor,
     FeeDistributor,
     GaugeController,
     Governor,
@@ -32,9 +39,12 @@ enum ContractType {
     ProxyAdmin,
     SmartWalletWhitelist,
     StEUR,
+    StUSD,
     Timelock,
     TransmuterAgEUR,
+    TransmuterAgUSD,
     TreasuryAgEUR,
+    TreasuryAgUSD,
     veANGLE,
     veBoost,
     veBoostProxy
@@ -64,6 +74,7 @@ uint256 constant CHAIN_ARBITRUM = 42161;
 uint256 constant CHAIN_AVALANCHE = 43114;
 uint256 constant CHAIN_OPTIMISM = 10;
 uint256 constant CHAIN_POLYGON = 137;
+uint256 constant CHAIN_FANTOM = 250;
 uint256 constant CHAIN_GNOSIS = 100;
 uint256 constant CHAIN_BNB = 56;
 uint256 constant CHAIN_CELO = 42220;

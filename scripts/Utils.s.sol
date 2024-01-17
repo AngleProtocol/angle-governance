@@ -82,19 +82,38 @@ contract Utils is Script {
         return ILayerZeroEndpoint(address(bytes20(res)));
     }
 
+    function _getALLContracts(uint256 chainId) internal returns (address[] memory allContracts) {
+        string[] memory cmd = new string[](3);
+        cmd[0] = "node";
+        cmd[1] = "utils/getAllContracts.js";
+        cmd[2] = vm.toString(chainId);
+
+        bytes memory res = vm.ffi(cmd);
+        // When process exit code is 1, it will return an empty bytes "0x"
+        if (res.length == 0) revert("Chain not supported");
+        allContracts = abi.decode(res, (address[]));
+    }
+
     function _chainToContract(uint256 chainId, ContractType name) internal returns (address) {
         string[] memory cmd = new string[](4);
         cmd[0] = "node";
         cmd[1] = "utils/contractAddress.js";
         cmd[2] = vm.toString(chainId);
 
+        // console.log("name ", uint256(name));
         if (name == ContractType.AgEUR) cmd[3] = "agEUR";
+        else if (name == ContractType.AgUSD) cmd[3] = "agUSD";
+        else if (name == ContractType.AgEURLZ) cmd[3] = "agEURLz";
+        else if (name == ContractType.AgUSDLZ) cmd[3] = "agUSDLz";
         else if (name == ContractType.Angle) cmd[3] = "angle";
+        else if (name == ContractType.AngleLZ) cmd[3] = "angleLz";
         else if (name == ContractType.AngleDistributor) cmd[3] = "angleDistributor";
         else if (name == ContractType.AngleMiddleman) cmd[3] = "angleMiddleman";
         else if (name == ContractType.AngleRouter) cmd[3] = "angleRouter";
         else if (name == ContractType.CoreBorrow) cmd[3] = "coreBorrow";
+        else if (name == ContractType.CoreMerkl) cmd[3] = "coreMerkl";
         else if (name == ContractType.DistributionCreator) cmd[3] = "distributionCreator";
+        else if (name == ContractType.Distributor) cmd[3] = "distributor";
         else if (name == ContractType.FeeDistributor) cmd[3] = "feeDistributor";
         else if (name == ContractType.GaugeController) cmd[3] = "gaugeController";
         else if (name == ContractType.Governor) cmd[3] = "governor";
@@ -106,9 +125,12 @@ contract Utils is Script {
         else if (name == ContractType.ProxyAdmin) cmd[3] = "proxyAdmin";
         else if (name == ContractType.SmartWalletWhitelist) cmd[3] = "smartWalletWhitelist";
         else if (name == ContractType.StEUR) cmd[3] = "stEUR";
+        else if (name == ContractType.StUSD) cmd[3] = "stUSD";
         else if (name == ContractType.Timelock) cmd[3] = "timelock";
         else if (name == ContractType.TransmuterAgEUR) cmd[3] = "transmuterAgEUR";
-        else if (name == ContractType.TreasuryAgEUR) cmd[3] = "treasury";
+        else if (name == ContractType.TransmuterAgUSD) cmd[3] = "transmuterAgUSD";
+        else if (name == ContractType.TreasuryAgEUR) cmd[3] = "treasuryAgEUR";
+        else if (name == ContractType.TreasuryAgUSD) cmd[3] = "treasuryAgUSD";
         else if (name == ContractType.veANGLE) cmd[3] = "veANGLE";
         else if (name == ContractType.veBoost) cmd[3] = "veBoost";
         else if (name == ContractType.veBoostProxy) cmd[3] = "veBoostProxy";
