@@ -100,7 +100,6 @@ contract Utils is Script {
         cmd[1] = "utils/contractAddress.js";
         cmd[2] = vm.toString(chainId);
 
-        // console.log("name ", uint256(name));
         if (name == ContractType.AgEUR) cmd[3] = "agEUR";
         else if (name == ContractType.AgUSD) cmd[3] = "agUSD";
         else if (name == ContractType.AgEURLZ) cmd[3] = "agEURLz";

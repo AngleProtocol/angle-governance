@@ -15,11 +15,12 @@ import "../Constants.s.sol";
 
 // 1,2,3,4,5,6,7,8,9,10,11
 contract CheckRoles is Utils {
-    address oldDeployer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
-    address oldKeeper = 0xcC617C6f9725eACC993ac626C7efC6B96476916E;
-    address oldKeeperPolygon = 0x5EB715d601C2F27f83Cb554b6B36e047822fB70a;
-    address oldKeeperPolygon2 = 0xEd42E58A303E20523A695CB31ac31df26C50397B;
-    address merklKeeper = 0x435046800Fb9149eE65159721A92cB7d50a7534b;
+    address constant oldDeployer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
+    address constant oldKeeper = 0xcC617C6f9725eACC993ac626C7efC6B96476916E;
+    address constant oldKeeperPolygon = 0x5EB715d601C2F27f83Cb554b6B36e047822fB70a;
+    address constant oldKeeperPolygon2 = 0xEd42E58A303E20523A695CB31ac31df26C50397B;
+    address constant merklKeeper = 0x435046800Fb9149eE65159721A92cB7d50a7534b;
+    address constant tmpCoreBorrowUSD = 0x3fc5a1bd4d0A435c55374208A6A81535A1923039;
     string constant angleLZ = "Angle LZ";
 
     bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
@@ -88,6 +89,8 @@ contract CheckRoles is Utils {
             // It would be better with a try catch but I don't know how why it doesn't work
             if (chainId == CHAIN_ETHEREUM) {
                 // Contract to check roles on
+                ITransmuter transmuterEUR = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgEUR));
+                ITransmuter transmuterUSD = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgUSD));
                 IAngle angle = IAngle(_chainToContract(chainId, ContractType.Angle));
                 ProposalSender proposalSender = ProposalSender(
                     payable(_chainToContract(chainId, ContractType.ProposalSender))
@@ -100,10 +103,28 @@ contract CheckRoles is Utils {
                 );
                 IVeAngle veAngle = IVeAngle(_chainToContract(chainId, ContractType.veANGLE));
                 IVeBoostProxy veBoostProxy = IVeBoostProxy(_chainToContract(chainId, ContractType.veBoostProxy));
+                IGenericAccessControl merklMiddleman = IGenericAccessControl(
+                    _chainToContract(chainId, ContractType.MerklMiddleman)
+                );
 
+                if (!_authorizedCore(chainId, address(transmuterEUR.accessControlManager())))
+                    console.log(
+                        "Transmuter EUR - wrong access control manager: ",
+                        address(transmuterEUR.accessControlManager())
+                    );
+                if (!_authorizedCore(chainId, address(transmuterUSD.accessControlManager())))
+                    console.log(
+                        "Transmuter USD - wrong access control manager: ",
+                        address(transmuterUSD.accessControlManager())
+                    );
                 if (!_authorizedMinter(chainId, angle.minter())) console.log("Angle - minter role: ", angle.minter());
                 if (!_authorizedOwner(chainId, proposalSender.owner()))
                     console.log("Proposal Sender - owner: ", proposalSender.owner());
+                if (!_authorizedCoreMerkl(chainId, address(merklMiddleman.accessControlManager())))
+                    console.log(
+                        "Merkl Middleman - wrong access control manager: ",
+                        address(merklMiddleman.accessControlManager())
+                    );
                 if (!_authorizedOwner(chainId, gaugeController.admin()))
                     console.log("Gauge Controller - admin role: ", gaugeController.admin());
                 if (!_authorizedOwner(chainId, gaugeController.future_admin()))
@@ -147,15 +168,10 @@ contract CheckRoles is Utils {
             ProxyAdmin proxyAdmin = ProxyAdmin(_chainToContract(chainId, ContractType.ProxyAdmin));
             ISavings stEUR = ISavings(_chainToContract(chainId, ContractType.StEUR));
             ISavings stUSD = ISavings(_chainToContract(chainId, ContractType.StUSD));
-            ITransmuter transmuterEUR = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgEUR));
-            ITransmuter transmuterUSD = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgUSD));
             IAccessControlCore distributionCreator = IAccessControlCore(
                 _chainToContract(chainId, ContractType.DistributionCreator)
             );
             IAccessControlCore distributor = IAccessControlCore(_chainToContract(chainId, ContractType.Distributor));
-            IGenericAccessControl merklMiddleman = IGenericAccessControl(
-                _chainToContract(chainId, ContractType.MerklMiddleman)
-            );
 
             if (!_authorizedProxyAdminOwner(chainId, proxyAdmin.owner()))
                 console.log("Proxy Admin - owner: ", proxyAdmin.owner());
@@ -163,21 +179,6 @@ contract CheckRoles is Utils {
                 console.log("StEUR - wrong access control manager: ", stEUR.accessControlManager());
             if (!_authorizedCore(chainId, address(stUSD.accessControlManager())))
                 console.log("StUSD - wrong access control manager: ", stUSD.accessControlManager());
-            if (!_authorizedCore(chainId, address(transmuterEUR.accessControlManager())))
-                console.log(
-                    "Transmuter EUR - wrong access control manager: ",
-                    address(transmuterEUR.accessControlManager())
-                );
-            if (!_authorizedCore(chainId, address(transmuterUSD.accessControlManager())))
-                console.log(
-                    "Transmuter USD - wrong access control manager: ",
-                    address(transmuterUSD.accessControlManager())
-                );
-            if (!_authorizedCoreMerkl(chainId, address(merklMiddleman.accessControlManager())))
-                console.log(
-                    "Merkl Middleman - wrong access control manager: ",
-                    address(merklMiddleman.accessControlManager())
-                );
             if (!_authorizedCoreMerkl(chainId, address(distributionCreator.core())))
                 console.log("Distribution creator - wrong core: ", distributionCreator.core());
             if (!_authorizedCoreMerkl(chainId, address(distributor.core())))
@@ -341,17 +342,17 @@ contract CheckRoles is Utils {
                 console.log(vm.toString(address(contractToCheck)), " minter: ");
         } catch {}
         try contractToCheck.isTrusted(addressToCheck) returns (bool isTrusted) {
-            if (isTrusted && _authorizedTrusted(chainId, addressToCheck))
+            if (isTrusted && !_authorizedTrusted(chainId, addressToCheck))
                 console.log(vm.toString(address(contractToCheck)), " trusted: ");
         } catch {}
         try contractToCheck.trusted(addressToCheck) returns (uint256 isTrusted) {
-            if (isTrusted > 0 && _authorizedTrusted(chainId, addressToCheck))
+            if (isTrusted > 0 && !_authorizedTrusted(chainId, addressToCheck))
                 console.log(vm.toString(address(contractToCheck)), " trusted: ");
         } catch {}
         bytes32[] memory listRoles = _listRoles();
         for (uint256 i = 0; i < listRoles.length; i++) {
             try contractToCheck.hasRole(listRoles[i], addressToCheck) returns (bool hasRole) {
-                if (hasRole && _mapCheckRoles(i, chainId, addressToCheck))
+                if (hasRole && !_mapCheckRoles(i, chainId, addressToCheck))
                     console.log(vm.toString(address(contractToCheck)), " have role: ", _nameRoles(i));
             } catch {}
         }
@@ -468,7 +469,8 @@ contract CheckRoles is Utils {
     }
 
     function _authorizedCore(uint256 chainId, address core) internal returns (bool) {
-        return core == _chainToContract(chainId, ContractType.CoreBorrow);
+        // TODO remove tmp core when USD linked to real one
+        return core == _chainToContract(chainId, ContractType.CoreBorrow) || core == tmpCoreBorrowUSD;
     }
 
     function _authorizedCoreMerkl(uint256 chainId, address core) internal returns (bool) {
