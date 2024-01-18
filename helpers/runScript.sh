@@ -19,6 +19,7 @@ function usage {
   echo -e "\t9: Polygon ZkEvm"
   echo -e "\t10: Optimism"
   echo -e "\t11: Linea"
+  echo -e "\t12: All"
   echo ""
 }
 
@@ -65,6 +66,7 @@ function main {
         echo "- 9: Polygon ZkEvm"
         echo "- 10: Optimism"
         echo "- 11: Linea"
+        echo "- 12: All"
 
         read chains
 
@@ -75,6 +77,11 @@ function main {
     fi
 
     mainnet_uri=$(chain_to_uri 1)
+
+    if [[ "$chains" == "12" ]]; then
+        # If user entered 12 (All), loop from 1 to 11 and add all chains
+        chains="1,2,3,4,5,6,7,8,9,10,11"
+    fi
 
     chainIds=""
     for chain in $(echo $chains | sed "s/,/ /g")

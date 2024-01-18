@@ -165,24 +165,32 @@ contract CheckRoles is Utils {
                     ContractType.TreasuryAgEUR
                 );
 
+            if (_isMerklDeployed(chainId)) {
+                IAccessControlCore distributionCreator = IAccessControlCore(
+                    _chainToContract(chainId, ContractType.DistributionCreator)
+                );
+                IAccessControlCore distributor = IAccessControlCore(
+                    _chainToContract(chainId, ContractType.Distributor)
+                );
+                if (!_authorizedCoreMerkl(chainId, address(distributionCreator.core())))
+                    console.log("Distribution creator - wrong core: ", distributionCreator.core());
+                if (!_authorizedCoreMerkl(chainId, address(distributor.core())))
+                    console.log("Distributor - wrong core: ", distributor.core());
+            }
+
+            if (_isSavingsDeployed(chainId)) {
+                ISavings stEUR = ISavings(_chainToContract(chainId, ContractType.StEUR));
+                ISavings stUSD = ISavings(_chainToContract(chainId, ContractType.StUSD));
+                if (!_authorizedCore(chainId, address(stEUR.accessControlManager())))
+                    console.log("StEUR - wrong access control manager: ", stEUR.accessControlManager());
+                if (!_authorizedCore(chainId, address(stUSD.accessControlManager())))
+                    console.log("StUSD - wrong access control manager: ", stUSD.accessControlManager());
+            }
+
             ProxyAdmin proxyAdmin = ProxyAdmin(_chainToContract(chainId, ContractType.ProxyAdmin));
-            ISavings stEUR = ISavings(_chainToContract(chainId, ContractType.StEUR));
-            ISavings stUSD = ISavings(_chainToContract(chainId, ContractType.StUSD));
-            IAccessControlCore distributionCreator = IAccessControlCore(
-                _chainToContract(chainId, ContractType.DistributionCreator)
-            );
-            IAccessControlCore distributor = IAccessControlCore(_chainToContract(chainId, ContractType.Distributor));
 
             if (!_authorizedProxyAdminOwner(chainId, proxyAdmin.owner()))
                 console.log("Proxy Admin - owner: ", proxyAdmin.owner());
-            if (!_authorizedCore(chainId, address(stEUR.accessControlManager())))
-                console.log("StEUR - wrong access control manager: ", stEUR.accessControlManager());
-            if (!_authorizedCore(chainId, address(stUSD.accessControlManager())))
-                console.log("StUSD - wrong access control manager: ", stUSD.accessControlManager());
-            if (!_authorizedCoreMerkl(chainId, address(distributionCreator.core())))
-                console.log("Distribution creator - wrong core: ", distributionCreator.core());
-            if (!_authorizedCoreMerkl(chainId, address(distributor.core())))
-                console.log("Distributor - wrong core: ", distributor.core());
             _checkOnLZToken(
                 chainId,
                 ILayerZeroBridge(_chainToContract(chainId, ContractType.AgEURLZ)),
@@ -200,16 +208,15 @@ contract CheckRoles is Utils {
             _checkVaultManagers(chainId, ContractType.TreasuryAgEUR);
             _checkVaultManagers(chainId, ContractType.TreasuryAgUSD);
 
-            for (uint256 i = 0; i < allContracts.length; i++) {
-                _checkGlobalAccessControl(chainId, IGenericAccessControl(allContracts[i]));
-            }
+            if (_revertOnWrongFunctioCall(chainId))
+                for (uint256 i = 0; i < allContracts.length; i++)
+                    _checkGlobalAccessControl(chainId, IGenericAccessControl(allContracts[i]));
         }
 
         // Contract to check roles on
         IAgToken agEUR = IAgToken(_chainToContract(chainId, ContractType.AgEUR));
         IAgToken agUSD = IAgToken(_chainToContract(chainId, ContractType.AgUSD));
         CoreBorrow core = CoreBorrow(_chainToContract(chainId, ContractType.CoreBorrow));
-        CoreBorrow coreMerkl = CoreBorrow(_chainToContract(chainId, ContractType.CoreMerkl));
         TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
             payable(_chainToContract(chainId, ContractType.Timelock))
         );
@@ -225,12 +232,6 @@ contract CheckRoles is Utils {
                 console.log("Core Borrow - guardian role");
             if (core.hasRole(FLASHLOANER_TREASURY_ROLE, actor) && !_authorizedFlashloaner(chainId, actor))
                 console.log("Core Borrow - flashloan role");
-            if (coreMerkl.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor))
-                console.log("Core Merkl - governor role");
-            if (coreMerkl.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor))
-                console.log("Core Merkl - guardian role");
-            // No one should have this role
-            if (coreMerkl.hasRole(FLASHLOANER_TREASURY_ROLE, actor)) console.log("Core Merkl - flashloan role");
             if (timelock.hasRole(PROPOSER_ROLE, actor) && !_authorizedProposer(chainId, actor))
                 console.log("Timelock - proposer role");
             if (timelock.hasRole(CANCELLER_ROLE, actor) && !_authorizedCanceller(chainId, actor))
@@ -240,8 +241,18 @@ contract CheckRoles is Utils {
             if (timelock.hasRole(DEFAULT_ADMIN_ROLE, actor) && !_authorizeDefaultAdmin(chainId, actor))
                 console.log("Timelock - default admin role");
 
-            for (uint256 j = 0; j < allContracts.length; j++) {
-                _checkAddressAccessControl(chainId, IGenericAccessControl(allContracts[j]), actor);
+            if (_revertOnWrongFunctioCall(chainId))
+                for (uint256 j = 0; j < allContracts.length; j++)
+                    _checkAddressAccessControl(chainId, IGenericAccessControl(allContracts[j]), actor);
+
+            if (_isMerklDeployed(chainId)) {
+                CoreBorrow coreMerkl = CoreBorrow(_chainToContract(chainId, ContractType.CoreMerkl));
+                if (coreMerkl.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor))
+                    console.log("Core Merkl - governor role");
+                if (coreMerkl.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor))
+                    console.log("Core Merkl - guardian role");
+                // No one should have this role
+                if (coreMerkl.hasRole(FLASHLOANER_TREASURY_ROLE, actor)) console.log("Core Merkl - flashloan role");
             }
 
             if (chainId == CHAIN_ETHEREUM) {
@@ -310,7 +321,6 @@ contract CheckRoles is Utils {
                 console.log(vm.toString(address(contractToCheck)), " minter: ", minter);
         } catch {}
         try contractToCheck.treasury() returns (address treasury) {
-            // TODO add treasury for every stablecoins
             if (!_authorizedTreasury(chainId, treasury))
                 console.log(vm.toString(address(contractToCheck)), " treasury: ", treasury);
         } catch {}
@@ -422,6 +432,39 @@ contract CheckRoles is Utils {
             chainId == CHAIN_FANTOM ||
             chainId == CHAIN_OPTIMISM ||
             chainId == CHAIN_POLYGON;
+    }
+
+    function _isMerklDeployed(uint256 chainId) internal pure returns (bool) {
+        return
+            chainId == CHAIN_ETHEREUM ||
+            chainId == CHAIN_ARBITRUM ||
+            chainId == CHAIN_AVALANCHE ||
+            chainId == CHAIN_BASE ||
+            chainId == CHAIN_BNB ||
+            chainId == CHAIN_GNOSIS ||
+            chainId == CHAIN_LINEA ||
+            chainId == CHAIN_MANTLE ||
+            chainId == CHAIN_OPTIMISM ||
+            chainId == CHAIN_POLYGON ||
+            chainId == CHAIN_POLYGONZKEVM;
+    }
+
+    function _isSavingsDeployed(uint256 chainId) internal pure returns (bool) {
+        return
+            chainId == CHAIN_ETHEREUM ||
+            chainId == CHAIN_ARBITRUM ||
+            chainId == CHAIN_AVALANCHE ||
+            chainId == CHAIN_BASE ||
+            chainId == CHAIN_BNB ||
+            chainId == CHAIN_CELO ||
+            chainId == CHAIN_GNOSIS ||
+            chainId == CHAIN_OPTIMISM ||
+            chainId == CHAIN_POLYGON ||
+            chainId == CHAIN_POLYGONZKEVM;
+    }
+
+    function _revertOnWrongFunctioCall(uint256 chainId) internal pure returns (bool) {
+        return chainId != CHAIN_CELO;
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
