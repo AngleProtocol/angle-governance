@@ -13,7 +13,6 @@ import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithC
 import { Utils } from "../Utils.s.sol";
 import "../Constants.s.sol";
 
-// 1,2,3,4,5,6,7,8,9,10,11
 contract CheckRoles is Utils {
     address constant oldDeployer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
     address constant oldKeeper = 0xcC617C6f9725eACC993ac626C7efC6B96476916E;
