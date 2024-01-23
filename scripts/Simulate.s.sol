@@ -12,7 +12,7 @@ contract Simulate is Script {
         address sender = address(0xcC617C6f9725eACC993ac626C7efC6B96476916E);
         address contractAddress = address(0x748bA9Cd5a5DDba5ABA70a4aC861b2413dCa4436);
         // remove the 0x
-        bytes memory data = hex"000";
+        bytes memory data = hex"00";
 
         vm.prank(sender, sender);
         (bool success, ) = contractAddress.call{ value: 0.6 ether }(data);
