@@ -551,11 +551,12 @@ contract CheckRoles is Utils {
     }
 
     function _authorizedKeeper(uint256 chainId, address keeper) internal returns (bool) {
-        return (
-            (chainId == CHAIN_POLYGON)
-                ? (keeper == oldKeeperPolygon || keeper == oldKeeperPolygon2)
-                : keeper == oldKeeper
-        );
+        // return (
+        //     (chainId == CHAIN_POLYGON)
+        //         ? (keeper == oldKeeperPolygon || keeper == oldKeeperPolygon2)
+        //         : keeper == oldKeeper
+        // );
+        return false;
     }
 
     function _authorizedTrusted(uint256 chainId, address trusted) internal returns (bool) {
@@ -565,11 +566,11 @@ contract CheckRoles is Utils {
             trusted == _chainToContract(chainId, ContractType.Timelock) ||
             trusted == _chainToContract(chainId, ContractType.CoreBorrow) ||
             trusted == _chainToContract(chainId, ContractType.ProxyAdmin) ||
-            trusted == oldDeployer ||
-            trusted == oldKeeper ||
-            trusted == oldKeeperPolygon ||
-            trusted == oldKeeperPolygon2 ||
-            trusted == merklKeeper ||
+            // trusted == oldDeployer ||
+            // trusted == oldKeeper ||
+            // trusted == oldKeeperPolygon ||
+            // trusted == oldKeeperPolygon2 ||
+            // trusted == merklKeeper ||
             ((chainId == CHAIN_SOURCE) ? trusted == _chainToContract(chainId, ContractType.Governor) : false);
     }
 

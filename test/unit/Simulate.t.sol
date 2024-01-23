@@ -20,7 +20,7 @@ import "stringutils/strings.sol";
 import "../Constants.t.sol";
 
 //solhint-disable
-contract Simulate is SimulationSetup {
+contract ProposalSimulateTest is SimulationSetup {
     function test_Simulate() public {
         (SubCall[] memory p, string memory description) = proposal.proposal();
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = wrap(p);
