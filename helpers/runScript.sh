@@ -2,8 +2,9 @@
 
 source helpers/common.sh
 
+
 function usage {
-  echo "bash createProposal.sh <script> <chain>"
+  echo "bash runScript.sh <script> <chain>"
   echo ""
   echo -e "script: path to the script to run"
   echo -e "chain: chain(s) to run the script on (separate with commas)"
@@ -18,6 +19,7 @@ function usage {
   echo -e "\t9: Polygon ZkEvm"
   echo -e "\t10: Optimism"
   echo -e "\t11: Linea"
+  echo -e "\t12: All"
   echo ""
 }
 
@@ -64,7 +66,7 @@ function main {
         echo "- 9: Polygon ZkEvm"
         echo "- 10: Optimism"
         echo "- 11: Linea"
-        echo "- 100: All"
+        echo "- 12: All"
 
         read chains
 
@@ -76,8 +78,8 @@ function main {
 
     mainnet_uri=$(chain_to_uri 1)
 
-    if [[ "$chains" == "100" ]]; then
-        # If user entered 100 (All), loop from 1 to 11 and add all chains
+    if [[ "$chains" == "12" ]]; then
+        # If user entered 12 (All), loop from 1 to 11 and add all chains
         chains="1,2,3,4,5,6,7,8,9,10,11"
     fi
 
@@ -95,26 +97,11 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    # TODO if the script fails we should abort
     FOUNDRY_PROFILE=dev forge script $script
 
     if [ $? -ne 0 ]; then
         echo ""
         echo "Script failed"
-    fi
-
-    # TODO if the test fails we should abort
-    testContract="${script}Test"
-    echo ""
-    echo "Running test"
-    FOUNDRY_PROFILE=dev forge test --match-contract $testContract -vvv
-
-    echo ""
-    echo "Would you like to create the proposal ? (yes/no)"
-    read execute
-
-    if [[ $execute == "yes" ]]; then
-        FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
     fi
 }
 

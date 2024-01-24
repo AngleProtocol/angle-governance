@@ -1,46 +1,6 @@
 #! /bin/bash
 
-function option_to_uri {
-  option=$1
-
-  case $option in
-    "1")
-      echo $ETH_NODE_URI_MAINNET
-      ;;
-    "2")
-      echo $ETH_NODE_URI_ARBITRUM
-      ;;
-    "3")
-      echo $ETH_NODE_URI_POLYGON
-      ;;
-    "4")
-      echo $ETH_NODE_URI_GNOSIS
-      ;;
-    "5")
-      echo $ETH_NODE_URI_AVALANCHE
-      ;;
-    "6")
-      echo $ETH_NODE_URI_BASE
-      ;;
-    "7")
-        echo $ETH_NODE_URI_BSC
-        ;;
-    "8")
-        echo $ETH_NODE_URI_CELO
-        ;;
-    "9")
-        echo $ETH_NODE_URI_POLYGON_ZKEVM
-        ;;
-    "10")
-        echo $ETH_NODE_URI_OPTIMISM
-        ;;
-    "11")
-        echo $ETH_NODE_URI_LINEA
-        ;;
-    *)
-      ;;
-  esac
-}
+source helpers/common.sh
 
 function main {
     if [ ! -f .env ]; then
@@ -64,7 +24,7 @@ function main {
 
     read option
 
-    uri=$(option_to_uri $option)
+    uri=$(chain_to_uri $option)
     if [ -z "$uri" ]; then
         echo "Unknown network"
         exit 1

@@ -11,7 +11,7 @@ import { ProposalSender } from "contracts/ProposalSender.sol";
 contract SetMinDelayTimelockTest is ScriptHelpers {
     using stdJson for string;
 
-    uint256 constant newMinDelay = uint256(1 weeks);
+    uint256 constant newMinDelay = uint256(1 days) - 1;
 
     function setUp() public override {
         super.setUp();

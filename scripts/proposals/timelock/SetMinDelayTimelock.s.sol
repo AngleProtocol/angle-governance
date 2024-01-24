@@ -22,10 +22,10 @@ contract SetMinDelayTimelock is Wrapper {
 
     function run() external {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
-        string memory description = "Set min delay for timelock";
+        string memory description = "ipfs://QmaWGR4XjsXHfaPxRB3UUX8DML56sg9dZLFCuvgpXzMiPC";
 
         /** TODO  complete */
-        uint256 minDelay = uint256(1 weeks);
+        uint256 minDelay = uint256(1 days) - 1;
         /** END  complete */
 
         for (uint256 i = 0; i < chainIds.length; i++) {

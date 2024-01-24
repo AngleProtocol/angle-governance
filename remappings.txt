@@ -6,6 +6,7 @@ lz/=lib/solidity-examples/contracts
 stringutils/=lib/solidity-stringutils
 borrow/=lib/borrow-contracts/contracts
 transmuter/=lib/angle-transmuter/contracts
+router/=lib/angle-router/contracts
 contracts/=contracts
 test/=test
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts
