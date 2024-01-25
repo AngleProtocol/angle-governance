@@ -123,17 +123,17 @@ contract Wrapper is Utils {
             payable(_chainToContract(chainId, ContractType.Timelock))
         );
 
-        address sender = _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender);
-        address receiver = _chainToContract(chainId, ContractType.ProposalReceiver);
+        uint256 minDelay = timelock.getMinDelay();
+        address sender;
+        if (chainId == CHAIN_SOURCE) {
+            sender = _chainToContract(chainId, ContractType.ProposalSender);
+        } else {
+            sender = _chainToContract(chainId, ContractType.ProposalReceiver);
+        }
 
-        vm.prank(address(lzEndPoint(chainId)));
+        vm.prank(sender);
         uint256 startGas = gasleft();
-        ProposalReceiver(payable(receiver)).lzReceive(
-            getLZChainId(CHAIN_SOURCE),
-            abi.encodePacked(sender, receiver),
-            0,
-            abi.encode(targets, values, new string[](1), calldatas)
-        );
+        timelock.scheduleBatch(targets, values, calldatas, bytes32(0), bytes32(0), minDelay);
         gas = startGas - gasleft();
     }
 
@@ -210,27 +210,8 @@ contract Wrapper is Utils {
                     hex""
                 );
 
-                vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
-                // TODO get the layer zero endpoint address from the sdk
-                (uint256 nativeFee, ) = ILayerZeroEndpoint(0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091).estimateFees(
-                    uint16(chainId),
-                    _chainToContract(chainId, ContractType.ProposalSender),
-                    payload,
-                    false,
-                    "0x"
-                );
-                vm.selectFork(forkIdentifier[chainId]);
+                values[finalPropLength] = nativeFee;
 
-                {
-                    ProposalSender proposalSender = ProposalSender(
-                        _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)
-                    );
-                    targets[finalPropLength] = address(proposalSender);
-                    // TODO update it dynamicly
-                    values[finalPropLength] = nativeFee;
-                    chainIds[finalPropLength] = chainId;
-                    calldatas[finalPropLength] = payload;
-                }
                 finalPropLength += 1;
                 i += count;
             }
