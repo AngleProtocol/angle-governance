@@ -210,8 +210,27 @@ contract Wrapper is Utils {
                     hex""
                 );
 
-                values[finalPropLength] = nativeFee;
+                vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
+                // TODO get the layer zero endpoint address from the sdk
+                (uint256 nativeFee, ) = ILayerZeroEndpoint(0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091).estimateFees(
+                    uint16(chainId),
+                    _chainToContract(chainId, ContractType.ProposalSender),
+                    payload,
+                    false,
+                    "0x"
+                );
+                vm.selectFork(forkIdentifier[chainId]);
 
+                {
+                    ProposalSender proposalSender = ProposalSender(
+                        _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)
+                    );
+                    targets[finalPropLength] = address(proposalSender);
+                    // TODO update it dynamicly
+                    values[finalPropLength] = nativeFee;
+                    chainIds[finalPropLength] = chainId;
+                    calldatas[finalPropLength] = payload;
+                }
                 finalPropLength += 1;
                 i += count;
             }
