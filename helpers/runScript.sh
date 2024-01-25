@@ -102,6 +102,7 @@ function main {
     if [ $? -ne 0 ]; then
         echo ""
         echo "Script failed"
+        exit 1
     fi
 }
 
