@@ -31,7 +31,7 @@ contract Propose is Utils {
         vm.rememberKey(deployerPrivateKey);
 
         vm.startBroadcast(deployerPrivateKey);
-        AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_ETHEREUM, ContractType.Governor)));
+        AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_SOURCE, ContractType.Governor)));
         uint256 proposalId = governor.propose(targets, values, calldatas, description);
         console.log("Proposal id: %d", proposalId);
 
