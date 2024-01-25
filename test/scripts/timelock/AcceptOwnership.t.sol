@@ -39,7 +39,7 @@ contract AcceptOwnershipTest is ScriptHelpers {
             vm.selectFork(forkIdentifier[chainId]);
 
             assertEq(timelock, veANGLE.admin());
-            assertEq(timelock, smartWallet.admin());
+            // assertEq(timelock, smartWallet.admin());
             assertEq(timelock, veBoostProxy.admin());
             assertEq(timelock, gaugeController.admin());
             assertEq(timelock, gaugeSushi.admin());

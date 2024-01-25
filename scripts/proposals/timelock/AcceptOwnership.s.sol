@@ -25,18 +25,19 @@ contract AcceptOwnership is Wrapper {
                     chainId,
                     veANGLE,
                     0,
-                    abi.encodeWithSelector(IAccessControlWriteVyper.apply_transfer_ownership.selector)
+                    abi.encodeWithSelector(IAccessControlWriteVyper.accept_transfer_ownership.selector)
                 )
             );
-            subCalls.push(
-                SubCall(chainId, smartWallet, 0, abi.encodeWithSelector(ISmartWalletWhitelist.applyAdmin.selector))
-            );
+            // TODO needs to be called by current admin
+            // subCalls.push(
+            //     SubCall(chainId, smartWallet, 0, abi.encodeWithSelector(ISmartWalletWhitelist.applyAdmin.selector))
+            // );
             subCalls.push(
                 SubCall(
                     chainId,
                     veBoostProxy,
                     0,
-                    abi.encodeWithSelector(IAccessControlWriteVyper.apply_transfer_ownership.selector)
+                    abi.encodeWithSelector(IAccessControlWriteVyper.accept_transfer_ownership.selector)
                 )
             );
             subCalls.push(
@@ -44,7 +45,7 @@ contract AcceptOwnership is Wrapper {
                     chainId,
                     gaugeController,
                     0,
-                    abi.encodeWithSelector(IAccessControlWriteVyper.apply_transfer_ownership.selector)
+                    abi.encodeWithSelector(IAccessControlWriteVyper.accept_transfer_ownership.selector)
                 )
             );
             subCalls.push(
@@ -52,7 +53,7 @@ contract AcceptOwnership is Wrapper {
                     chainId,
                     gaugeSushi,
                     0,
-                    abi.encodeWithSelector(IAccessControlWriteVyper.apply_transfer_ownership.selector)
+                    abi.encodeWithSelector(IAccessControlWriteVyper.accept_transfer_ownership.selector)
                 )
             );
         }

@@ -16,7 +16,7 @@ interface IAccessControlViewVyper {
 interface IAccessControlWriteVyper {
     function commit_transfer_ownership(address newAdmin) external;
 
-    function apply_transfer_ownership() external;
+    function accept_transfer_ownership() external;
 }
 
 interface IVaultManagerGovernance {
