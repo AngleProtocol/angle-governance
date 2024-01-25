@@ -124,6 +124,31 @@ contract Wrapper is Utils {
         }
     }
 
+    function _estimateGas(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        uint256 chainId
+    ) internal returns (uint256 gas) {
+        vm.selectFork(forkIdentifier[chainId]);
+        TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
+            payable(_chainToContract(chainId, ContractType.Timelock))
+        );
+
+        uint256 minDelay = timelock.getMinDelay();
+        address sender;
+        if (chainId == CHAIN_SOURCE) {
+            sender = _chainToContract(chainId, ContractType.ProposalSender);
+        } else {
+            sender = _chainToContract(chainId, ContractType.ProposalReceiver);
+        }
+
+        vm.prank(sender);
+        uint256 startGas = gasleft();
+        timelock.scheduleBatch(targets, values, calldatas, bytes32(0), bytes32(0), minDelay);
+        gas = startGas - gasleft();
+    }
+
     function _wrap(
         SubCall[] memory prop
     )
@@ -173,41 +198,32 @@ contract Wrapper is Utils {
                 batchCalldatas[0] = data;
 
                 // Wrap for proposal sender
-                ProposalSender proposalSender = ProposalSender(
-                    _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)
-                );
-                targets[finalPropLength] = address(proposalSender);
-                values[finalPropLength] = _getLZGasEstimate(chainId);
+                bytes memory payload;
+                {
+                    uint256 gasNeeded = (_estimateGas(batchTargets, batchValues, batchCalldatas, chainId) *
+                        GAS_MULTIPLIER) / BASE_GAS;
+                    payload = abi.encodeWithSelector(
+                        ProposalSender.execute.selector,
+                        getLZChainId(chainId),
+                        abi.encode(batchTargets, batchValues, new string[](1), batchCalldatas),
+                        abi.encodePacked(uint16(1), gasNeeded)
+                    );
+                }
+                targets[finalPropLength] = _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender);
                 chainIds[finalPropLength] = chainId;
-                calldatas[finalPropLength] = abi.encodeWithSelector(
-                    ProposalSender.execute.selector,
-                    getLZChainId(chainId),
-                    abi.encode(batchTargets, batchValues, new string[](1), batchCalldatas),
-                    // TODO make a better estimate of the gas required on detination chain 300000
-                    abi.encodePacked(uint16(1), uint256(300000))
-                );
+                calldatas[finalPropLength] = payload;
 
                 vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
-                // TODO get the layer zero endpoint address from the sdk
-                (uint256 nativeFee, ) = ILayerZeroEndpoint(0x9d159aEb0b2482D09666A5479A2e426Cb8B5D091).estimateFees(
-                    uint16(chainId),
-                    _chainToContract(chainId, ContractType.ProposalSender),
+                (uint256 nativeFee, ) = ILayerZeroEndpoint(lzEndPoint(CHAIN_SOURCE)).estimateFees(
+                    getLZChainId(chainId),
+                    _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender),
                     payload,
                     false,
-                    "0x"
+                    hex""
                 );
-                vm.selectFork(forkIdentifier[chainId]);
 
-                {
-                    ProposalSender proposalSender = ProposalSender(
-                        _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)
-                    );
-                    targets[finalPropLength] = address(proposalSender);
-                    // TODO update it dynamicly
-                    values[finalPropLength] = nativeFee;
-                    chainIds[finalPropLength] = chainId;
-                    calldatas[finalPropLength] = payload;
-                }
+                values[finalPropLength] = nativeFee;
+
                 finalPropLength += 1;
                 i += count;
             }
