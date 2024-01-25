@@ -16,7 +16,7 @@ interface IAccessControlViewVyper {
 interface IAccessControlWriteVyper {
     function commit_transfer_ownership(address newAdmin) external;
 
-    function apply_transfer_ownership() external;
+    function accept_transfer_ownership() external;
 }
 
 interface IVaultManagerGovernance {
@@ -47,9 +47,17 @@ interface ILiquidityGauge is IAccessControlViewVyper, IAccessControlWriteVyper {
 
 interface IVeBoostProxy is IAccessControlViewVyper, IAccessControlWriteVyper {}
 
-interface ISmartWalletWhitelist is IAccessControlViewVyper, IAccessControlWriteVyper {}
+interface ISmartWalletWhitelist is IAccessControlViewVyper {
+    function commitAdmin(address newAdmin) external;
 
-interface IFeeDistributor is IAccessControlWriteVyper {}
+    function applyAdmin() external;
+}
+
+interface IFeeDistributor is IAccessControlViewVyper {
+    function commit_admin(address newAdmin) external;
+
+    function accept_admin() external;
+}
 
 interface IGenericAccessControl is IAccessControl, IAccessControlCore, IAccessControlViewVyper {
     function owner() external returns (address);

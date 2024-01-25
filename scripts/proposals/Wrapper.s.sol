@@ -194,6 +194,7 @@ contract Wrapper is Utils {
             mstore(targets, finalPropLength)
             mstore(values, finalPropLength)
             mstore(calldatas, finalPropLength)
+            mstore(chainIds, finalPropLength)
         }
     }
 
