@@ -4,18 +4,6 @@ pragma solidity ^0.8.20;
 import "../Utils.s.sol";
 
 contract Wrapper is Utils {
-    uint256 public constant LZ_VALUE_ARBITRUM = 0.05 ether;
-    uint256 public constant LZ_VALUE_AVALANCHE = 0.05 ether;
-    uint256 public constant LZ_VALUE_ETHEREUM = 0.1 ether;
-    uint256 public constant LZ_VALUE_OPTIMISM = 0.05 ether;
-    uint256 public constant LZ_VALUE_POLYGON = 0.05 ether;
-    uint256 public constant LZ_VALUE_GNOSIS = 0.05 ether;
-    uint256 public constant LZ_VALUE_BNB = 0.05 ether;
-    uint256 public constant LZ_VALUE_CELO = 0.05 ether;
-    uint256 public constant LZ_VALUE_POLYGONZKEVM = 0.05 ether;
-    uint256 public constant LZ_VALUE_BASE = 0.05 ether;
-    uint256 public constant LZ_VALUE_LINEA = 0.05 ether;
-
     function wrapTimelock(
         uint256 chainId,
         SubCall[] memory p
@@ -233,31 +221,5 @@ contract Wrapper is Utils {
             mstore(values, finalPropLength)
             mstore(calldatas, finalPropLength)
         }
-    }
-
-    // TODO make a better estimate (based on `quote_fee`)
-    function _getLZGasEstimate(uint256 chainId) internal pure returns (uint256 value) {
-        value = chainId == CHAIN_ARBITRUM ? LZ_VALUE_ARBITRUM : chainId == CHAIN_AVALANCHE
-            ? LZ_VALUE_AVALANCHE
-            : chainId == CHAIN_ETHEREUM
-            ? LZ_VALUE_ETHEREUM
-            : chainId == CHAIN_OPTIMISM
-            ? LZ_VALUE_OPTIMISM
-            : chainId == CHAIN_POLYGON
-            ? LZ_VALUE_POLYGON
-            : chainId == CHAIN_GNOSIS
-            ? LZ_VALUE_GNOSIS
-            : chainId == CHAIN_BNB
-            ? LZ_VALUE_BNB
-            : chainId == CHAIN_CELO
-            ? LZ_VALUE_CELO
-            : chainId == CHAIN_POLYGONZKEVM
-            ? LZ_VALUE_POLYGONZKEVM
-            : chainId == CHAIN_BASE
-            ? LZ_VALUE_BASE
-            : chainId == CHAIN_LINEA
-            ? LZ_VALUE_LINEA
-            : 0;
-        if (value == 0) revert("Invalid chainId");
     }
 }
