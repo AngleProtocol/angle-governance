@@ -135,17 +135,17 @@ contract Wrapper is Utils {
             payable(_chainToContract(chainId, ContractType.Timelock))
         );
 
-        uint256 minDelay = timelock.getMinDelay();
-        address sender;
-        if (chainId == CHAIN_SOURCE) {
-            sender = _chainToContract(chainId, ContractType.ProposalSender);
-        } else {
-            sender = _chainToContract(chainId, ContractType.ProposalReceiver);
-        }
+        address sender = _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender);
+        address receiver = _chainToContract(chainId, ContractType.ProposalReceiver);
 
-        vm.prank(sender);
+        vm.prank(address(lzEndPoint(chainId)));
         uint256 startGas = gasleft();
-        timelock.scheduleBatch(targets, values, calldatas, bytes32(0), bytes32(0), minDelay);
+        ProposalReceiver(payable(receiver)).lzReceive(
+            getLZChainId(CHAIN_SOURCE),
+            abi.encodePacked(sender, receiver),
+            0,
+            abi.encode(targets, values, new string[](1), calldatas)
+        );
         gas = startGas - gasleft();
     }
 
