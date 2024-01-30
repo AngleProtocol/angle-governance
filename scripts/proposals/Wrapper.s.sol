@@ -126,10 +126,10 @@ contract Wrapper is Utils {
         address sender = _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender);
         address receiver = _chainToContract(chainId, ContractType.ProposalReceiver);
 
-        vm.prank(address(lzEndPoint(chainId)));
+        vm.prank(address(_lzEndPoint(chainId)));
         uint256 startGas = gasleft();
         ProposalReceiver(payable(receiver)).lzReceive(
-            getLZChainId(CHAIN_SOURCE),
+            _getLZChainId(CHAIN_SOURCE),
             abi.encodePacked(sender, receiver),
             0,
             abi.encode(targets, values, new string[](1), calldatas)
@@ -192,7 +192,7 @@ contract Wrapper is Utils {
                         GAS_MULTIPLIER) / BASE_GAS;
                     payload = abi.encodeWithSelector(
                         ProposalSender.execute.selector,
-                        getLZChainId(chainId),
+                        _getLZChainId(chainId),
                         abi.encode(batchTargets, batchValues, new string[](1), batchCalldatas),
                         abi.encodePacked(uint16(1), gasNeeded)
                     );
@@ -202,8 +202,8 @@ contract Wrapper is Utils {
                 calldatas[finalPropLength] = payload;
 
                 vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
-                (uint256 nativeFee, ) = ILayerZeroEndpoint(lzEndPoint(CHAIN_SOURCE)).estimateFees(
-                    getLZChainId(chainId),
+                (uint256 nativeFee, ) = ILayerZeroEndpoint(_lzEndPoint(CHAIN_SOURCE)).estimateFees(
+                    _getLZChainId(chainId),
                     _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender),
                     payload,
                     false,

@@ -48,11 +48,11 @@ contract ProposalSimulateTest is SimulationSetup {
         for (uint256 i; i < entries.length; i++) {
             if (entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)")) {
                 bytes memory payload = abi.decode(entries[i].data, (bytes));
-                uint16 chainId = getChainId(uint16(uint256((entries[i].topics[1]))));
+                uint16 chainId = _getChainIdFromLZChainId(uint16(uint256((entries[i].topics[1]))));
                 vm.selectFork(forkIdentifier[chainId]);
-                hoax(address(lzEndPoint(chainId)));
+                hoax(address(_lzEndPoint(chainId)));
                 proposalReceiver(chainId).lzReceive(
-                    getLZChainId(1),
+                    _getLZChainId(1),
                     abi.encodePacked(proposalSender(), proposalReceiver(chainId)),
                     0,
                     payload

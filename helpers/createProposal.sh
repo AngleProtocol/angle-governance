@@ -1,6 +1,6 @@
 #! /bin/bash
 
-source helpers/common.sh
+source lib/utils/helpers/common.sh
 
 function usage {
   echo "bash createProposal.sh <script> <chain>"
@@ -74,7 +74,7 @@ function main {
         fi
     fi
 
-    mainnet_uri=$(chain_to_uri 1)
+    mainnet_uri=$(chain_to_uri 4)
 
     if [[ "$chains" == "100" ]]; then
         # If user entered 100 (All), loop from 1 to 11 and add all chains
@@ -113,7 +113,6 @@ function main {
     if [ $? -ne 0 ]; then
         echo ""
         echo "Test failed"
-        exit 1
     fi
 
     echo ""

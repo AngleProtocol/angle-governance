@@ -132,7 +132,7 @@ contract Scenarios is SimulationSetup {
         for (uint256 i; i < entries.length; i++) {
             if (
                 entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                entries[i].topics[1] == bytes32(uint256(getLZChainId(137)))
+                entries[i].topics[1] == bytes32(uint256(_getLZChainId(137)))
             ) {
                 payload = abi.decode(entries[i].data, (bytes));
                 break;
@@ -140,9 +140,9 @@ contract Scenarios is SimulationSetup {
         }
 
         vm.selectFork(forkIdentifier[137]);
-        hoax(address(lzEndPoint(137)));
+        hoax(address(_lzEndPoint(137)));
         proposalReceiver(137).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(137)),
             0,
             payload
