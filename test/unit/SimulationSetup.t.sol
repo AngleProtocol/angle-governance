@@ -20,10 +20,12 @@ import { Proposal, SubCall } from "./Proposal.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import "stringutils/strings.sol";
 
+import "utils/test/TestUtils.t.sol";
+
 import "../Constants.t.sol";
 
 //solhint-disable
-contract SimulationSetup is Test {
+contract SimulationSetup is TestUtils {
     using strings for *;
 
     Proposal proposal = new Proposal();
@@ -89,7 +91,7 @@ contract SimulationSetup is Test {
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].PROPOSER_ROLE(), address(governor()));
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].CANCELLER_ROLE(), multisig(chainIds[i]));
                 _timelocks[chainIds[i]].renounceRole(_timelocks[chainIds[i]].DEFAULT_ADMIN_ROLE(), address(this));
-                _proposalSender = new ProposalSender(lzEndPoint(chainIds[i]));
+                _proposalSender = new ProposalSender(_lzEndPoint(chainIds[i]));
             } else {
                 vm.selectFork(forkIdentifier[chainIds[i]]);
                 address[] memory proposers = new address[](0);
@@ -102,7 +104,7 @@ contract SimulationSetup is Test {
                     executors,
                     address(this)
                 );
-                _proposalReceivers[chainIds[i]] = new ProposalReceiver(address(lzEndPoint(chainIds[i])));
+                _proposalReceivers[chainIds[i]] = new ProposalReceiver(address(_lzEndPoint(chainIds[i])));
                 _timelocks[chainIds[i]].grantRole(
                     _timelocks[chainIds[i]].PROPOSER_ROLE(),
                     address(_proposalReceivers[chainIds[i]])
@@ -111,13 +113,13 @@ contract SimulationSetup is Test {
 
                 vm.selectFork(forkIdentifier[1]);
                 _proposalSender.setTrustedRemoteAddress(
-                    getLZChainId(chainIds[i]),
+                    _getLZChainId(chainIds[i]),
                     abi.encodePacked(_proposalReceivers[chainIds[i]])
                 );
 
                 vm.selectFork(forkIdentifier[chainIds[i]]);
                 _proposalReceivers[chainIds[i]].setTrustedRemoteAddress(
-                    getLZChainId(1),
+                    _getLZChainId(1),
                     abi.encodePacked(_proposalSender)
                 );
                 _proposalReceivers[chainIds[i]].transferOwnership(address(_timelocks[chainIds[i]]));
@@ -156,48 +158,6 @@ contract SimulationSetup is Test {
 
         bytes memory res = vm.ffi(cmd);
         return address(bytes20(res));
-    }
-
-    function lzEndPoint(uint256 chainId) public returns (ILayerZeroEndpoint) {
-        string[] memory cmd = new string[](3);
-        cmd[0] = "node";
-        cmd[1] = "utils/layerZeroEndpoint.js";
-        cmd[2] = vm.toString(chainId);
-
-        bytes memory res = vm.ffi(cmd);
-        return ILayerZeroEndpoint(address(bytes20(res)));
-    }
-
-    function stringToUint(string memory s) public pure returns (uint) {
-        bytes memory b = bytes(s);
-        uint result = 0;
-        for (uint256 i = 0; i < b.length; i++) {
-            uint256 c = uint256(uint8(b[i]));
-            if (c >= 48 && c <= 57) {
-                result = result * 10 + (c - 48);
-            }
-        }
-        return result;
-    }
-
-    function getLZChainId(uint256 chainId) internal returns (uint16) {
-        string[] memory cmd = new string[](3);
-        cmd[0] = "node";
-        cmd[1] = "utils/layerZeroChainIds.js";
-        cmd[2] = vm.toString(chainId);
-
-        bytes memory res = vm.ffi(cmd);
-        return uint16(stringToUint(string(res)));
-    }
-
-    function getChainId(uint256 lzChainId) internal returns (uint16) {
-        string[] memory cmd = new string[](3);
-        cmd[0] = "node";
-        cmd[1] = "utils/chainIdFromLZChainIds.js";
-        cmd[2] = vm.toString(lzChainId);
-
-        bytes memory res = vm.ffi(cmd);
-        return uint16(stringToUint(string(res)));
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +225,7 @@ contract SimulationSetup is Test {
                 values[finalPropLength] = 0.1 ether;
                 calldatas[finalPropLength] = abi.encodeWithSelector(
                     proposalSender().execute.selector,
-                    getLZChainId(chainId),
+                    _getLZChainId(chainId),
                     abi.encode(batchTargets, batchValues, new string[](1), batchCalldatas),
                     abi.encodePacked(uint16(1), uint256(300000))
                 );
@@ -441,7 +401,7 @@ contract SimulationSetup is Test {
                 for (uint256 i; i < entries.length; i++) {
                     if (
                         entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                        entries[i].topics[1] == bytes32(uint256(getLZChainId(chainId)))
+                        entries[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
                     ) {
                         payload = abi.decode(entries[i].data, (bytes));
                         break;
@@ -450,9 +410,9 @@ contract SimulationSetup is Test {
             }
 
             vm.selectFork(forkIdentifier[chainId]);
-            hoax(address(lzEndPoint(chainId)));
+            hoax(address(_lzEndPoint(chainId)));
             proposalReceiver(chainId).lzReceive(
-                getLZChainId(1),
+                _getLZChainId(1),
                 abi.encodePacked(proposalSender(), proposalReceiver(chainId)),
                 0,
                 payload

@@ -70,7 +70,7 @@ contract CrossChainProposal is Utils {
         values[0] = feeLZ;
         calldatas[0] = abi.encodeWithSelector(
             sender.execute.selector,
-            getLZChainId(destChainId),
+            _getLZChainId(destChainId),
             abi.encode(timelockTargets, timelockValues, new string[](1), timelockCalldatas),
             abi.encodePacked(uint16(1), uint256(300000))
         );

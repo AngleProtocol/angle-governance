@@ -34,7 +34,7 @@ contract ProposalReceiverConnect is Utils {
         values[0] = 0;
         calldatas[0] = abi.encodeWithSelector(
             sender.setTrustedRemoteAddress.selector,
-            getLZChainId(destChainId),
+            _getLZChainId(destChainId),
             abi.encodePacked(receiver)
         );
 

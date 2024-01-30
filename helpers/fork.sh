@@ -1,6 +1,6 @@
 #! /bin/bash
 
-source helpers/common.sh
+source lib/utils/helpers/common.sh
 
 function main {
     if [ ! -f .env ]; then

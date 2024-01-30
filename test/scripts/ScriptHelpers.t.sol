@@ -40,7 +40,7 @@ contract ScriptHelpers is Test, Utils {
         for (uint256 i; i < ALL_CHAINS.length; i++) {
             uint256 chainId = ALL_CHAINS[i];
             proposalSender.setTrustedRemoteAddress(
-                getLZChainId(chainId),
+                _getLZChainId(chainId),
                 abi.encodePacked(_chainToContract(chainId, ContractType.ProposalReceiver))
             );
         }
@@ -100,7 +100,7 @@ contract ScriptHelpers is Test, Utils {
                         for (uint256 i; i < entries.length; i++) {
                             if (
                                 entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                                entries[i].topics[1] == bytes32(uint256(getLZChainId(chainId)))
+                                entries[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
                             ) {
                                 payload = abi.decode(entries[i].data, (bytes));
                                 break;
@@ -109,9 +109,9 @@ contract ScriptHelpers is Test, Utils {
                     }
 
                     vm.selectFork(forkIdentifier[chainId]);
-                    hoax(address(lzEndPoint(chainId)));
+                    hoax(address(_lzEndPoint(chainId)));
                     proposalReceiver.lzReceive(
-                        getLZChainId(CHAIN_SOURCE),
+                        _getLZChainId(CHAIN_SOURCE),
                         abi.encodePacked(proposalSender, proposalReceiver),
                         0,
                         payload
@@ -125,7 +125,7 @@ contract ScriptHelpers is Test, Utils {
                     console.logBytes(calldatas[chainCount]);
                     (, bytes memory senderData, ) = abi.decode(
                         // calldatas[chainCount],
-                        slice(calldatas[chainCount], 4, calldatas[chainCount].length - 4),
+                        _slice(calldatas[chainCount], 4, calldatas[chainCount].length - 4),
                         (uint16, bytes, bytes)
                     );
                     console.logBytes(senderData);
@@ -152,9 +152,9 @@ contract ScriptHelpers is Test, Utils {
         // We only consider when transaction is sent to the chain timelock, as the other case shouldn't ask for another execute call
         if (target == address(timelock)) {
             vm.prank(_chainToContract(chainId, ContractType.GuardianMultisig));
-            if (TimelockControllerWithCounter.schedule.selector == bytes4(slice(rawData, 0, 4))) {
+            if (TimelockControllerWithCounter.schedule.selector == bytes4(_slice(rawData, 0, 4))) {
                 (address target, uint256 value, bytes memory data, bytes32 predecessor, bytes32 salt, ) = abi.decode(
-                    slice(rawData, 4, rawData.length - 4),
+                    _slice(rawData, 4, rawData.length - 4),
                     (address, uint256, bytes, bytes32, bytes32, uint256)
                 );
                 timelock.execute(target, value, data, predecessor, salt);
@@ -167,7 +167,7 @@ contract ScriptHelpers is Test, Utils {
                     bytes32 salt,
 
                 ) = abi.decode(
-                        slice(rawData, 4, rawData.length - 4),
+                        _slice(rawData, 4, rawData.length - 4),
                         (address[], uint256[], bytes[], bytes32, bytes32, uint256)
                     );
                 timelock.executeBatch(tmpTargets, tmpValues, tmpCalldatas, predecessor, salt);

@@ -45,8 +45,8 @@ contract ProposalSenderConnectTest is ScriptHelpers {
             uint256 chainId = chainIds[i];
 
             address receiver = _chainToContract(chainId, ContractType.ProposalReceiver);
-            bytes memory trustedRemote = sender.trustedRemoteLookup(getLZChainId(chainId));
-            address connectedReceiver = address(bytes20(slice(trustedRemote, 0, 20)));
+            bytes memory trustedRemote = sender.trustedRemoteLookup(_getLZChainId(chainId));
+            address connectedReceiver = address(bytes20(_slice(trustedRemote, 0, 20)));
             assertEq(receiver, connectedReceiver);
         }
     }

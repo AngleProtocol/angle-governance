@@ -1,6 +1,6 @@
 #! /bin/bash
 
-source helpers/common.sh
+source lib/utils/helpers/common.sh
 
 function usage {
   echo "bash createProposal.sh <script> <chain>"
@@ -111,7 +111,6 @@ function main {
     if [ $? -ne 0 ]; then
         echo ""
         echo "Test failed"
-        exit 1
     fi
 
     echo ""

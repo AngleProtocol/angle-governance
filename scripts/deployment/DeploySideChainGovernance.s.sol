@@ -41,20 +41,20 @@ contract DeploySideChainGovernance is Utils {
         executors[0] = destSafeMultiSig; // Means everyone can execute
 
         // timelock = new TimelockControllerWithCounter(timelockDelay, proposers, executors, deployer);
-        // proposalReceiver = new ProposalReceiver(address(lzEndPoint(destChainId)));
+        // proposalReceiver = new ProposalReceiver(address(_lzEndPoint(destChainId)));
         timelock = TimelockControllerWithCounter(payable(0xd23B51d6F2cB3eC7ca9599D4332a2F10C3CFDF85));
         proposalReceiver = ProposalReceiver(payable(0x4A44f77978Daa3E92Eb3D97210bd11645cF935Ab));
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(proposalReceiver));
         timelock.grantRole(timelock.CANCELLER_ROLE(), destSafeMultiSig);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), deployer);
 
-        proposalReceiver.setTrustedRemoteAddress(getLZChainId(srcChainId), abi.encodePacked(proposalSender));
+        proposalReceiver.setTrustedRemoteAddress(_getLZChainId(srcChainId), abi.encodePacked(proposalSender));
         proposalReceiver.transferOwnership(address(timelock));
 
         vm.stopBroadcast();
 
         // TODO to connect both chains - governance need to approve this relayer receiver on native chain
         // vm.selectFork(srcChainId);
-        // proposalSender.setTrustedRemoteAddress(getLZChainId(destChainId), abi.encodePacked(proposalReceiver));
+        // proposalSender.setTrustedRemoteAddress(_getLZChainId(destChainId), abi.encodePacked(proposalReceiver));
     }
 }

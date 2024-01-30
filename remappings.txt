@@ -12,3 +12,4 @@ test/=test
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts
 @chainlink/=lib/chainlink
+utils/=lib/utils

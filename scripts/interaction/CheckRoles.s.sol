@@ -53,7 +53,7 @@ contract CheckRoles is Utils {
     function _checkRoles(uint256 chainId) public {
         vm.selectFork(forkIdentifier[chainId]);
 
-        allContracts = _getALLContracts(chainId);
+        allContracts = _getAllContracts(chainId);
         // Address to check roles for
         uint256 nbrActors = chainId == CHAIN_ETHEREUM ? 11 : 10;
         address[] memory listAddressToCheck = new address[](nbrActors);
@@ -286,8 +286,8 @@ contract CheckRoles is Utils {
             if (token.treasury() != _chainToContract(chainId, contractTypeTreasury))
                 console.log(string.concat(nameToken, "  - wrong treasury: ", vm.toString(token.treasury())));
         }
-        if (token.lzEndpoint() != address(lzEndPoint(chainId)))
-            console.log(string.concat(nameToken, "  - wrong endpoint: ", vm.toString(address(token.lzEndpoint()))));
+        if (token.lzEndPoint() != address(_lzEndPoint(chainId)))
+            console.log(string.concat(nameToken, "  - wrong endpoint: ", vm.toString(address(token.lzEndPoint()))));
     }
 
     function _checkVaultManagers(uint256 chainId, ContractType treasuryType) internal {
