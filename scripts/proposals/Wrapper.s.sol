@@ -4,18 +4,6 @@ pragma solidity ^0.8.20;
 import "../Utils.s.sol";
 
 contract Wrapper is Utils {
-    uint256 public constant LZ_VALUE_ARBITRUM = 0.05 ether;
-    uint256 public constant LZ_VALUE_AVALANCHE = 0.05 ether;
-    uint256 public constant LZ_VALUE_ETHEREUM = 0.1 ether;
-    uint256 public constant LZ_VALUE_OPTIMISM = 0.05 ether;
-    uint256 public constant LZ_VALUE_POLYGON = 0.05 ether;
-    uint256 public constant LZ_VALUE_GNOSIS = 0.05 ether;
-    uint256 public constant LZ_VALUE_BNB = 0.05 ether;
-    uint256 public constant LZ_VALUE_CELO = 0.05 ether;
-    uint256 public constant LZ_VALUE_POLYGONZKEVM = 0.05 ether;
-    uint256 public constant LZ_VALUE_BASE = 0.05 ether;
-    uint256 public constant LZ_VALUE_LINEA = 0.05 ether;
-
     function wrapTimelock(
         uint256 chainId,
         SubCall[] memory p
@@ -124,6 +112,31 @@ contract Wrapper is Utils {
         }
     }
 
+    function _estimateGas(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        uint256 chainId
+    ) internal returns (uint256 gas) {
+        vm.selectFork(forkIdentifier[chainId]);
+        TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
+            payable(_chainToContract(chainId, ContractType.Timelock))
+        );
+
+        address sender = _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender);
+        address receiver = _chainToContract(chainId, ContractType.ProposalReceiver);
+
+        vm.prank(address(lzEndPoint(chainId)));
+        uint256 startGas = gasleft();
+        ProposalReceiver(payable(receiver)).lzReceive(
+            getLZChainId(CHAIN_SOURCE),
+            abi.encodePacked(sender, receiver),
+            0,
+            abi.encode(targets, values, new string[](1), calldatas)
+        );
+        gas = startGas - gasleft();
+    }
+
     function _wrap(
         SubCall[] memory prop
     )
@@ -173,19 +186,32 @@ contract Wrapper is Utils {
                 batchCalldatas[0] = data;
 
                 // Wrap for proposal sender
-                ProposalSender proposalSender = ProposalSender(
-                    _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)
-                );
-                targets[finalPropLength] = address(proposalSender);
-                values[finalPropLength] = _getLZGasEstimate(chainId);
+                bytes memory payload;
+                {
+                    uint256 gasNeeded = (_estimateGas(batchTargets, batchValues, batchCalldatas, chainId) *
+                        GAS_MULTIPLIER) / BASE_GAS;
+                    payload = abi.encodeWithSelector(
+                        ProposalSender.execute.selector,
+                        getLZChainId(chainId),
+                        abi.encode(batchTargets, batchValues, new string[](1), batchCalldatas),
+                        abi.encodePacked(uint16(1), gasNeeded)
+                    );
+                }
+                targets[finalPropLength] = _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender);
                 chainIds[finalPropLength] = chainId;
-                calldatas[finalPropLength] = abi.encodeWithSelector(
-                    ProposalSender.execute.selector,
+                calldatas[finalPropLength] = payload;
+
+                vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
+                (uint256 nativeFee, ) = ILayerZeroEndpoint(lzEndPoint(CHAIN_SOURCE)).estimateFees(
                     getLZChainId(chainId),
-                    abi.encode(batchTargets, batchValues, new string[](1), batchCalldatas),
-                    // TODO make a better estimate of the gas required on detination chain 300000
-                    abi.encodePacked(uint16(1), uint256(300000))
+                    _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender),
+                    payload,
+                    false,
+                    hex""
                 );
+
+                values[finalPropLength] = nativeFee;
+
                 finalPropLength += 1;
                 i += count;
             }
@@ -196,31 +222,5 @@ contract Wrapper is Utils {
             mstore(calldatas, finalPropLength)
             mstore(chainIds, finalPropLength)
         }
-    }
-
-    // TODO make a better estimate (based on `quote_fee`)
-    function _getLZGasEstimate(uint256 chainId) internal pure returns (uint256 value) {
-        value = chainId == CHAIN_ARBITRUM ? LZ_VALUE_ARBITRUM : chainId == CHAIN_AVALANCHE
-            ? LZ_VALUE_AVALANCHE
-            : chainId == CHAIN_ETHEREUM
-            ? LZ_VALUE_ETHEREUM
-            : chainId == CHAIN_OPTIMISM
-            ? LZ_VALUE_OPTIMISM
-            : chainId == CHAIN_POLYGON
-            ? LZ_VALUE_POLYGON
-            : chainId == CHAIN_GNOSIS
-            ? LZ_VALUE_GNOSIS
-            : chainId == CHAIN_BNB
-            ? LZ_VALUE_BNB
-            : chainId == CHAIN_CELO
-            ? LZ_VALUE_CELO
-            : chainId == CHAIN_POLYGONZKEVM
-            ? LZ_VALUE_POLYGONZKEVM
-            : chainId == CHAIN_BASE
-            ? LZ_VALUE_BASE
-            : chainId == CHAIN_LINEA
-            ? LZ_VALUE_LINEA
-            : 0;
-        if (value == 0) revert("Invalid chainId");
     }
 }

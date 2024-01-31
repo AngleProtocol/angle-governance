@@ -95,19 +95,24 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    # TODO if the script fails we should abort
     FOUNDRY_PROFILE=dev forge script $script
 
     if [ $? -ne 0 ]; then
         echo ""
         echo "Script failed"
+        exit 1
     fi
 
-    # TODO if the test fails we should abort
     testContract="${script}Test"
     echo ""
     echo "Running test"
     FOUNDRY_PROFILE=dev forge test --match-contract $testContract -vvv
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "Test failed"
+        exit 1
+    fi
 
     echo ""
     echo "Would you like to create the proposal ? (yes/no)"
