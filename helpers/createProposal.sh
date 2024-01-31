@@ -95,7 +95,6 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    # TODO if the script fails we should abort
     FOUNDRY_PROFILE=dev forge script $script
 
     if [ $? -ne 0 ]; then
@@ -104,7 +103,6 @@ function main {
         exit 1
     fi
 
-    # TODO if the test fails we should abort
     testContract="${script}Test"
     echo ""
     echo "Running test"
