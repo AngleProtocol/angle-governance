@@ -2,9 +2,6 @@
 pragma solidity ^0.8.20;
 
 import { console } from "forge-std/console.sol";
-import { IVaultManagerFunctions } from "borrow/interfaces/IVaultManager.sol";
-import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol";
-
 import { Wrapper } from "../Wrapper.s.sol";
 import "../../Constants.s.sol";
 
@@ -22,10 +19,10 @@ contract SetMinDelayTimelock is Wrapper {
 
     function run() external {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
-        string memory description = "ipfs://QmaWGR4XjsXHfaPxRB3UUX8DML56sg9dZLFCuvgpXzMiPC";
+        string memory description = "ipfs://QmY3MwLhYxygzrk16595tPDYHjouZmjtyUJhYZ8ondoukE";
 
         /** TODO  complete */
-        uint256 minDelay = uint256(1 days) - 1;
+        uint256 minDelay = uint256(1 days);
         /** END  complete */
 
         for (uint256 i = 0; i < chainIds.length; i++) {

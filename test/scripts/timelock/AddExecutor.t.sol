@@ -4,14 +4,16 @@ pragma solidity ^0.8.19;
 import { stdJson } from "forge-std/StdJson.sol";
 import { console } from "forge-std/console.sol";
 import { ScriptHelpers } from "../ScriptHelpers.t.sol";
+import { IAccessControl } from "oz/access/IAccessControl.sol";
+import { TimelockController } from "oz/governance/TimelockController.sol";
 import "../../../scripts/Constants.s.sol";
 import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 
-contract SetMinDelayTimelockTest is ScriptHelpers {
+contract AddExecutorTest is ScriptHelpers {
     using stdJson for string;
 
-    uint256 constant newMinDelay = uint256(1 days);
+    address constant newExecutor = address(0);
 
     function setUp() public override {
         super.setUp();
@@ -27,8 +29,21 @@ contract SetMinDelayTimelockTest is ScriptHelpers {
                 payable(_chainToContract(chainId, ContractType.Timelock))
             );
             vm.selectFork(forkIdentifier[chainId]);
-            uint256 minDelay = timelock.getMinDelay();
-            assertEq(minDelay, newMinDelay);
+            bytes32 EXECUTOR_ROLE = timelock.EXECUTOR_ROLE();
+
+            assertEq(timelock.hasRole(EXECUTOR_ROLE, newExecutor), true);
+
+            // This check is only when you set the address(0) as executor
+            vm.startPrank(whale);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    TimelockController.TimelockUnexpectedOperationState.selector,
+                    keccak256(abi.encode(address(0), 0, nullBytes, bytes32(0), bytes32(0))),
+                    bytes32(1 << uint8(TimelockController.OperationState.Ready))
+                )
+            );
+            timelock.execute(address(0), 0, nullBytes, bytes32(0), bytes32(0));
+            vm.stopPrank();
         }
     }
 }
