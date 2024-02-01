@@ -20,12 +20,12 @@ import { Proposal, SubCall } from "./Proposal.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import "stringutils/strings.sol";
 
-import "utils/test/TestUtils.t.sol";
+import "utils/src/CommonUtils.sol";
 
 import "../Constants.t.sol";
 
 //solhint-disable
-contract SimulationSetup is TestUtils {
+contract SimulationSetup is Test, CommonUtils {
     using strings for *;
 
     Proposal proposal = new Proposal();

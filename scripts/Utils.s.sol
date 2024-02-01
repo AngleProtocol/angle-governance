@@ -8,12 +8,12 @@ import { ProposalSender } from "contracts/ProposalSender.sol";
 import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import { ITreasury } from "borrow/interfaces/ITreasury.sol";
-import "utils/script/LibUtils.s.sol";
+import "utils/src/CommonUtils.sol";
 import "./Constants.s.sol";
 
 /// @title Utils
 /// @author Angle Labs, Inc.
-contract Utils is Script, LibUtils {
+contract Utils is Script, CommonUtils {
     mapping(uint256 => uint256) internal forkIdentifier;
     uint256 public arbitrumFork;
     uint256 public avalancheFork;
