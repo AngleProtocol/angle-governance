@@ -15,7 +15,7 @@ contract ProposalSenderConnect is Wrapper {
             0,
             abi.encodeWithSelector(
                 ProposalSender.setTrustedRemoteAddress.selector,
-                getLZChainId(chainId),
+                _getLZChainId(chainId),
                 abi.encodePacked(receiver)
             )
         );

@@ -33,8 +33,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         uint256 srcChain = 1;
         uint256 destChain = 10;
         vm.selectFork(forkIdentifier[destChain]);
-        ProposalReceiver newReceiverOptimism = new ProposalReceiver(address(lzEndPoint(destChain)));
-        newReceiverOptimism.setTrustedRemoteAddress(getLZChainId(srcChain), abi.encodePacked(proposalSender()));
+        ProposalReceiver newReceiverOptimism = new ProposalReceiver(address(_lzEndPoint(destChain)));
+        newReceiverOptimism.setTrustedRemoteAddress(_getLZChainId(srcChain), abi.encodePacked(proposalSender()));
         newReceiverOptimism.transferOwnership(address(timelock(destChain)));
 
         {
@@ -72,7 +72,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         values[0] = 0;
         calldatas[0] = abi.encodeWithSelector(
             proposalSender().setTrustedRemoteAddress.selector,
-            getLZChainId(destChain),
+            _getLZChainId(destChain),
             abi.encodePacked(address(newReceiverOptimism))
         );
 
@@ -81,12 +81,12 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         vm.selectFork(forkIdentifier[srcChain]);
         assertEq(
-            proposalSender().trustedRemoteLookup(getLZChainId(destChain)),
+            proposalSender().trustedRemoteLookup(_getLZChainId(destChain)),
             abi.encodePacked(address(proposalReceiver(destChain)), address(proposalSender()))
         );
         governor().execute(targets, values, calldatas, keccak256(bytes(description)));
         assertEq(
-            proposalSender().trustedRemoteLookup(getLZChainId(destChain)),
+            proposalSender().trustedRemoteLookup(_getLZChainId(destChain)),
             abi.encodePacked(address(newReceiverOptimism), address(proposalSender()))
         );
 
@@ -159,9 +159,9 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         string memory description = "Updating sendVersion on Mainnet";
 
         _shortcutProposal(1, description, targets, values, calldatas);
-        assertEq(lzEndPoint(1).getSendVersion(address(proposalSender())), defaultVersion);
+        assertEq(_lzEndPoint(1).getSendVersion(address(proposalSender())), defaultVersion);
         governor().execute(targets, values, calldatas, keccak256(bytes(description)));
-        assertEq(lzEndPoint(1).getSendVersion(address(proposalSender())), 1);
+        assertEq(_lzEndPoint(1).getSendVersion(address(proposalSender())), 1);
     }
 
     function test_RevertWhen_lzEndpointFail() public {
@@ -176,8 +176,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[1]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(_lzEndPoint(1)),
+            abi.encodeWithSelector(_lzEndPoint(1).send.selector),
             abi.encode("REVERT")
         );
         assertEq(uint256(proposalSender().lastStoredPayloadNonce()), 0);
@@ -186,18 +186,18 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         bytes
             memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
-        (uint nativeFee, uint zroFee) = proposalSender().estimateFees(getLZChainId(137), payload, adapterParams);
+        (uint nativeFee, uint zroFee) = proposalSender().estimateFees(_getLZChainId(137), payload, adapterParams);
         assertEq(zroFee, 0);
         assertGt(nativeFee, 0);
         assertLe(nativeFee, 0.1 ether);
-        bytes memory execution = abi.encode(getLZChainId(137), payload, adapterParams, 0.1 ether);
+        bytes memory execution = abi.encode(_getLZChainId(137), payload, adapterParams, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), keccak256(execution));
     }
 
     function test_RevertWhen_NoFailTx() public {
         uint64 nonce = 0;
         vm.expectRevert(abi.encodeWithSelector(Errors.OmnichainProposalSenderNoStoredPayload.selector));
-        proposalSender().retryExecute(nonce, getLZChainId(137), hex"", hex"", 1);
+        proposalSender().retryExecute(nonce, _getLZChainId(137), hex"", hex"", 1);
     }
 
     function test_RevertWhen_RetryExecuteWrongParams() public {
@@ -212,13 +212,13 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[1]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(_lzEndPoint(1)),
+            abi.encodeWithSelector(_lzEndPoint(1).send.selector),
             abi.encode("REVERT")
         );
         _dummyProposal(1, p, description, 0.1 ether, hex"");
         vm.expectRevert(abi.encodeWithSelector(Errors.OmnichainProposalSenderInvalidExecParams.selector));
-        proposalSender().retryExecute(1, getLZChainId(137), hex"", hex"", 1);
+        proposalSender().retryExecute(1, _getLZChainId(137), hex"", hex"", 1);
     }
 
     function test_RetryExecuteSimple() public {
@@ -236,27 +236,27 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[srcChain]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(srcChain)),
-            abi.encodeWithSelector(lzEndPoint(srcChain).send.selector),
+            address(_lzEndPoint(srcChain)),
+            abi.encodeWithSelector(_lzEndPoint(srcChain).send.selector),
             abi.encode("REVERT")
         );
         bytes
             memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
-        (uint256 nativeFee, ) = proposalSender().estimateFees(getLZChainId(destChain), payload, adapterParams);
+        (uint256 nativeFee, ) = proposalSender().estimateFees(_getLZChainId(destChain), payload, adapterParams);
         assertLe(nativeFee, 0.1 ether);
         _dummyProposal(srcChain, p, description, 0.1 ether, hex"");
         vm.clearMockedCalls();
         // We need to execute with an address to get the eth refund
         vm.startPrank(alice);
-        proposalSender().retryExecute(1, getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        proposalSender().retryExecute(1, _getLZChainId(destChain), payload, adapterParams, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
         vm.stopPrank();
 
         vm.selectFork(forkIdentifier[destChain]);
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(srcChain),
+            _getLZChainId(srcChain),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload
@@ -287,8 +287,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[1]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(_lzEndPoint(1)),
+            abi.encodeWithSelector(_lzEndPoint(1).send.selector),
             abi.encode("REVERT")
         );
         bytes
@@ -316,17 +316,17 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.clearMockedCalls();
         // We need to execute with an address to get the eth refund
         vm.prank(alice);
-        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        proposalSender().retryExecute(1, _getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
 
         vm.prank(alice);
-        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        proposalSender().retryExecute(2, _getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
 
         vm.selectFork(forkIdentifier[destChain]);
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload1
@@ -345,9 +345,9 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             assertEq(timelock(destChain).getMinDelay() == 100, true);
         }
 
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload2
@@ -379,8 +379,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[1]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(_lzEndPoint(1)),
+            abi.encodeWithSelector(_lzEndPoint(1).send.selector),
             abi.encode("REVERT")
         );
         bytes
@@ -408,17 +408,17 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.clearMockedCalls();
         // We need to execute with an address to get the eth refund
         vm.prank(alice);
-        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        proposalSender().retryExecute(1, _getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
 
         vm.prank(alice);
-        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        proposalSender().retryExecute(2, _getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
 
         vm.selectFork(forkIdentifier[destChain]);
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload2
@@ -437,9 +437,9 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), true);
         }
 
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload1
@@ -471,8 +471,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[1]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(_lzEndPoint(1)),
+            abi.encodeWithSelector(_lzEndPoint(1).send.selector),
             abi.encode("REVERT")
         );
         bytes
@@ -500,17 +500,17 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.clearMockedCalls();
         // We need to execute with an address to get the eth refund
         vm.prank(alice);
-        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        proposalSender().retryExecute(2, _getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
 
         vm.prank(alice);
-        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        proposalSender().retryExecute(1, _getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
 
         vm.selectFork(forkIdentifier[destChain]);
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload1
@@ -529,9 +529,9 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             assertEq(timelock(destChain).getMinDelay() == 100, true);
         }
 
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload2
@@ -563,8 +563,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[1]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(_lzEndPoint(1)),
+            abi.encodeWithSelector(_lzEndPoint(1).send.selector),
             abi.encode("REVERT")
         );
         bytes
@@ -592,17 +592,17 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.clearMockedCalls();
         // We need to execute with an address to get the eth refund
         vm.prank(alice);
-        proposalSender().retryExecute(2, getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
+        proposalSender().retryExecute(2, _getLZChainId(destChain), payload2, adapterParams2, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(2), bytes32(0));
 
         vm.prank(alice);
-        proposalSender().retryExecute(1, getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
+        proposalSender().retryExecute(1, _getLZChainId(destChain), payload1, adapterParams1, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
 
         vm.selectFork(forkIdentifier[destChain]);
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload2
@@ -621,9 +621,9 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             assertEq(timelock(destChain).hasRole(timelock(destChain).PROPOSER_ROLE(), alice), true);
         }
 
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload1
@@ -665,8 +665,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.selectFork(forkIdentifier[1]);
         // Making the call revert to force replay
         vm.mockCallRevert(
-            address(lzEndPoint(1)),
-            abi.encodeWithSelector(lzEndPoint(1).send.selector),
+            address(_lzEndPoint(1)),
+            abi.encodeWithSelector(_lzEndPoint(1).send.selector),
             abi.encode("REVERT")
         );
         bytes
@@ -676,14 +676,14 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         vm.clearMockedCalls();
         // We need to execute with an address to get the eth refund
         vm.startPrank(alice);
-        proposalSender().retryExecute(1, getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        proposalSender().retryExecute(1, _getLZChainId(destChain), payload, adapterParams, 0.1 ether);
         assertEq(proposalSender().storedExecutionHashes(1), bytes32(0));
         vm.stopPrank();
 
         vm.selectFork(forkIdentifier[destChain]);
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload
@@ -786,8 +786,8 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
     function test_PolygonUpdateProposalReceiver() public {
         vm.selectFork(forkIdentifier[137]);
-        ProposalReceiver proposalReceiver2 = new ProposalReceiver(address(lzEndPoint(137)));
-        proposalReceiver2.setTrustedRemoteAddress(getLZChainId(1), abi.encodePacked(_proposalSender));
+        ProposalReceiver proposalReceiver2 = new ProposalReceiver(address(_lzEndPoint(137)));
+        proposalReceiver2.setTrustedRemoteAddress(_getLZChainId(1), abi.encodePacked(_proposalSender));
         proposalReceiver2.transferOwnership(address(timelock(137)));
         address newProposalReceiver = address(proposalReceiver2);
 
@@ -820,7 +820,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             value: 0,
             data: abi.encodeWithSelector(
                 proposalSender().setTrustedRemoteAddress.selector,
-                getLZChainId(137),
+                _getLZChainId(137),
                 abi.encodePacked(proposalReceiver2)
             )
         });
@@ -846,7 +846,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         for (uint256 i; i < entries.length; i++) {
             if (
                 entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                entries[i].topics[1] == bytes32(uint256(getLZChainId(137)))
+                entries[i].topics[1] == bytes32(uint256(_getLZChainId(137)))
             ) {
                 payload = abi.decode(entries[i].data, (bytes));
                 break;
@@ -854,9 +854,9 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         }
 
         vm.selectFork(forkIdentifier[137]);
-        hoax(address(lzEndPoint(137)));
+        hoax(address(_lzEndPoint(137)));
         proposalReceiver(137).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(137)),
             0,
             payload
@@ -892,22 +892,22 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         bytes
             memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
-        bytes memory execution = abi.encode(getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        bytes memory execution = abi.encode(_getLZChainId(destChain), payload, adapterParams, 0.1 ether);
         vm.mockCallRevert(
             address(timelock(destChain)),
             abi.encodeWithSelector(timelock(destChain).schedule.selector),
             abi.encode(TimelockController.TimelockUnexpectedOperationState.selector, hex"", hex"01")
         );
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload
         );
         assertEq(
             proposalReceiver(destChain).failedMessages(
-                getLZChainId(1),
+                _getLZChainId(1),
                 abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
                 0
             ),
@@ -916,7 +916,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         vm.expectRevert(Errors.OmnichainGovernanceExecutorTxExecReverted.selector);
         proposalReceiver(destChain).retryMessage(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload
@@ -925,7 +925,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         assertEq(timelock(destChain).getMinDelay() != 100, true);
         proposalReceiver(destChain).retryMessage(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             0,
             payload
@@ -969,22 +969,22 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         bytes
             memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
-        bytes memory execution = abi.encode(getLZChainId(destChain), payload, adapterParams, 0.1 ether);
+        bytes memory execution = abi.encode(_getLZChainId(destChain), payload, adapterParams, 0.1 ether);
         vm.mockCallRevert(
             address(timelock(destChain)),
             abi.encodeWithSelector(timelock(destChain).schedule.selector),
             abi.encode(TimelockController.TimelockUnexpectedOperationState.selector, hex"", hex"01")
         );
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             1,
             payload
         );
         assertEq(
             proposalReceiver(destChain).failedMessages(
-                getLZChainId(1),
+                _getLZChainId(1),
                 abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
                 1
             ),
@@ -993,7 +993,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         vm.expectRevert(Errors.OmnichainGovernanceExecutorTxExecReverted.selector);
         proposalReceiver(destChain).retryMessage(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             1,
             payload
@@ -1002,7 +1002,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         assertEq(timelock(destChain).getMinDelay() != 100, true);
         proposalReceiver(destChain).retryMessage(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             1,
             payload
@@ -1054,9 +1054,9 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
             abi.encodeWithSelector(timelock(destChain).schedule.selector),
             abi.encode(TimelockController.TimelockUnexpectedOperationState.selector, hex"", hex"01")
         );
-        hoax(address(lzEndPoint(destChain)));
+        hoax(address(_lzEndPoint(destChain)));
         proposalReceiver(destChain).lzReceive(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             1,
             payload
@@ -1065,7 +1065,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         assertEq(timelock(destChain).getMinDelay() != oldDelay, true);
         proposalReceiver(destChain).retryMessage(
-            getLZChainId(1),
+            _getLZChainId(1),
             abi.encodePacked(proposalSender(), proposalReceiver(destChain)),
             1,
             payload

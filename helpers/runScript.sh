@@ -1,7 +1,6 @@
 #! /bin/bash
 
-source helpers/common.sh
-
+source lib/utils/helpers/common.sh
 
 function usage {
   echo "bash runScript.sh <script> <chain>"

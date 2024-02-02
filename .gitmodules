@@ -35,3 +35,6 @@
 [submodule "lib/chainlink"]
 	path = lib/chainlink
 	url = https://github.com/smartcontractkit/chainlink
+[submodule "lib/utils"]
+	path = lib/utils
+	url = https://github.com/AngleProtocol/utils
