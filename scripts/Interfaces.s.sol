@@ -84,5 +84,5 @@ interface ILayerZeroBridge {
 
     function treasury() external view returns (address);
 
-    function lzEndPoint() external view returns (address);
+    function lzEndpoint() external view returns (address);
 }

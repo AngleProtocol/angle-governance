@@ -286,8 +286,8 @@ contract CheckRoles is Utils {
             if (token.treasury() != _chainToContract(chainId, contractTypeTreasury))
                 console.log(string.concat(nameToken, "  - wrong treasury: ", vm.toString(token.treasury())));
         }
-        if (token.lzEndPoint() != address(_lzEndPoint(chainId)))
-            console.log(string.concat(nameToken, "  - wrong endpoint: ", vm.toString(address(token.lzEndPoint()))));
+        if (token.lzEndpoint() != address(_lzEndPoint(chainId)))
+            console.log(string.concat(nameToken, "  - wrong endpoint: ", vm.toString(address(token.lzEndpoint()))));
     }
 
     function _checkVaultManagers(uint256 chainId, ContractType treasuryType) internal {
