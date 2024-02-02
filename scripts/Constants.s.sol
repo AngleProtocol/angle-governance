@@ -34,7 +34,7 @@ uint256 constant initialQuorumNumerator = 5;
 uint256 constant initialShortCircuitNumerator = 10;
 bytes constant nullBytes = hex"";
 
-uint256 constant CHAIN_SOURCE = CHAIN_GNOSIS;
+uint256 constant CHAIN_SOURCE = CHAIN_ETHEREUM;
 
 uint256 constant BASE_GAS = 100000;
 uint256 constant GAS_MULTIPLIER = 150000; // 1.5x
