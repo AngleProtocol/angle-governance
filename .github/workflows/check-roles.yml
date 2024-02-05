@@ -1,0 +1,30 @@
+name: "check-roles"
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # every day at midnight
+
+jobs:
+  check-roles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "yarn"
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: generate roles files
+        run: forge script CheckRoles
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run script
+        run: yarn check-roles

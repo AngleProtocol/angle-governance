@@ -12,8 +12,11 @@ import { ProposalSender } from "contracts/ProposalSender.sol";
 import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
 import { Utils } from "../Utils.s.sol";
 import "../Constants.s.sol";
+import "stringutils/strings.sol";
 
 contract CheckRoles is Utils {
+    using strings for *;
+
     address constant oldDeployer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
     address constant oldKeeper = 0xcC617C6f9725eACC993ac626C7efC6B96476916E;
     address constant oldKeeperPolygon = 0x5EB715d601C2F27f83Cb554b6B36e047822fB70a;
@@ -35,6 +38,14 @@ contract CheckRoles is Utils {
 
     address[] public allContracts;
 
+    string public constant OUTPUT_PATH = "./scripts/roles.json";
+    string private json;
+    uint256 private jsonIndex;
+    string private output;
+    string private outputActor;
+    string private jsonActor;
+    uint256 private jsonActorIndex;
+
     // TODO also check that all proxy contracts have been initialized
     function run() external {
         vm.label(oldDeployer, "Old Deployer");
@@ -43,11 +54,17 @@ contract CheckRoles is Utils {
         vm.label(oldKeeperPolygon2, "Old Keeper Polygon 2");
         vm.label(merklKeeper, "Merkl Keeper");
 
+        string memory jsonGlobal = "chain";
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
+        string memory finalOutput;
         for (uint256 i = 0; i < chainIds.length; i++) {
-            console.log("############  Chain ID: ", chainIds[i], " ############");
+            json = vm.toString(chainIds[i]);
+            jsonIndex = 0;
+            output = "";
             _checkRoles(chainIds[i]);
+            finalOutput = vm.serializeString(jsonGlobal, vm.toString(chainIds[i]), output);
         }
+        vm.writeFile(OUTPUT_PATH, finalOutput);
     }
 
     function _checkRoles(uint256 chainId) public {
@@ -106,53 +123,151 @@ contract CheckRoles is Utils {
                     _chainToContract(chainId, ContractType.MerklMiddleman)
                 );
 
-                if (!_authorizedCore(chainId, address(transmuterEUR.accessControlManager())))
-                    console.log(
-                        "Transmuter EUR - wrong access control manager: ",
-                        address(transmuterEUR.accessControlManager())
+                if (!_authorizedCore(chainId, address(transmuterEUR.accessControlManager()))) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat(
+                            "Transmuter EUR - wrong access control manager: ",
+                            vm.toString(address(transmuterEUR.accessControlManager()))
+                        )
                     );
-                if (!_authorizedCore(chainId, address(transmuterUSD.accessControlManager())))
-                    console.log(
-                        "Transmuter USD - wrong access control manager: ",
-                        address(transmuterUSD.accessControlManager())
+                    jsonIndex++;
+                }
+                if (!_authorizedCore(chainId, address(transmuterUSD.accessControlManager()))) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat(
+                            "Transmuter USD - wrong access control manager: ",
+                            vm.toString(address(transmuterUSD.accessControlManager()))
+                        )
                     );
-                if (!_authorizedMinter(chainId, angle.minter())) console.log("Angle - minter role: ", angle.minter());
-                if (!_authorizedOwner(chainId, proposalSender.owner()))
-                    console.log("Proposal Sender - owner: ", proposalSender.owner());
-                if (!_authorizedCoreMerkl(chainId, address(merklMiddleman.accessControlManager())))
-                    console.log(
-                        "Merkl Middleman - wrong access control manager: ",
-                        address(merklMiddleman.accessControlManager())
+                    jsonIndex++;
+                }
+                if (!_authorizedMinter(chainId, angle.minter())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Angle - minter role: ", vm.toString(angle.minter()))
                     );
-                if (!_authorizedOwner(chainId, gaugeController.admin()))
-                    console.log("Gauge Controller - admin role: ", gaugeController.admin());
-                if (!_authorizedOwner(chainId, gaugeController.future_admin()))
-                    console.log("Gauge Controller - future admin role: ", gaugeController.future_admin());
-                if (!_authorizedOwner(chainId, smartWalletWhitelist.admin()))
-                    console.log("Smart Wallet Whitelist - admin: ", smartWalletWhitelist.admin());
-                if (!_authorizedOwner(chainId, smartWalletWhitelist.future_admin()))
-                    console.log("Smart Wallet Whitelist - future admin: ", smartWalletWhitelist.future_admin());
-                if (!_authorizedOwner(chainId, veAngle.admin())) console.log("veANGLE - admin: ", veAngle.admin());
-                if (!_authorizedOwner(chainId, veAngle.future_admin()))
-                    console.log("veANGLE - future admin: ", veAngle.future_admin());
-                if (!_authorizedOwner(chainId, veBoostProxy.admin()))
-                    console.log("veBoostProxy - admin: ", veBoostProxy.admin());
-                if (!_authorizedOwner(chainId, veBoostProxy.future_admin()))
-                    console.log("veBoostProxy - future admin: ", veBoostProxy.future_admin());
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, proposalSender.owner())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Proposal Sender - owner: ", vm.toString(proposalSender.owner()))
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedCoreMerkl(chainId, address(merklMiddleman.accessControlManager()))) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat(
+                            "Merkl Middleman - wrong access control manager: ",
+                            vm.toString(address(merklMiddleman.accessControlManager()))
+                        )
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, gaugeController.admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Gauge Controller - admin role: ", vm.toString(gaugeController.admin()))
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, gaugeController.future_admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat(
+                            "Gauge Controller - future admin role: ",
+                            vm.toString(gaugeController.future_admin())
+                        )
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, smartWalletWhitelist.admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Smart Wallet Whitelist - admin: ", vm.toString(smartWalletWhitelist.admin()))
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, smartWalletWhitelist.future_admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat(
+                            "Smart Wallet Whitelist - future admin: ",
+                            vm.toString(smartWalletWhitelist.future_admin())
+                        )
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, veAngle.admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("veANGLE - admin: ", vm.toString(veAngle.admin()))
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, veAngle.future_admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("veANGLE - future admin: ", vm.toString(veAngle.future_admin()))
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, veBoostProxy.admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("veBoostProxy - admin: ", vm.toString(veBoostProxy.admin()))
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedOwner(chainId, veBoostProxy.future_admin())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("veBoostProxy - future admin: ", vm.toString(veBoostProxy.future_admin()))
+                    );
+                    jsonIndex++;
+                }
             } else {
                 ProposalReceiver proposalReceiver = ProposalReceiver(
                     payable(_chainToContract(chainId, ContractType.ProposalReceiver))
                 );
-                if (!_authorizedOwner(chainId, proposalReceiver.owner()))
-                    console.log("Proposal Receiver - owner: ", proposalReceiver.owner());
+                if (!_authorizedOwner(chainId, proposalReceiver.owner())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Proposal Receiver - owner: ", vm.toString(proposalReceiver.owner()))
+                    );
+                    jsonIndex++;
+                }
             }
 
             if (_isCoreChain(chainId)) {
                 IAccessControlCore angleRouter = IAccessControlCore(
                     _chainToContract(chainId, ContractType.AngleRouter)
                 );
-                if (!_authorizedCore(chainId, angleRouter.core()))
-                    console.log("Angle Router - core: ", angleRouter.core());
+                if (!_authorizedCore(chainId, angleRouter.core())) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Angle Router - core: ", vm.toString(angleRouter.core()))
+                    );
+                    jsonIndex++;
+                }
             }
 
             if (_isAngleDeployed(chainId) && chainId != CHAIN_POLYGON)
@@ -171,25 +286,61 @@ contract CheckRoles is Utils {
                 IAccessControlCore distributor = IAccessControlCore(
                     _chainToContract(chainId, ContractType.Distributor)
                 );
-                if (!_authorizedCoreMerkl(chainId, address(distributionCreator.core())))
-                    console.log("Distribution creator - wrong core: ", distributionCreator.core());
-                if (!_authorizedCoreMerkl(chainId, address(distributor.core())))
-                    console.log("Distributor - wrong core: ", distributor.core());
+                if (!_authorizedCoreMerkl(chainId, address(distributionCreator.core()))) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Distribution creator - wrong core: ", vm.toString(distributionCreator.core()))
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedCoreMerkl(chainId, address(distributor.core()))) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat("Distributor - wrong core: ", vm.toString(distributor.core()))
+                    );
+                    jsonIndex++;
+                }
             }
 
             if (_isSavingsDeployed(chainId)) {
                 ISavings stEUR = ISavings(_chainToContract(chainId, ContractType.StEUR));
                 ISavings stUSD = ISavings(_chainToContract(chainId, ContractType.StUSD));
-                if (!_authorizedCore(chainId, address(stEUR.accessControlManager())))
-                    console.log("StEUR - wrong access control manager: ", stEUR.accessControlManager());
-                if (!_authorizedCore(chainId, address(stUSD.accessControlManager())))
-                    console.log("StUSD - wrong access control manager: ", stUSD.accessControlManager());
+                if (!_authorizedCore(chainId, address(stEUR.accessControlManager()))) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat(
+                            "StEUR - wrong access control manager: ",
+                            vm.toString(stEUR.accessControlManager())
+                        )
+                    );
+                    jsonIndex++;
+                }
+                if (!_authorizedCore(chainId, address(stUSD.accessControlManager()))) {
+                    output = vm.serializeString(
+                        json,
+                        vm.toString(jsonIndex),
+                        string.concat(
+                            "StUSD - wrong access control manager: ",
+                            vm.toString(stUSD.accessControlManager())
+                        )
+                    );
+                    jsonIndex++;
+                }
             }
 
             ProxyAdmin proxyAdmin = ProxyAdmin(_chainToContract(chainId, ContractType.ProxyAdmin));
 
-            if (!_authorizedProxyAdminOwner(chainId, proxyAdmin.owner()))
-                console.log("Proxy Admin - owner: ", proxyAdmin.owner());
+            if (!_authorizedProxyAdminOwner(chainId, proxyAdmin.owner())) {
+                output = vm.serializeString(
+                    json,
+                    vm.toString(jsonIndex),
+                    string.concat("Proxy Admin - owner: ", vm.toString(proxyAdmin.owner()))
+                );
+                jsonIndex++;
+            }
             _checkOnLZToken(
                 chainId,
                 ILayerZeroBridge(_chainToContract(chainId, ContractType.AgEURLZ)),
@@ -220,25 +371,54 @@ contract CheckRoles is Utils {
             payable(_chainToContract(chainId, ContractType.Timelock))
         );
         for (uint256 i = 0; i < listAddressToCheck.length; i++) {
+            outputActor = "";
+            jsonActor = vm.toString(listAddressToCheck[i]);
+            jsonActorIndex = 0;
             address actor = listAddressToCheck[i];
-            console.log("======== Actor: ", actor, " =========");
-
-            if (agEUR.isMinter(actor) && !_authorizedMinter(chainId, actor)) console.log("AgEUR - minter role");
-            if (agUSD.isMinter(actor) && !_authorizedMinter(chainId, actor)) console.log("AgUSD - minter role");
-            if (core.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor))
-                console.log("Core Borrow - governor role");
-            if (core.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor))
-                console.log("Core Borrow - guardian role");
-            if (core.hasRole(FLASHLOANER_TREASURY_ROLE, actor) && !_authorizedFlashloaner(chainId, actor))
-                console.log("Core Borrow - flashloan role");
-            if (timelock.hasRole(PROPOSER_ROLE, actor) && !_authorizedProposer(chainId, actor))
-                console.log("Timelock - proposer role");
-            if (timelock.hasRole(CANCELLER_ROLE, actor) && !_authorizedCanceller(chainId, actor))
-                console.log("Timelock - canceller role");
-            if (timelock.hasRole(EXECUTOR_ROLE, actor) && !_authorizedExecutor(chainId, actor))
-                console.log("Timelock - executor role");
-            if (timelock.hasRole(DEFAULT_ADMIN_ROLE, actor) && !_authorizeDefaultAdmin(chainId, actor))
-                console.log("Timelock - default admin role");
+            if (agEUR.isMinter(actor) && !_authorizedMinter(chainId, actor)) {
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "AgEUR - minter role");
+                jsonActorIndex++;
+            }
+            if (agUSD.isMinter(actor) && !_authorizedMinter(chainId, actor)) {
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "AgUSD - minter role");
+                jsonActorIndex++;
+            }
+            if (core.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor)) {
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Core Borrow - governor role");
+                jsonActorIndex++;
+            }
+            if (core.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor)) {
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Core Borrow - guardian role");
+                jsonActorIndex++;
+            }
+            if (core.hasRole(FLASHLOANER_TREASURY_ROLE, actor) && !_authorizedFlashloaner(chainId, actor)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    "Core Borrow - flashloan role"
+                );
+                jsonActorIndex++;
+            }
+            if (timelock.hasRole(PROPOSER_ROLE, actor) && !_authorizedProposer(chainId, actor)) {
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Timelock - proposer role");
+                jsonActorIndex++;
+            }
+            if (timelock.hasRole(CANCELLER_ROLE, actor) && !_authorizedCanceller(chainId, actor)) {
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Timelock - canceller role");
+                jsonActorIndex++;
+            }
+            if (timelock.hasRole(EXECUTOR_ROLE, actor) && !_authorizedExecutor(chainId, actor)) {
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Timelock - executor role");
+                jsonActorIndex++;
+            }
+            if (timelock.hasRole(DEFAULT_ADMIN_ROLE, actor) && !_authorizeDefaultAdmin(chainId, actor)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    "Timelock - default admin role"
+                );
+                jsonActorIndex++;
+            }
 
             if (_revertOnWrongFunctioCall(chainId))
                 for (uint256 j = 0; j < allContracts.length; j++)
@@ -246,23 +426,56 @@ contract CheckRoles is Utils {
 
             if (_isMerklDeployed(chainId)) {
                 CoreBorrow coreMerkl = CoreBorrow(_chainToContract(chainId, ContractType.CoreMerkl));
-                if (coreMerkl.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor))
-                    console.log("Core Merkl - governor role");
-                if (coreMerkl.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor))
-                    console.log("Core Merkl - guardian role");
+                if (coreMerkl.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor)) {
+                    outputActor = vm.serializeString(
+                        jsonActor,
+                        vm.toString(jsonActorIndex),
+                        "Core Merkl - governor role"
+                    );
+                    jsonActorIndex++;
+                }
+                if (coreMerkl.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor)) {
+                    outputActor = vm.serializeString(
+                        jsonActor,
+                        vm.toString(jsonActorIndex),
+                        "Core Merkl - guardian role"
+                    );
+                    jsonActorIndex++;
+                }
                 // No one should have this role
-                if (coreMerkl.hasRole(FLASHLOANER_TREASURY_ROLE, actor)) console.log("Core Merkl - flashloan role");
+                if (coreMerkl.hasRole(FLASHLOANER_TREASURY_ROLE, actor)) {
+                    outputActor = vm.serializeString(
+                        jsonActor,
+                        vm.toString(jsonActorIndex),
+                        "Core Merkl - flashloan role"
+                    );
+                    jsonActorIndex++;
+                }
             }
 
             if (chainId == CHAIN_ETHEREUM) {
                 IAccessControl angleDistributor = IAccessControl(
                     _chainToContract(chainId, ContractType.AngleDistributor)
                 );
-                if (angleDistributor.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor))
-                    console.log("Angle distributor - governor role");
-                if (angleDistributor.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor))
-                    console.log("Angle distributor - guardian role");
+                if (angleDistributor.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor)) {
+                    outputActor = vm.serializeString(
+                        jsonActor,
+                        vm.toString(jsonActorIndex),
+                        "Angle distributor - governor role"
+                    );
+                    jsonActorIndex++;
+                }
+                if (angleDistributor.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor)) {
+                    outputActor = vm.serializeString(
+                        jsonActor,
+                        vm.toString(jsonActorIndex),
+                        "Angle distributor - guardian role"
+                    );
+                    jsonActorIndex++;
+                }
             }
+            if (outputActor.toSlice().len() != 0)
+                output = vm.serializeString(json, vm.toString(listAddressToCheck[i]), outputActor);
         }
     }
 
@@ -277,17 +490,41 @@ contract CheckRoles is Utils {
         ContractType contractType,
         ContractType contractTypeTreasury
     ) internal returns (bool) {
-        if (token.canonicalToken() != _chainToContract(chainId, contractType))
-            console.log(string.concat(nameToken, "  - wrong canonical token: ", vm.toString(token.canonicalToken())));
-        if (contractType == ContractType.Angle) {
-            if (!_authorizedCore(chainId, token.coreBorrow()))
-                console.log(string.concat(nameToken, "  - wrong core borrow: ", vm.toString(token.coreBorrow())));
-        } else {
-            if (token.treasury() != _chainToContract(chainId, contractTypeTreasury))
-                console.log(string.concat(nameToken, "  - wrong treasury: ", vm.toString(token.treasury())));
+        if (token.canonicalToken() != _chainToContract(chainId, contractType)) {
+            outputActor = vm.serializeString(
+                jsonActor,
+                vm.toString(jsonActorIndex),
+                string.concat(nameToken, "  - wrong canonical token: ", vm.toString(token.canonicalToken()))
+            );
+            jsonActorIndex++;
         }
-        if (token.lzEndpoint() != address(_lzEndPoint(chainId)))
-            console.log(string.concat(nameToken, "  - wrong endpoint: ", vm.toString(address(token.lzEndpoint()))));
+        if (contractType == ContractType.Angle) {
+            if (!_authorizedCore(chainId, token.coreBorrow())) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(nameToken, "  - wrong core borrow: ", vm.toString(token.coreBorrow()))
+                );
+                jsonActorIndex++;
+            }
+        } else {
+            if (token.treasury() != _chainToContract(chainId, contractTypeTreasury)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(nameToken, "  - wrong treasury: ", vm.toString(token.treasury()))
+                );
+                jsonActorIndex++;
+            }
+        }
+        if (token.lzEndpoint() != address(_lzEndPoint(chainId))) {
+            outputActor = vm.serializeString(
+                jsonActor,
+                vm.toString(jsonActorIndex),
+                string.concat(nameToken, "  - wrong endpoint: ", vm.toString(token.lzEndpoint()))
+            );
+            jsonActorIndex++;
+        }
     }
 
     function _checkVaultManagers(uint256 chainId, ContractType treasuryType) internal {
@@ -295,14 +532,18 @@ contract CheckRoles is Utils {
         uint256 i;
         while (true) {
             try treasury.vaultManagerList(i) returns (address vault) {
-                if (address(IVaultManager(vault).treasury()) != address(treasury))
-                    console.log(
+                if (address(IVaultManager(vault).treasury()) != address(treasury)) {
+                    outputActor = vm.serializeString(
+                        jsonActor,
+                        vm.toString(jsonActorIndex),
                         string.concat(
                             IERC721Metadata(vault).name(),
                             "Vault Manager - wrong treasury: ",
                             vm.toString(address(treasury))
                         )
                     );
+                    jsonActorIndex++;
+                }
                 i++;
             } catch {
                 break;
@@ -312,32 +553,74 @@ contract CheckRoles is Utils {
 
     function _checkGlobalAccessControl(uint256 chainId, IGenericAccessControl contractToCheck) public {
         try contractToCheck.owner() returns (address owner) {
-            if (!_authorizedOwner(chainId, owner))
-                console.log(vm.toString(address(contractToCheck)), " owner: ", owner);
+            if (!_authorizedOwner(chainId, owner)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " owner: ", vm.toString(owner))
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.minter() returns (address minter) {
-            if (!_authorizedOwner(chainId, minter))
-                console.log(vm.toString(address(contractToCheck)), " minter: ", minter);
+            if (!_authorizedOwner(chainId, minter)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " minter: ", vm.toString(minter))
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.treasury() returns (address treasury) {
-            if (!_authorizedTreasury(chainId, treasury))
-                console.log(vm.toString(address(contractToCheck)), " treasury: ", treasury);
+            if (!_authorizedTreasury(chainId, treasury)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " treasury: ", vm.toString(treasury))
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.coreBorrow() returns (address coreBorrow) {
-            if (!_authorizedCore(chainId, coreBorrow))
-                console.log(vm.toString(address(contractToCheck)), " core borrow: ", coreBorrow);
+            if (!_authorizedCore(chainId, coreBorrow)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " core borrow: ", vm.toString(coreBorrow))
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.core() returns (address coreBorrow) {
-            if (!_authorizedCore(chainId, coreBorrow))
-                console.log(vm.toString(address(contractToCheck)), " core borrow: ", coreBorrow);
+            if (!_authorizedCore(chainId, coreBorrow)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " core borrow: ", vm.toString(coreBorrow))
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.admin() returns (address admin) {
-            if (!_authorizedOwner(chainId, admin))
-                console.log(vm.toString(address(contractToCheck)), " admin: ", admin);
+            if (!_authorizedOwner(chainId, admin)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " admin: ", vm.toString(admin))
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.future_admin() returns (address future_admin) {
-            if (!_authorizedOwner(chainId, future_admin))
-                console.log(vm.toString(address(contractToCheck)), " future admin: ", future_admin);
+            if (!_authorizedOwner(chainId, future_admin)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " future admin: ", vm.toString(future_admin))
+                );
+                jsonActorIndex++;
+            }
         } catch {}
     }
 
@@ -347,22 +630,46 @@ contract CheckRoles is Utils {
         address addressToCheck
     ) public {
         try contractToCheck.isMinter(addressToCheck) returns (bool isMinter) {
-            if (isMinter && !_authorizedMinter(chainId, addressToCheck))
-                console.log(vm.toString(address(contractToCheck)), " minter: ");
+            if (isMinter && !_authorizedMinter(chainId, addressToCheck)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " minter: ")
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.isTrusted(addressToCheck) returns (bool isTrusted) {
-            if (isTrusted && !_authorizedTrusted(chainId, addressToCheck))
-                console.log(vm.toString(address(contractToCheck)), " trusted: ");
+            if (isTrusted && !_authorizedTrusted(chainId, addressToCheck)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " trusted: ")
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         try contractToCheck.trusted(addressToCheck) returns (uint256 isTrusted) {
-            if (isTrusted > 0 && !_authorizedTrusted(chainId, addressToCheck))
-                console.log(vm.toString(address(contractToCheck)), " trusted: ");
+            if (isTrusted > 0 && !_authorizedTrusted(chainId, addressToCheck)) {
+                outputActor = vm.serializeString(
+                    jsonActor,
+                    vm.toString(jsonActorIndex),
+                    string.concat(vm.toString(address(contractToCheck)), " trusted: ")
+                );
+                jsonActorIndex++;
+            }
         } catch {}
         bytes32[] memory listRoles = _listRoles();
         for (uint256 i = 0; i < listRoles.length; i++) {
             try contractToCheck.hasRole(listRoles[i], addressToCheck) returns (bool hasRole) {
-                if (hasRole && !_mapCheckRoles(i, chainId, addressToCheck))
-                    console.log(vm.toString(address(contractToCheck)), " have role: ", _nameRoles(i));
+                if (hasRole && !_mapCheckRoles(i, chainId, addressToCheck)) {
+                    outputActor = vm.serializeString(
+                        jsonActor,
+                        vm.toString(jsonActorIndex),
+                        string.concat(vm.toString(address(contractToCheck)), " have role: ", _nameRoles(i))
+                    );
+                    jsonActorIndex++;
+                }
             } catch {}
         }
     }
