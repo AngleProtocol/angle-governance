@@ -21,6 +21,7 @@ client.on('ready', async () => {
   const content = readFileSync('./scripts/roles.json');
   const roles = JSON.parse(content);
   const chains = Object.keys(roles);
+  let embeds = [];
   await Promise.all(chains.map(async chain => {
     const title = `⛓️ Chain: ${chain}`;
     const keys = Object.keys(roles[chain]);
@@ -36,9 +37,20 @@ client.on('ready', async () => {
           message += `${roles[chain][key]}\n`;
       }
       }));
-      const embed = new EmbedBuilder().setTitle(title).setDescription(message);
-      await channel.send({ embeds: [embed] });
+      embeds.push(new EmbedBuilder().setTitle(title).setDescription(message));
     }));
+
+    const lastMessages = (await channel.messages.fetch({ limit: 20, sort: 'timestamp'})).map(m => m.embeds).flat();
+    const latestChainIdsMessages = chains.map(chain => lastMessages.find(m => m?.title == `⛓️ Chain: ${chain}`));
+    for (const embed of embeds) {
+        if (latestChainIdsMessages.find(m => m.data.description.replace(/\n/g, '') == embed.data.description.replace(/\n/g, ''))) {
+            console.log('chain already exists')
+            continue;
+        } else {
+            console.log('chain does not exist', embed.data.title)
+            await channel.send({ embeds: [embed] });
+        }
+    }
     process.exit(0);
 });
 
