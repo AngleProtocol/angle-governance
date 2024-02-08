@@ -4,12 +4,16 @@ env:
   FOUNDRY_PROFILE: "ci"
 
 on:
+  pull_request:
   schedule:
     - cron: "0 0 * * *" # every day at midnight
 
 jobs:
   check-roles:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chain: [1,42161,137,100,43114,8453,56,42220,1101,10,59144]
     steps:
       - uses: actions/checkout@v3
 
@@ -23,13 +27,26 @@ jobs:
         with:
           version: nightly
 
+      - name: Setup repo
+        uses: ./.github/actions/setup-repo
+        with:
+          registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
+
       - name: generate roles files
         run: forge script CheckRoles
         env:
-          CHAIN_IDS: "1,42161,137,100,43114,8453,56,42220,1101,10,59144"
-
-      - name: Install dependencies
-        run: yarn install
+          ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
+          ETH_NODE_URI_AVALANCHE: ${{ secrets.ETH_NODE_URI_AVALANCHE }}
+          ETH_NODE_URI_ETHEREUM: ${{ secrets.ETH_NODE_URI_ETHEREUM }}
+          ETH_NODE_URI_OPTIMISM: ${{ secrets.ETH_NODE_URI_OPTIMISM }}
+          ETH_NODE_URI_POLYGON: ${{ secrets.ETH_NODE_URI_POLYGON }}
+          ETH_NODE_URI_GNOSIS: ${{ secrets.ETH_NODE_URI_GNOSIS }}
+          ETH_NODE_URI_BSC: ${{ secrets.ETH_NODE_URI_BSC }}
+          ETH_NODE_URI_CELO: ${{ secrets.ETH_NODE_URI_CELO }}
+          ETH_NODE_URI_POLYGON_ZKEVM: ${{ secrets.ETH_NODE_URI_POLYGON_ZKEVM }}
+          ETH_NODE_URI_BASE: ${{ secrets.ETH_NODE_URI_BASE }}
+          ETH_NODE_URI_LINEA: ${{ secrets.ETH_NODE_URI_LINEA }}
+          CHAIN_IDS: ${{ matrix.chain }}
 
       - name: Run script
         run: yarn check-roles
