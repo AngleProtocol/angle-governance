@@ -2,29 +2,38 @@
 pragma solidity ^0.8.20;
 
 import { console } from "forge-std/console.sol";
+import { IAccessControl } from "oz/access/IAccessControl.sol";
 import { Wrapper } from "../Wrapper.s.sol";
 import "../../Constants.s.sol";
 
-contract SavingsSetRate is Wrapper {
+contract AddExecutor is Wrapper {
     SubCall[] private subCalls;
 
-    function _setRateSavings(uint256 chainId, uint208 rate) private {
+    function _addExecutorRole(uint256 chainId, address executor) private {
         vm.selectFork(forkIdentifier[chainId]);
-        address stEUR = _chainToContract(chainId, ContractType.StEUR);
+        address timelock = _chainToContract(chainId, ContractType.Timelock);
 
-        subCalls.push(SubCall(chainId, stEUR, 0, abi.encodeWithSelector(ISavings.setRate.selector, rate)));
+        bytes32 EXECUTOR_ROLE = TimelockController(payable(timelock)).EXECUTOR_ROLE();
+        subCalls.push(
+            SubCall(
+                chainId,
+                timelock,
+                0,
+                abi.encodeWithSelector(IAccessControl.grantRole.selector, EXECUTOR_ROLE, executor)
+            )
+        );
     }
 
     function run() external {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
-        string memory description = "ipfs://QmRSdyuXeemVEn97RPRSiit6UEUonvwVr9we7bEe2w8v2E";
+        string memory description = "ipfs://QmYv2RGPpZh78vCsQPd6R4HMJcGH61Mi2oL5a4eXMei61n";
 
         /** TODO  complete */
-        uint208 rate = uint208(uint256(fourPoint3Rate));
+        address executor = address(0);
         /** END  complete */
 
         for (uint256 i = 0; i < chainIds.length; i++) {
-            _setRateSavings(chainIds[i], rate);
+            _addExecutorRole(chainIds[i], executor);
         }
 
         (

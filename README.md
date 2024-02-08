@@ -14,7 +14,7 @@ It also comes with some utils and scripts to facilitate the creation and executi
 ## Create and Simulate a Proposal
 
 - Create a script in `scripts/proposals`. Take for example `scripts/proposals/SetMinDelayTimelock.s.sol` and the contract name is `SetMinDelayTimelock`
-- Create the associate test in `tests/scripts`. If the script contract name is `XXX` the test contract should be named `XXXTest`.
+- Create the associated test in `tests/scripts`. If the script contract name is `XXX` the test contract should be named `XXXTest`.
 - You can create, simulate and potentially send (you will be asked if you want) the proposals by running `yarn create:proposal`. You will be prompted to specify the script you want to run, you should enter `XXX`. Then asks on which chains you want to run the script, and finally after tests are passing you are asked if you want to send the proposal to the on chain governance.
 
 ## System Architecture 🏘️
