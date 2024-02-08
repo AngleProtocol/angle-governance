@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy:
-      max-parallel: 1
       matrix:
         chain: [1,42161,137,100,43114,8453,56,42220,1101,10,59144]
     steps:
@@ -37,8 +36,10 @@ jobs:
       - name: Compile
         run: forge build
 
-      - name: generate roles files
-        run: forge script CheckRoles
+      - uses: nick-fields/retry@v2
+        with:
+          max_attempts: 5
+          command: forge script CheckRoles
         env:
           ETH_NODE_URI_MAINNET: ${{ secrets.ETH_NODE_URI_MAINNET }}
           ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
