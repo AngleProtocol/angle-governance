@@ -44,10 +44,10 @@ client.on('ready', async () => {
     const latestChainIdsMessages = chains.map(chain => lastMessages.find(m => m?.title == `⛓️ Chain: ${chain}`));
     for (const embed of embeds) {
         if (latestChainIdsMessages.find(m => m.data.description.replace(/\n/g, '') == embed.data.description.replace(/\n/g, ''))) {
-            console.log('chain already exists')
+            console.log('chain embed is already the same')
             continue;
         } else {
-            console.log('chain does not exist', embed.data.title)
+            console.log("chain embed does not exist or isn't the same", embed.data.title)
             await channel.send({ embeds: [embed] });
         }
     }
