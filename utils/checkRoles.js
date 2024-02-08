@@ -55,9 +55,9 @@ client.on("ready", async () => {
   )
     .map((m) => m.embeds)
     .flat();
-  const latestChainIdsMessages = chains.map((chain) =>
-    lastMessages.find((m) => m?.title == `⛓️ Chain: ${chain}`)
-  );
+  const latestChainIdsMessages = chains
+    .map((chain) => lastMessages.find((m) => m?.title == `⛓️ Chain: ${chain}`))
+    .filter((m) => m);
   for (const embed of embeds) {
     if (
       latestChainIdsMessages.find(
