@@ -7,6 +7,12 @@ const getChannel = (discordClient, channelName) => {
   );
 };
 
+const isDecimal = (s) => {
+  s = s.toString();
+  var regex = /^[0-9]*\.?[0-9]+$/;
+  return regex.test(s) && !isNaN(parseFloat(s)) && isFinite(s);
+}
+
 const rolesChannel = "roles-on-chain";
 
 const client = new Client({
@@ -33,7 +39,7 @@ client.on("ready", async () => {
       let message = "";
       await Promise.all(
         keys.map(async (key) => {
-          if (!isNaN(parseInt(key))) {
+          if (!isDecimal(key)) {
             message += `\n👨‍🎤 **Actor: ${key}**\n`;
             const actorKeys = Object.keys(roles[chain][key]);
             await Promise.all(
