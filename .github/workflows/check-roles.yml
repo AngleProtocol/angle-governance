@@ -40,6 +40,7 @@ jobs:
         with:
           max_attempts: 5
           command: forge script CheckRoles
+          timeout_minutes: 60
         env:
           ETH_NODE_URI_MAINNET: ${{ secrets.ETH_NODE_URI_MAINNET }}
           ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
