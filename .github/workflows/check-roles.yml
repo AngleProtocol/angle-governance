@@ -29,6 +29,11 @@ jobs:
         with:
           version: nightly
 
+      - name: Setup repo
+        uses: ./.github/actions/setup-repo
+        with:
+          registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
+
       - name: Install dependencies
         run: yarn install
 
@@ -41,7 +46,6 @@ jobs:
           ETH_NODE_URI_MAINNET: "https://eth.llamarpc.com"
           ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
           ETH_NODE_URI_AVALANCHE: ${{ secrets.ETH_NODE_URI_AVALANCHE }}
-          ETH_NODE_URI_ETHEREUM: ${{ secrets.ETH_NODE_URI_ETHEREUM }}
           ETH_NODE_URI_OPTIMISM: ${{ secrets.ETH_NODE_URI_OPTIMISM }}
           ETH_NODE_URI_POLYGON: ${{ secrets.ETH_NODE_URI_POLYGON }}
           ETH_NODE_URI_GNOSIS: ${{ secrets.ETH_NODE_URI_GNOSIS }}
