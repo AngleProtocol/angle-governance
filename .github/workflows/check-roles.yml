@@ -38,7 +38,7 @@ jobs:
       - name: generate roles files
         run: forge script CheckRoles
         env:
-          ETH_NODE_URI_MAINNET: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
+          ETH_NODE_URI_MAINNET: "https://eth.llamarpc.com"
           ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
           ETH_NODE_URI_AVALANCHE: ${{ secrets.ETH_NODE_URI_AVALANCHE }}
           ETH_NODE_URI_ETHEREUM: ${{ secrets.ETH_NODE_URI_ETHEREUM }}
