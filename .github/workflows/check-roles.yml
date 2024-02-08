@@ -32,6 +32,9 @@ jobs:
         with:
           registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
 
+      - name: Compile
+        run: forge build
+
       - name: generate roles files
         run: forge script CheckRoles
         env:
