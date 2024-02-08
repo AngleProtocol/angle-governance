@@ -49,6 +49,11 @@ jobs:
         with:
           version: nightly
 
+      - name: Setup repo
+        uses: ./.github/actions/setup-repo
+        with:
+          registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
+
       - name: Compile foundry
         run: yarn compile --sizes
 
@@ -59,6 +64,7 @@ jobs:
           path: |
             cache-forge
             out
+            node_modules
 
       - name: "Add build summary"
         run: |
@@ -79,12 +85,8 @@ jobs:
           path: |
             cache-forge
             out
+            node_modules
           key: "build-${{ github.sha }}"
-
-      - name: Setup repo
-        uses: ./.github/actions/setup-repo
-        with:
-          registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -118,13 +120,14 @@ jobs:
           path: |
             cache-forge
             out
+            node_modules
           key: "build-${{ github.sha }}"
 
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           cache: 'pip' # caching pip dependencies
-        
+
       - name: Install viper
         shell: bash
         run: pip install vyper==0.3.0
@@ -163,13 +166,14 @@ jobs:
           path: |
             cache-forge
             out
+            node_modules
           key: "build-${{ github.sha }}"
 
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           cache: 'pip' # caching pip dependencies
-        
+
       - name: Install viper
         shell: bash
         run: pip install vyper==0.3.0
@@ -206,6 +210,15 @@ jobs:
 
       - name: "Install lcov"
         run: "sudo apt-get install lcov"
+
+      - uses: actions/cache/restore@v3
+        with:
+          fail-on-cache-miss: true
+          path: |
+            cache-forge
+            out
+            node_modules
+          key: "build-${{ github.sha }}"
 
       - name: "Generate the coverage report using the unit and the integration tests"
         run: "yarn ci:coverage"
