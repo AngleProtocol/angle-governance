@@ -37,7 +37,7 @@ bytes constant nullBytes = hex"";
 uint256 constant CHAIN_SOURCE = CHAIN_ETHEREUM;
 
 uint256 constant BASE_GAS = 100000;
-uint256 constant GAS_MULTIPLIER = 150000; // 1.5x
+uint256 constant GAS_MULTIPLIER = 250000; // 3x
 
 uint64 constant twoPoint5Rate = 782997666703977344;
 uint64 constant fourRate = 1243680713969297408;

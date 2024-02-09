@@ -15,6 +15,7 @@
     "fork": "bash helpers/fork.sh",
     "run": "docker run -it --rm -v $(pwd):/app -w /app ghcr.io/foundry-rs/foundry sh",
     "script:fork": "FOUNDRY_PROFILE=dev forge script --skip test --fork-url fork --broadcast -vvvv",
+    "script": "FOUNDRY_PROFILE=dev forge script --skip test --rpc-url mainnet --broadcast -vvvv",
     "test:unit": "forge test -vvv --gas-report --match-path \"test/unit/**/*.sol\"",
     "test:invariant": "forge test -vvv --gas-report --match-path \"test/invariant/**/*.sol\"",
     "test:fuzz": "forge test -vvv --gas-report --match-path \"test/fuzz/**/*.sol\"",
