@@ -25,6 +25,10 @@ interface IVaultManagerGovernance {
     function interestRate() external view returns (uint64);
 }
 
+interface INameable {
+    function setNameAndSymbol(string memory name, string memory symbol) external;
+}
+
 interface ISavings {
     function setRate(uint208 newRate) external;
 
