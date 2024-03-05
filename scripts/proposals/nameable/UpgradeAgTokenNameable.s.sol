@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import { console } from "forge-std/console.sol";
 import { Wrapper } from "../Wrapper.s.sol";
 import "../../Constants.s.sol";
+import { ProxyAdmin } from "oz/proxy/transparent/ProxyAdmin.sol";
 
 contract UpgradeAgTokenNameable is Wrapper {
     SubCall[] private subCalls;
@@ -14,9 +15,10 @@ contract UpgradeAgTokenNameable is Wrapper {
         vm.selectFork(forkIdentifier[chainId]);
 
         bytes memory nameAndSymbolData = abi.encodeWithSelector(INameable.setNameAndSymbol.selector, name, symbol);
-        bytes memory data = abi.encodeWithSelector(ProxyAdmin.upgradeAndCall.selector, 0, implementation, proxy, nameAndSymbolData);
+        bytes memory data = abi.encodeWithSelector(ProxyAdmin.upgradeAndCall.selector, proxy, implementation, "");
 
         subCalls.push(SubCall(chainId, proxyAdmin, 0, data));
+        subCalls.push(SubCall(chainId, proxy, 0, nameAndSymbolData));
     }
 
     function run() external {
