@@ -24,8 +24,8 @@ contract UpgradeAgTokenNameable is Wrapper {
         string memory description = "ipfs://QmRSdyuXeemVEn97RPRSiit6UEUonvwVr9we7bEe2w8v2E";
 
         /** TODO  complete */
-        string memory name = "EURA";
-        string memory symbol = "EURA";
+        string memory name = "EURA"; // previously "agEUR"
+        string memory symbol = "EURA"; // previously "agEUR"
         _chainToToken[CHAIN_ETHEREUM] = address(0);
         _chainToImplementation[CHAIN_ETHEREUM] = address(0);
         /** END  complete */
