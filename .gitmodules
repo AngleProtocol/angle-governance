@@ -45,3 +45,6 @@
 	path = lib/old-oz
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 	version = cffb2f1ddcd87efd68effc92cfd336c5145acabd
+[submodule "lib/old-oz-upgradeable"]
+	path = lib/old-oz-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
