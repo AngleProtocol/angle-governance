@@ -10,11 +10,17 @@ import {OldTransmuter} from "../../interfaces/ITransmuter.sol";
 
 import {IERC20} from "oz-v5/token/ERC20/IERC20.sol";
 import "transmuter/transmuter/Storage.sol" as Storage;
+import {DiamondCut} from "transmuter/transmuter/facets/DiamondCut.sol";
+import {DiamondEtherscan} from "transmuter/transmuter/facets/DiamondEtherscan.sol";
+import {DiamondLoupe} from "transmuter/transmuter/facets/DiamondLoupe.sol";
+import {DiamondProxy} from "transmuter/transmuter/DiamondProxy.sol";
 import {Getters} from "transmuter/transmuter/facets/Getters.sol";
 import {Oracle} from "transmuter/transmuter/facets/Oracle.sol";
-// import {Redeemer} from "transmuter/transmuter/facets/Redeemer.sol";
+import {Redeemer} from "transmuter/transmuter/facets/Redeemer.sol";
+import {RewardHandler} from "transmuter/transmuter/facets/RewardHandler.sol";
 import {SettersGovernor} from "transmuter/transmuter/facets/SettersGovernor.sol";
-// import {Swapper} from "transmuter/transmuter/facets/Swapper.sol";
+import {SettersGuardian} from "transmuter/transmuter/facets/SettersGuardian.sol";
+import {Swapper} from "transmuter/transmuter/facets/Swapper.sol";
 import {ITransmuter, IDiamondCut, ISettersGovernor} from "transmuter/interfaces/ITransmuter.sol";
 
 contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
@@ -178,6 +184,7 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
                         oracleTypeBC3M,
                         Storage.OracleReadType.MAX,
                         oracleDataBC3M,
+                        // We can hope that the oracleDataBC3M won't move much before the proposal is executed
                         abi.encode(currentBC3MPrice, DEVIATION_THRESHOLD_BC3M, uint96(block.timestamp), HEARTBEAT),
                         abi.encode(FIREWALL_MINT_BC3M, FIREWALL_BURN_BC3M)
                     )

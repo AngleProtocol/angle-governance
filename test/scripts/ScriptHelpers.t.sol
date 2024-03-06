@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.9;
 
-import { console } from "forge-std/console.sol";
-import { Vm } from "forge-std/Vm.sol";
-import { stdStorage, StdStorage, Test, stdError } from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
+import {Vm} from "forge-std/Vm.sol";
+import {stdStorage, StdStorage, Test, stdError} from "forge-std/Test.sol";
 
-import { AngleGovernor } from "contracts/AngleGovernor.sol";
+import {AngleGovernor} from "contracts/AngleGovernor.sol";
 import "../../scripts/Constants.s.sol";
 import "../../scripts/Utils.s.sol";
 
@@ -21,9 +21,8 @@ contract ScriptHelpers is Test, Utils {
 
         // TODO remove when on chain tx are passed to connect chains
         vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
-        ProposalSender proposalSender = ProposalSender(
-            payable(_chainToContract(CHAIN_SOURCE, ContractType.ProposalSender))
-        );
+        ProposalSender proposalSender =
+            ProposalSender(payable(_chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)));
         uint256[] memory ALL_CHAINS = new uint256[](10);
         ALL_CHAINS[0] = CHAIN_LINEA;
         ALL_CHAINS[1] = CHAIN_POLYGON;
@@ -40,14 +39,21 @@ contract ScriptHelpers is Test, Utils {
         for (uint256 i; i < ALL_CHAINS.length; i++) {
             uint256 chainId = ALL_CHAINS[i];
             proposalSender.setTrustedRemoteAddress(
-                _getLZChainId(chainId),
-                abi.encodePacked(_chainToContract(chainId, ContractType.ProposalReceiver))
+                _getLZChainId(chainId), abi.encodePacked(_chainToContract(chainId, ContractType.ProposalReceiver))
             );
         }
         vm.stopPrank();
     }
 
+    function _executeProposalWithFork() public returns (uint256[] memory) {
+        return _executeProposalInternal(true);
+    }
+
     function _executeProposal() public returns (uint256[] memory) {
+        return _executeProposalInternal(false);
+    }
+
+    function _executeProposalInternal(bool isFork) public returns (uint256[] memory) {
         (
             bytes[] memory calldatas,
             string memory description,
@@ -56,7 +62,7 @@ contract ScriptHelpers is Test, Utils {
             uint256[] memory chainIds
         ) = _deserializeJson();
 
-        vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
+        vm.selectFork(forkIdentifier[isFork ? CHAIN_FORK : CHAIN_SOURCE]);
         {
             AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_SOURCE, ContractType.Governor)));
 
@@ -73,34 +79,31 @@ contract ScriptHelpers is Test, Utils {
 
             vm.recordLogs();
             hoax(whale);
-            governor.execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description)));
+            governor.execute{value: valueEther}(targets, values, calldatas, keccak256(bytes(description)));
         }
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         for (uint256 chainCount; chainCount < chainIds.length; chainCount++) {
             uint256 chainId = chainIds[chainCount];
-            TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
-                payable(_chainToContract(chainId, ContractType.Timelock))
-            );
+            TimelockControllerWithCounter timelock =
+                TimelockControllerWithCounter(payable(_chainToContract(chainId, ContractType.Timelock)));
 
             if (chainId == CHAIN_SOURCE) {
                 vm.warp(block.timestamp + timelock.getMinDelay() + 1);
                 _executeTimelock(chainId, timelock, targets[chainCount], calldatas[chainCount]);
             } else {
                 {
-                    ProposalSender proposalSender = ProposalSender(
-                        payable(_chainToContract(CHAIN_SOURCE, ContractType.ProposalSender))
-                    );
-                    ProposalReceiver proposalReceiver = ProposalReceiver(
-                        payable(_chainToContract(chainId, ContractType.ProposalReceiver))
-                    );
+                    ProposalSender proposalSender =
+                        ProposalSender(payable(_chainToContract(CHAIN_SOURCE, ContractType.ProposalSender)));
+                    ProposalReceiver proposalReceiver =
+                        ProposalReceiver(payable(_chainToContract(chainId, ContractType.ProposalReceiver)));
                     bytes memory payload;
 
                     {
                         for (uint256 i; i < entries.length; i++) {
                             if (
-                                entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                                entries[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
+                                entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)")
+                                    && entries[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
                             ) {
                                 payload = abi.decode(entries[i].data, (bytes));
                                 break;
@@ -111,10 +114,7 @@ contract ScriptHelpers is Test, Utils {
                     vm.selectFork(forkIdentifier[chainId]);
                     hoax(address(_lzEndPoint(chainId)));
                     proposalReceiver.lzReceive(
-                        _getLZChainId(CHAIN_SOURCE),
-                        abi.encodePacked(proposalSender, proposalReceiver),
-                        0,
-                        payload
+                        _getLZChainId(CHAIN_SOURCE), abi.encodePacked(proposalSender, proposalReceiver), 0, payload
                     );
                 }
 
@@ -123,16 +123,13 @@ contract ScriptHelpers is Test, Utils {
                 bytes[] memory chainCalldatas;
                 {
                     console.logBytes(calldatas[chainCount]);
-                    (, bytes memory senderData, ) = abi.decode(
+                    (, bytes memory senderData,) = abi.decode(
                         // calldatas[chainCount],
                         _slice(calldatas[chainCount], 4, calldatas[chainCount].length - 4),
                         (uint16, bytes, bytes)
                     );
                     console.logBytes(senderData);
-                    (chainTargets, , , chainCalldatas) = abi.decode(
-                        senderData,
-                        (address[], uint256[], string[], bytes[])
-                    );
+                    (chainTargets,,, chainCalldatas) = abi.decode(senderData, (address[], uint256[], string[], bytes[]));
                 }
 
                 for (uint256 i; i < chainTargets.length; i++) {
@@ -153,9 +150,8 @@ contract ScriptHelpers is Test, Utils {
         if (target == address(timelock)) {
             vm.prank(_chainToContract(chainId, ContractType.GuardianMultisig));
             if (TimelockControllerWithCounter.schedule.selector == bytes4(_slice(rawData, 0, 4))) {
-                (address target, uint256 value, bytes memory data, bytes32 predecessor, bytes32 salt, ) = abi.decode(
-                    _slice(rawData, 4, rawData.length - 4),
-                    (address, uint256, bytes, bytes32, bytes32, uint256)
+                (address target, uint256 value, bytes memory data, bytes32 predecessor, bytes32 salt,) = abi.decode(
+                    _slice(rawData, 4, rawData.length - 4), (address, uint256, bytes, bytes32, bytes32, uint256)
                 );
                 timelock.execute(target, value, data, predecessor, salt);
             } else {
@@ -165,11 +161,9 @@ contract ScriptHelpers is Test, Utils {
                     bytes[] memory tmpCalldatas,
                     bytes32 predecessor,
                     bytes32 salt,
-
                 ) = abi.decode(
-                        _slice(rawData, 4, rawData.length - 4),
-                        (address[], uint256[], bytes[], bytes32, bytes32, uint256)
-                    );
+                    _slice(rawData, 4, rawData.length - 4), (address[], uint256[], bytes[], bytes32, bytes32, uint256)
+                );
                 timelock.executeBatch(tmpTargets, tmpValues, tmpCalldatas, predecessor, salt);
             }
         }

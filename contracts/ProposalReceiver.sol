@@ -3,8 +3,7 @@
 pragma solidity ^0.8.20;
 
 import "oz-v5/utils/ReentrancyGuard.sol";
-import "oz-v5/access/Ownable.sol";
-import {BytesLib, ExcessivelySafeCall, NonblockingLzApp} from "lz/lzApp/NonblockingLzApp.sol";
+import "lz/lzApp/NonblockingLzApp.sol";
 import "./utils/Errors.sol";
 
 /// @title ProposalReceiver
