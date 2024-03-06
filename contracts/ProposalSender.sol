@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "oz/access/Ownable.sol";
-import "oz/utils/ReentrancyGuard.sol";
+import "oz-v5/access/Ownable.sol";
+import "oz-v5/utils/ReentrancyGuard.sol";
 import "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 
 import "./utils/Errors.sol";
@@ -47,7 +47,7 @@ contract ProposalSender is Ownable, ReentrancyGuard {
         uint16 indexed remoteChainId,
         bytes payload,
         bytes adapterParams,
-        uint value,
+        uint256 value,
         bytes reason
     );
 
@@ -66,11 +66,11 @@ contract ProposalSender is Ownable, ReentrancyGuard {
     /// on the destination
     /// @return nativeFee The amount of fee in the native gas token (e.g. ETH)
     /// @return zroFee The amount of fee in ZRO token
-    function estimateFees(
-        uint16 remoteChainId,
-        bytes calldata payload,
-        bytes calldata adapterParams
-    ) external view returns (uint nativeFee, uint zroFee) {
+    function estimateFees(uint16 remoteChainId, bytes calldata payload, bytes calldata adapterParams)
+        external
+        view
+        returns (uint256 nativeFee, uint256 zroFee)
+    {
         return lzEndpoint.estimateFees(remoteChainId, address(this), payload, false, adapterParams);
     }
 
@@ -81,24 +81,17 @@ contract ProposalSender is Ownable, ReentrancyGuard {
     /// payload = abi.encode(targets, values, signatures, calldatas)
     /// @param adapterParams The params used to specify the custom amount of gas required for the execution
     /// on the destination
-    function execute(
-        uint16 remoteChainId,
-        bytes calldata payload,
-        bytes calldata adapterParams
-    ) external payable onlyOwner {
+    function execute(uint16 remoteChainId, bytes calldata payload, bytes calldata adapterParams)
+        external
+        payable
+        onlyOwner
+    {
         bytes memory trustedRemote = trustedRemoteLookup[remoteChainId];
         if (trustedRemote.length == 0) revert OmnichainProposalSenderDestinationChainNotTrustedSource();
 
-        try
-            lzEndpoint.send{ value: msg.value }(
-                remoteChainId,
-                trustedRemote,
-                payload,
-                payable(tx.origin),
-                address(0),
-                adapterParams
-            )
-        {
+        try lzEndpoint.send{value: msg.value}(
+            remoteChainId, trustedRemote, payload, payable(tx.origin), address(0), adapterParams
+        ) {
             emit ExecuteRemoteProposal(remoteChainId, payload);
         } catch (bytes memory reason) {
             uint64 _lastStoredPayloadNonce = ++lastStoredPayloadNonce;
@@ -122,7 +115,7 @@ contract ProposalSender is Ownable, ReentrancyGuard {
         uint16 remoteChainId,
         bytes calldata payload,
         bytes calldata adapterParams,
-        uint originalValue
+        uint256 originalValue
     ) external payable nonReentrant {
         bytes32 hash = storedExecutionHashes[nonce];
         if (hash == bytes32(0)) revert OmnichainProposalSenderNoStoredPayload();
@@ -132,13 +125,8 @@ contract ProposalSender is Ownable, ReentrancyGuard {
 
         delete storedExecutionHashes[nonce];
 
-        lzEndpoint.send{ value: originalValue + msg.value }(
-            remoteChainId,
-            trustedRemoteLookup[remoteChainId],
-            payload,
-            payable(msg.sender),
-            address(0),
-            adapterParams
+        lzEndpoint.send{value: originalValue + msg.value}(
+            remoteChainId, trustedRemoteLookup[remoteChainId], payload, payable(msg.sender), address(0), adapterParams
         );
         emit ClearPayload(nonce, hash);
     }
@@ -156,7 +144,7 @@ contract ProposalSender is Ownable, ReentrancyGuard {
     /// @param chainId The LayerZero chainId for the pending config change
     /// @param configType The type of configuration. Every messaging library has its own convention
     /// @param config The configuration in bytes. It can encode arbitrary content
-    function setConfig(uint16 version, uint16 chainId, uint configType, bytes calldata config) external onlyOwner {
+    function setConfig(uint16 version, uint16 chainId, uint256 configType, bytes calldata config) external onlyOwner {
         lzEndpoint.setConfig(version, chainId, configType, config);
     }
 
@@ -170,7 +158,7 @@ contract ProposalSender is Ownable, ReentrancyGuard {
     /// @param version Messaging library version
     /// @param chainId The LayerZero chainId
     /// @param configType Type of configuration. Every messaging library has its own convention.
-    function getConfig(uint16 version, uint16 chainId, uint configType) external view returns (bytes memory) {
+    function getConfig(uint16 version, uint16 chainId, uint256 configType) external view returns (bytes memory) {
         return lzEndpoint.getConfig(version, chainId, address(this), configType);
     }
 }

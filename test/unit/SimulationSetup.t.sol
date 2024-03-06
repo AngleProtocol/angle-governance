@@ -2,22 +2,22 @@
 
 pragma solidity ^0.8.9;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { Strings } from "oz/utils/Strings.sol";
+import {IGovernor} from "oz-v5/governance/IGovernor.sol";
+import {IVotes} from "oz-v5/governance/extensions/GovernorVotes.sol";
+import {Strings} from "oz-v5/utils/Strings.sol";
 
-import { console } from "forge-std/console.sol";
-import { Test, stdError } from "forge-std/Test.sol";
-import { Vm } from "forge-std/Vm.sol";
+import {console} from "forge-std/console.sol";
+import {Test, stdError} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
-import { AngleGovernor } from "contracts/AngleGovernor.sol";
-import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
-import { ProposalSender } from "contracts/ProposalSender.sol";
-import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
-import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
+import {AngleGovernor} from "contracts/AngleGovernor.sol";
+import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
+import {ProposalSender} from "contracts/ProposalSender.sol";
+import {VeANGLEVotingDelegation} from "contracts/VeANGLEVotingDelegation.sol";
+import {TimelockControllerWithCounter} from "contracts/TimelockControllerWithCounter.sol";
 
-import { Proposal, SubCall } from "./Proposal.sol";
-import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
+import {Proposal, SubCall} from "./Proposal.sol";
+import {ILayerZeroEndpoint} from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import "stringutils/strings.sol";
 
 import "utils/src/CommonUtils.sol";
@@ -60,9 +60,8 @@ contract SimulationSetup is Test, CommonUtils {
 
         string memory baseURI = "ETH_NODE_URI_";
         for (uint256 i; i < chainIds.length; i++) {
-            forkIdentifier[chainIds[i]] = vm.createFork(
-                vm.envString(baseURI.toSlice().concat(mapChainIds[chainIds[i]].toSlice()))
-            );
+            forkIdentifier[chainIds[i]] =
+                vm.createFork(vm.envString(baseURI.toSlice().concat(mapChainIds[chainIds[i]].toSlice())));
 
             /// TODO Remove this part after deployment
             if (chainIds[i] == 1) {
@@ -71,12 +70,7 @@ contract SimulationSetup is Test, CommonUtils {
                 address[] memory executors = new address[](1);
                 executors[0] = address(0); // Means everyone can execute
 
-                _timelocks[chainIds[i]] = new TimelockControllerWithCounter(
-                    1 days,
-                    proposers,
-                    executors,
-                    address(this)
-                );
+                _timelocks[chainIds[i]] = new TimelockControllerWithCounter(1 days, proposers, executors, address(this));
                 _governor = new AngleGovernor(
                     veANGLEDelegation,
                     address(_timelocks[chainIds[i]]),
@@ -98,29 +92,21 @@ contract SimulationSetup is Test, CommonUtils {
                 address[] memory executors = new address[](1);
                 executors[0] = address(0); // Means everyone can execute
 
-                _timelocks[chainIds[i]] = new TimelockControllerWithCounter(
-                    1 days,
-                    proposers,
-                    executors,
-                    address(this)
-                );
+                _timelocks[chainIds[i]] = new TimelockControllerWithCounter(1 days, proposers, executors, address(this));
                 _proposalReceivers[chainIds[i]] = new ProposalReceiver(address(_lzEndPoint(chainIds[i])));
                 _timelocks[chainIds[i]].grantRole(
-                    _timelocks[chainIds[i]].PROPOSER_ROLE(),
-                    address(_proposalReceivers[chainIds[i]])
+                    _timelocks[chainIds[i]].PROPOSER_ROLE(), address(_proposalReceivers[chainIds[i]])
                 );
                 _timelocks[chainIds[i]].grantRole(_timelocks[chainIds[i]].CANCELLER_ROLE(), multisig(chainIds[i]));
 
                 vm.selectFork(forkIdentifier[1]);
                 _proposalSender.setTrustedRemoteAddress(
-                    _getLZChainId(chainIds[i]),
-                    abi.encodePacked(_proposalReceivers[chainIds[i]])
+                    _getLZChainId(chainIds[i]), abi.encodePacked(_proposalReceivers[chainIds[i]])
                 );
 
                 vm.selectFork(forkIdentifier[chainIds[i]]);
                 _proposalReceivers[chainIds[i]].setTrustedRemoteAddress(
-                    _getLZChainId(1),
-                    abi.encodePacked(_proposalSender)
+                    _getLZChainId(1), abi.encodePacked(_proposalSender)
                 );
                 _proposalReceivers[chainIds[i]].transferOwnership(address(_timelocks[chainIds[i]]));
             }
@@ -166,9 +152,10 @@ contract SimulationSetup is Test, CommonUtils {
 
     // TODO USE IT
     /// @notice Build the governor proposal based on all the transaction that need to be executed
-    function wrap(
-        SubCall[] memory prop
-    ) internal returns (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) {
+    function wrap(SubCall[] memory prop)
+        internal
+        returns (address[] memory targets, uint256[] memory values, bytes[] memory calldatas)
+    {
         targets = new address[](prop.length);
         values = new uint256[](prop.length);
         calldatas = new bytes[](prop.length);
@@ -192,25 +179,17 @@ contract SimulationSetup is Test, CommonUtils {
             if (chainId == 1) {
                 vm.selectFork(forkIdentifier[1]);
 
-                (
-                    address[] memory batchTargets,
-                    uint256[] memory batchValues,
-                    bytes[] memory batchCalldatas
-                ) = filterChainSubCalls(chainId, prop);
-                (targets[finalPropLength], values[finalPropLength], calldatas[finalPropLength]) = wrapTimelock(
-                    chainId,
-                    prop
-                );
+                (address[] memory batchTargets, uint256[] memory batchValues, bytes[] memory batchCalldatas) =
+                    filterChainSubCalls(chainId, prop);
+                (targets[finalPropLength], values[finalPropLength], calldatas[finalPropLength]) =
+                    wrapTimelock(chainId, prop);
                 finalPropLength += 1;
                 i += count;
             } else {
                 vm.selectFork(forkIdentifier[chainId]);
 
-                (
-                    address[] memory batchTargets,
-                    uint256[] memory batchValues,
-                    bytes[] memory batchCalldatas
-                ) = filterChainSubCalls(chainId, prop);
+                (address[] memory batchTargets, uint256[] memory batchValues, bytes[] memory batchCalldatas) =
+                    filterChainSubCalls(chainId, prop);
                 (address target, uint256 value, bytes memory data) = wrapTimelock(chainId, prop);
 
                 batchTargets = new address[](1);
@@ -241,10 +220,7 @@ contract SimulationSetup is Test, CommonUtils {
         vm.selectFork(forkIdentifier[1]); // Set back the fork to mainnet
     }
 
-    function filterChainSubCalls(
-        uint256 chainId,
-        SubCall[] memory prop
-    )
+    function filterChainSubCalls(uint256 chainId, SubCall[] memory prop)
         internal
         pure
         returns (address[] memory batchTargets, uint256[] memory batchValues, bytes[] memory batchCalldatas)
@@ -269,15 +245,13 @@ contract SimulationSetup is Test, CommonUtils {
         }
     }
 
-    function wrapTimelock(
-        uint256 chainId,
-        SubCall[] memory p
-    ) public view returns (address target, uint256 value, bytes memory data) {
-        (
-            address[] memory batchTargets,
-            uint256[] memory batchValues,
-            bytes[] memory batchCalldatas
-        ) = filterChainSubCalls(chainId, p);
+    function wrapTimelock(uint256 chainId, SubCall[] memory p)
+        public
+        view
+        returns (address target, uint256 value, bytes memory data)
+    {
+        (address[] memory batchTargets, uint256[] memory batchValues, bytes[] memory batchCalldatas) =
+            filterChainSubCalls(chainId, p);
         if (batchTargets.length == 1) {
             // In case the operation has already been done add a salt
             uint256 salt = computeSalt(chainId, p);
@@ -313,11 +287,8 @@ contract SimulationSetup is Test, CommonUtils {
     function executeTimelock(uint256 chainId, SubCall[] memory p) internal {
         vm.selectFork(forkIdentifier[chainId]);
         vm.warp(block.timestamp + timelock(chainId).getMinDelay() + 1);
-        (
-            address[] memory batchTargets,
-            uint256[] memory batchValues,
-            bytes[] memory batchCalldatas
-        ) = filterChainSubCalls(chainId, p);
+        (address[] memory batchTargets, uint256[] memory batchValues, bytes[] memory batchCalldatas) =
+            filterChainSubCalls(chainId, p);
         uint256 salt = computeSalt(chainId, p);
         if (batchTargets.length == 1) {
             timelock(chainId).execute(batchTargets[0], batchValues[0], batchCalldatas[0], bytes32(0), 0);
@@ -327,21 +298,14 @@ contract SimulationSetup is Test, CommonUtils {
     }
 
     function computeSalt(uint256 chainId, SubCall[] memory p) internal view returns (uint256 salt) {
-        (
-            address[] memory batchTargets,
-            uint256[] memory batchValues,
-            bytes[] memory batchCalldatas
-        ) = filterChainSubCalls(chainId, p);
+        (address[] memory batchTargets, uint256[] memory batchValues, bytes[] memory batchCalldatas) =
+            filterChainSubCalls(chainId, p);
         if (batchTargets.length == 1) {
             salt = 0;
             while (
                 timelock(chainId).isOperation(
                     timelock(chainId).hashOperation(
-                        batchTargets[0],
-                        batchValues[0],
-                        batchCalldatas[0],
-                        bytes32(0),
-                        bytes32(salt)
+                        batchTargets[0], batchValues[0], batchCalldatas[0], bytes32(0), bytes32(salt)
                     )
                 )
             ) {
@@ -352,11 +316,7 @@ contract SimulationSetup is Test, CommonUtils {
             while (
                 timelock(chainId).isOperation(
                     timelock(chainId).hashOperationBatch(
-                        batchTargets,
-                        batchValues,
-                        batchCalldatas,
-                        bytes32(0),
-                        bytes32(salt)
+                        batchTargets, batchValues, batchCalldatas, bytes32(0), bytes32(salt)
                     )
                 )
             ) {
@@ -392,7 +352,7 @@ contract SimulationSetup is Test, CommonUtils {
         }
 
         vm.recordLogs();
-        governor().execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description))); // TODO Optimize value
+        governor().execute{value: valueEther}(targets, values, calldatas, keccak256(bytes(description))); // TODO Optimize value
 
         {
             bytes memory payload;
@@ -400,8 +360,8 @@ contract SimulationSetup is Test, CommonUtils {
                 Vm.Log[] memory entries = vm.getRecordedLogs();
                 for (uint256 i; i < entries.length; i++) {
                     if (
-                        entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                        entries[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
+                        entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)")
+                            && entries[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
                     ) {
                         payload = abi.decode(entries[i].data, (bytes));
                         break;
@@ -412,10 +372,7 @@ contract SimulationSetup is Test, CommonUtils {
             vm.selectFork(forkIdentifier[chainId]);
             hoax(address(_lzEndPoint(chainId)));
             proposalReceiver(chainId).lzReceive(
-                _getLZChainId(1),
-                abi.encodePacked(proposalSender(), proposalReceiver(chainId)),
-                0,
-                payload
+                _getLZChainId(1), abi.encodePacked(proposalSender(), proposalReceiver(chainId)), 0, payload
             );
         }
 
@@ -455,7 +412,7 @@ contract SimulationSetup is Test, CommonUtils {
         governor().state(proposalId);
 
         if (keccak256(error) != keccak256(nullBytes)) vm.expectRevert(error);
-        governor().execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description)));
+        governor().execute{value: valueEther}(targets, values, calldatas, keccak256(bytes(description)));
         vm.warp(block.timestamp + timelock(chainId).getMinDelay() + 1);
     }
 

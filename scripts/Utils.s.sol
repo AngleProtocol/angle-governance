@@ -2,18 +2,20 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import { AngleGovernor } from "contracts/AngleGovernor.sol";
-import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
-import { ProposalSender } from "contracts/ProposalSender.sol";
-import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
-import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
-import { ITreasury } from "borrow/interfaces/ITreasury.sol";
+import {AngleGovernor} from "contracts/AngleGovernor.sol";
+import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
+import {ProposalSender} from "contracts/ProposalSender.sol";
+import {TimelockControllerWithCounter} from "contracts/TimelockControllerWithCounter.sol";
+import {ILayerZeroEndpoint} from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
+import {ITreasury} from "borrow/interfaces/ITreasury.sol";
 import "utils/src/CommonUtils.sol";
 import "./Constants.s.sol";
 
 /// @title Utils
 /// @author Angle Labs, Inc.
 contract Utils is Script, CommonUtils {
+    uint256 constant CHAIN_FORK = 0;
+
     mapping(uint256 => uint256) internal forkIdentifier;
     uint256 public arbitrumFork;
     uint256 public avalancheFork;
@@ -26,6 +28,7 @@ contract Utils is Script, CommonUtils {
     uint256 public polygonZkEVMFork;
     uint256 public baseFork;
     uint256 public lineaFork;
+    uint256 public localFork;
 
     bytes[] private calldatas;
     string private description;
@@ -45,6 +48,7 @@ contract Utils is Script, CommonUtils {
         polygonZkEVMFork = vm.createFork(vm.envString("ETH_NODE_URI_POLYGON_ZKEVM"));
         baseFork = vm.createFork(vm.envString("ETH_NODE_URI_BASE"));
         lineaFork = vm.createFork(vm.envString("ETH_NODE_URI_LINEA"));
+        localFork = vm.createFork(vm.envString("ETH_NODE_URI_FORK"));
 
         forkIdentifier[CHAIN_ARBITRUM] = arbitrumFork;
         forkIdentifier[CHAIN_AVALANCHE] = avalancheFork;
@@ -57,6 +61,7 @@ contract Utils is Script, CommonUtils {
         forkIdentifier[CHAIN_POLYGONZKEVM] = polygonZkEVMFork;
         forkIdentifier[CHAIN_BASE] = baseFork;
         forkIdentifier[CHAIN_LINEA] = lineaFork;
+        forkIdentifier[CHAIN_FORK] = localFork;
     }
 
     function _deserializeJson()

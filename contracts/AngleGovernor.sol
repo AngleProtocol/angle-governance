@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.20;
 
-import { IVotes } from "oz/governance/utils/IVotes.sol";
+import {IVotes} from "oz-v5/governance/utils/IVotes.sol";
 
-import { Governor } from "oz/governance/Governor.sol";
-import { GovernorPreventLateQuorum } from "oz/governance/extensions/GovernorPreventLateQuorum.sol";
-import { GovernorVotesQuorumFraction, GovernorVotes } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
-import { GovernorSettings } from "oz/governance/extensions/GovernorSettings.sol";
-import { IERC5805 } from "oz/interfaces/IERC5805.sol";
+import {Governor} from "oz-v5/governance/Governor.sol";
+import {GovernorPreventLateQuorum} from "oz-v5/governance/extensions/GovernorPreventLateQuorum.sol";
+import {GovernorVotesQuorumFraction, GovernorVotes} from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
+import {GovernorSettings} from "oz-v5/governance/extensions/GovernorSettings.sol";
+import {IERC5805} from "oz-v5/interfaces/IERC5805.sol";
 
-import { GovernorCountingFractional } from "./external/GovernorCountingFractional.sol";
-import { GovernorShortCircuit } from "./external/GovernorShortCircuit.sol";
+import {GovernorCountingFractional} from "./external/GovernorCountingFractional.sol";
+import {GovernorShortCircuit} from "./external/GovernorShortCircuit.sol";
 
 import "./utils/Errors.sol";
 
@@ -85,9 +85,8 @@ contract AngleGovernor is
     function state(uint256 proposalId) public view override(Governor) returns (ProposalState) {
         ProposalState currentState = super.state(proposalId);
         if (
-            currentState == ProposalState.Executed ||
-            currentState == ProposalState.Canceled ||
-            currentState == ProposalState.Pending
+            currentState == ProposalState.Executed || currentState == ProposalState.Canceled
+                || currentState == ProposalState.Pending
         ) return currentState;
 
         uint256 snapshot = proposalSnapshot(proposalId);
@@ -99,25 +98,32 @@ contract AngleGovernor is
             return ProposalState.Succeeded;
         } else if (isShortCircuitAgainst) {
             return ProposalState.Defeated;
-        } else return currentState;
+        } else {
+            return currentState;
+        }
     }
 
     /// @inheritdoc GovernorVotesQuorumFraction
-    function quorum(
-        uint256 timepoint
-    ) public view override(Governor, GovernorVotesQuorumFraction) returns (uint256 quorumAtTimepoint) {
+    function quorum(uint256 timepoint)
+        public
+        view
+        override(Governor, GovernorVotesQuorumFraction)
+        returns (uint256 quorumAtTimepoint)
+    {
         uint256 snapshotBlockNumber = $snapshotTimestampToSnapshotBlockNumber[timepoint];
         if (snapshotBlockNumber == 0 || snapshotBlockNumber >= block.number) revert InvalidTimepoint();
 
         quorumAtTimepoint =
-            (token().getPastTotalSupply(snapshotBlockNumber) * quorumNumerator(timepoint)) /
-            quorumDenominator();
+            (token().getPastTotalSupply(snapshotBlockNumber) * quorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @inheritdoc GovernorPreventLateQuorum
-    function proposalDeadline(
-        uint256 proposalId
-    ) public view override(Governor, GovernorPreventLateQuorum) returns (uint256) {
+    function proposalDeadline(uint256 proposalId)
+        public
+        view
+        override(Governor, GovernorPreventLateQuorum)
+        returns (uint256)
+    {
         return GovernorPreventLateQuorum.proposalDeadline(proposalId);
     }
 
@@ -168,13 +174,11 @@ contract AngleGovernor is
     }
 
     /// @inheritdoc GovernorPreventLateQuorum
-    function _castVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        string memory reason,
-        bytes memory params
-    ) internal override(Governor, GovernorPreventLateQuorum) returns (uint256) {
+    function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
+        internal
+        override(Governor, GovernorPreventLateQuorum)
+        returns (uint256)
+    {
         return GovernorPreventLateQuorum._castVote(proposalId, account, support, reason, params);
     }
 

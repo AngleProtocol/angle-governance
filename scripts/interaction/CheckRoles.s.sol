@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import { console } from "forge-std/console.sol";
-import { IVaultManager } from "borrow/interfaces/IVaultManager.sol";
-import { ITreasury } from "borrow/interfaces/ITreasury.sol";
-import { IAgToken } from "borrow/interfaces/IAgToken.sol";
-import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol";
-import { IAccessControl } from "oz/access/IAccessControl.sol";
-import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
-import { ProposalSender } from "contracts/ProposalSender.sol";
-import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
-import { Utils } from "../Utils.s.sol";
+import {console} from "forge-std/console.sol";
+import {IVaultManager} from "borrow/interfaces/IVaultManager.sol";
+import {ITreasury} from "borrow/interfaces/ITreasury.sol";
+import {IAgToken} from "borrow/interfaces/IAgToken.sol";
+import {IERC721Metadata} from "oz-v5/token/ERC721/extensions/IERC721Metadata.sol";
+import {IAccessControl} from "oz-v5/access/IAccessControl.sol";
+import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
+import {ProposalSender} from "contracts/ProposalSender.sol";
+import {TimelockControllerWithCounter} from "contracts/TimelockControllerWithCounter.sol";
+import {Utils} from "../Utils.s.sol";
 import "../Constants.s.sol";
 import "stringutils/strings.sol";
 
@@ -108,20 +108,16 @@ contract CheckRoles is Utils {
                 ITransmuter transmuterEUR = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgEUR));
                 ITransmuter transmuterUSD = ITransmuter(_chainToContract(chainId, ContractType.TransmuterAgUSD));
                 IAngle angle = IAngle(_chainToContract(chainId, ContractType.Angle));
-                ProposalSender proposalSender = ProposalSender(
-                    payable(_chainToContract(chainId, ContractType.ProposalSender))
-                );
-                IGaugeController gaugeController = IGaugeController(
-                    _chainToContract(chainId, ContractType.GaugeController)
-                );
-                ISmartWalletWhitelist smartWalletWhitelist = ISmartWalletWhitelist(
-                    _chainToContract(chainId, ContractType.SmartWalletWhitelist)
-                );
+                ProposalSender proposalSender =
+                    ProposalSender(payable(_chainToContract(chainId, ContractType.ProposalSender)));
+                IGaugeController gaugeController =
+                    IGaugeController(_chainToContract(chainId, ContractType.GaugeController));
+                ISmartWalletWhitelist smartWalletWhitelist =
+                    ISmartWalletWhitelist(_chainToContract(chainId, ContractType.SmartWalletWhitelist));
                 IVeAngle veAngle = IVeAngle(_chainToContract(chainId, ContractType.veANGLE));
                 IVeBoostProxy veBoostProxy = IVeBoostProxy(_chainToContract(chainId, ContractType.veBoostProxy));
-                IGenericAccessControl merklMiddleman = IGenericAccessControl(
-                    _chainToContract(chainId, ContractType.MerklMiddleman)
-                );
+                IGenericAccessControl merklMiddleman =
+                    IGenericAccessControl(_chainToContract(chainId, ContractType.MerklMiddleman));
 
                 if (!_authorizedCore(chainId, address(transmuterEUR.accessControlManager()))) {
                     output = vm.serializeString(
@@ -185,8 +181,7 @@ contract CheckRoles is Utils {
                         json,
                         vm.toString(jsonIndex),
                         string.concat(
-                            "Gauge Controller - future admin role: ",
-                            vm.toString(gaugeController.future_admin())
+                            "Gauge Controller - future admin role: ", vm.toString(gaugeController.future_admin())
                         )
                     );
                     jsonIndex++;
@@ -204,17 +199,14 @@ contract CheckRoles is Utils {
                         json,
                         vm.toString(jsonIndex),
                         string.concat(
-                            "Smart Wallet Whitelist - future admin: ",
-                            vm.toString(smartWalletWhitelist.future_admin())
+                            "Smart Wallet Whitelist - future admin: ", vm.toString(smartWalletWhitelist.future_admin())
                         )
                     );
                     jsonIndex++;
                 }
                 if (!_authorizedOwner(chainId, veAngle.admin())) {
                     output = vm.serializeString(
-                        json,
-                        vm.toString(jsonIndex),
-                        string.concat("veANGLE - admin: ", vm.toString(veAngle.admin()))
+                        json, vm.toString(jsonIndex), string.concat("veANGLE - admin: ", vm.toString(veAngle.admin()))
                     );
                     jsonIndex++;
                 }
@@ -243,9 +235,8 @@ contract CheckRoles is Utils {
                     jsonIndex++;
                 }
             } else {
-                ProposalReceiver proposalReceiver = ProposalReceiver(
-                    payable(_chainToContract(chainId, ContractType.ProposalReceiver))
-                );
+                ProposalReceiver proposalReceiver =
+                    ProposalReceiver(payable(_chainToContract(chainId, ContractType.ProposalReceiver)));
                 if (!_authorizedOwner(chainId, proposalReceiver.owner())) {
                     output = vm.serializeString(
                         json,
@@ -257,9 +248,7 @@ contract CheckRoles is Utils {
             }
 
             if (_isCoreChain(chainId)) {
-                IAccessControlCore angleRouter = IAccessControlCore(
-                    _chainToContract(chainId, ContractType.AngleRouter)
-                );
+                IAccessControlCore angleRouter = IAccessControlCore(_chainToContract(chainId, ContractType.AngleRouter));
                 if (!_authorizedCore(chainId, angleRouter.core())) {
                     output = vm.serializeString(
                         json,
@@ -270,7 +259,7 @@ contract CheckRoles is Utils {
                 }
             }
 
-            if (_isAngleDeployed(chainId) && chainId != CHAIN_POLYGON)
+            if (_isAngleDeployed(chainId) && chainId != CHAIN_POLYGON) {
                 _checkOnLZToken(
                     chainId,
                     ILayerZeroBridge(_chainToContract(chainId, ContractType.AngleLZ)),
@@ -278,14 +267,12 @@ contract CheckRoles is Utils {
                     ContractType.Angle,
                     ContractType.TreasuryAgEUR
                 );
+            }
 
             if (_isMerklDeployed(chainId)) {
-                IAccessControlCore distributionCreator = IAccessControlCore(
-                    _chainToContract(chainId, ContractType.DistributionCreator)
-                );
-                IAccessControlCore distributor = IAccessControlCore(
-                    _chainToContract(chainId, ContractType.Distributor)
-                );
+                IAccessControlCore distributionCreator =
+                    IAccessControlCore(_chainToContract(chainId, ContractType.DistributionCreator));
+                IAccessControlCore distributor = IAccessControlCore(_chainToContract(chainId, ContractType.Distributor));
                 if (!_authorizedCoreMerkl(chainId, address(distributionCreator.core()))) {
                     output = vm.serializeString(
                         json,
@@ -312,8 +299,7 @@ contract CheckRoles is Utils {
                         json,
                         vm.toString(jsonIndex),
                         string.concat(
-                            "StEUR - wrong access control manager: ",
-                            vm.toString(stEUR.accessControlManager())
+                            "StEUR - wrong access control manager: ", vm.toString(stEUR.accessControlManager())
                         )
                     );
                     jsonIndex++;
@@ -323,8 +309,7 @@ contract CheckRoles is Utils {
                         json,
                         vm.toString(jsonIndex),
                         string.concat(
-                            "StUSD - wrong access control manager: ",
-                            vm.toString(stUSD.accessControlManager())
+                            "StUSD - wrong access control manager: ", vm.toString(stUSD.accessControlManager())
                         )
                     );
                     jsonIndex++;
@@ -358,18 +343,19 @@ contract CheckRoles is Utils {
             _checkVaultManagers(chainId, ContractType.TreasuryAgEUR);
             _checkVaultManagers(chainId, ContractType.TreasuryAgUSD);
 
-            if (_revertOnWrongFunctioCall(chainId))
-                for (uint256 i = 0; i < allContracts.length; i++)
+            if (_revertOnWrongFunctioCall(chainId)) {
+                for (uint256 i = 0; i < allContracts.length; i++) {
                     _checkGlobalAccessControl(chainId, IGenericAccessControl(allContracts[i]));
+                }
+            }
         }
 
         // Contract to check roles on
         IAgToken agEUR = IAgToken(_chainToContract(chainId, ContractType.AgEUR));
         IAgToken agUSD = IAgToken(_chainToContract(chainId, ContractType.AgUSD));
         CoreBorrow core = CoreBorrow(_chainToContract(chainId, ContractType.CoreBorrow));
-        TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
-            payable(_chainToContract(chainId, ContractType.Timelock))
-        );
+        TimelockControllerWithCounter timelock =
+            TimelockControllerWithCounter(payable(_chainToContract(chainId, ContractType.Timelock)));
         for (uint256 i = 0; i < listAddressToCheck.length; i++) {
             outputActor = "";
             jsonActor = vm.toString(listAddressToCheck[i]);
@@ -392,11 +378,7 @@ contract CheckRoles is Utils {
                 jsonActorIndex++;
             }
             if (core.hasRole(FLASHLOANER_TREASURY_ROLE, actor) && !_authorizedFlashloaner(chainId, actor)) {
-                outputActor = vm.serializeString(
-                    jsonActor,
-                    vm.toString(jsonActorIndex),
-                    "Core Borrow - flashloan role"
-                );
+                outputActor = vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Core Borrow - flashloan role");
                 jsonActorIndex++;
             }
             if (timelock.hasRole(PROPOSER_ROLE, actor) && !_authorizedProposer(chainId, actor)) {
@@ -412,70 +394,54 @@ contract CheckRoles is Utils {
                 jsonActorIndex++;
             }
             if (timelock.hasRole(DEFAULT_ADMIN_ROLE, actor) && !_authorizeDefaultAdmin(chainId, actor)) {
-                outputActor = vm.serializeString(
-                    jsonActor,
-                    vm.toString(jsonActorIndex),
-                    "Timelock - default admin role"
-                );
+                outputActor =
+                    vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Timelock - default admin role");
                 jsonActorIndex++;
             }
 
-            if (_revertOnWrongFunctioCall(chainId))
-                for (uint256 j = 0; j < allContracts.length; j++)
+            if (_revertOnWrongFunctioCall(chainId)) {
+                for (uint256 j = 0; j < allContracts.length; j++) {
                     _checkAddressAccessControl(chainId, IGenericAccessControl(allContracts[j]), actor);
+                }
+            }
 
             if (_isMerklDeployed(chainId)) {
                 CoreBorrow coreMerkl = CoreBorrow(_chainToContract(chainId, ContractType.CoreMerkl));
                 if (coreMerkl.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor)) {
-                    outputActor = vm.serializeString(
-                        jsonActor,
-                        vm.toString(jsonActorIndex),
-                        "Core Merkl - governor role"
-                    );
+                    outputActor =
+                        vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Core Merkl - governor role");
                     jsonActorIndex++;
                 }
                 if (coreMerkl.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor)) {
-                    outputActor = vm.serializeString(
-                        jsonActor,
-                        vm.toString(jsonActorIndex),
-                        "Core Merkl - guardian role"
-                    );
+                    outputActor =
+                        vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Core Merkl - guardian role");
                     jsonActorIndex++;
                 }
                 // No one should have this role
                 if (coreMerkl.hasRole(FLASHLOANER_TREASURY_ROLE, actor)) {
-                    outputActor = vm.serializeString(
-                        jsonActor,
-                        vm.toString(jsonActorIndex),
-                        "Core Merkl - flashloan role"
-                    );
+                    outputActor =
+                        vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Core Merkl - flashloan role");
                     jsonActorIndex++;
                 }
             }
 
             if (chainId == CHAIN_ETHEREUM) {
-                IAccessControl angleDistributor = IAccessControl(
-                    _chainToContract(chainId, ContractType.AngleDistributor)
-                );
+                IAccessControl angleDistributor =
+                    IAccessControl(_chainToContract(chainId, ContractType.AngleDistributor));
                 if (angleDistributor.hasRole(GOVERNOR_ROLE, actor) && !_authorizedGovernor(chainId, actor)) {
-                    outputActor = vm.serializeString(
-                        jsonActor,
-                        vm.toString(jsonActorIndex),
-                        "Angle distributor - governor role"
-                    );
+                    outputActor =
+                        vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Angle distributor - governor role");
                     jsonActorIndex++;
                 }
                 if (angleDistributor.hasRole(GUARDIAN_ROLE, actor) && !_authorizedGuardian(chainId, actor)) {
-                    outputActor = vm.serializeString(
-                        jsonActor,
-                        vm.toString(jsonActorIndex),
-                        "Angle distributor - guardian role"
-                    );
+                    outputActor =
+                        vm.serializeString(jsonActor, vm.toString(jsonActorIndex), "Angle distributor - guardian role");
                     jsonActorIndex++;
                 }
             }
-            if (outputActor.toSlice().len() != 0)
+            if (outputActor.toSlice().len() != 0) {
                 output = vm.serializeString(json, vm.toString(listAddressToCheck[i]), outputActor);
+            }
         }
     }
 
@@ -624,11 +590,9 @@ contract CheckRoles is Utils {
         } catch {}
     }
 
-    function _checkAddressAccessControl(
-        uint256 chainId,
-        IGenericAccessControl contractToCheck,
-        address addressToCheck
-    ) public {
+    function _checkAddressAccessControl(uint256 chainId, IGenericAccessControl contractToCheck, address addressToCheck)
+        public
+    {
         try contractToCheck.isMinter(addressToCheck) returns (bool isMinter) {
             if (isMinter && !_authorizedMinter(chainId, addressToCheck)) {
                 outputActor = vm.serializeString(
@@ -719,54 +683,27 @@ contract CheckRoles is Utils {
     }
 
     function _isCoreChain(uint256 chainId) internal pure returns (bool) {
-        return
-            chainId == CHAIN_ETHEREUM ||
-            chainId == CHAIN_ARBITRUM ||
-            chainId == CHAIN_AVALANCHE ||
-            chainId == CHAIN_OPTIMISM ||
-            chainId == CHAIN_POLYGON ||
-            chainId == CHAIN_GNOSIS;
+        return chainId == CHAIN_ETHEREUM || chainId == CHAIN_ARBITRUM || chainId == CHAIN_AVALANCHE
+            || chainId == CHAIN_OPTIMISM || chainId == CHAIN_POLYGON || chainId == CHAIN_GNOSIS;
     }
 
     function _isAngleDeployed(uint256 chainId) internal pure returns (bool) {
-        return
-            chainId == CHAIN_ETHEREUM ||
-            chainId == CHAIN_ARBITRUM ||
-            chainId == CHAIN_AURORA ||
-            chainId == CHAIN_AVALANCHE ||
-            chainId == CHAIN_BNB ||
-            chainId == CHAIN_FANTOM ||
-            chainId == CHAIN_OPTIMISM ||
-            chainId == CHAIN_POLYGON;
+        return chainId == CHAIN_ETHEREUM || chainId == CHAIN_ARBITRUM || chainId == CHAIN_AURORA
+            || chainId == CHAIN_AVALANCHE || chainId == CHAIN_BNB || chainId == CHAIN_FANTOM || chainId == CHAIN_OPTIMISM
+            || chainId == CHAIN_POLYGON;
     }
 
     function _isMerklDeployed(uint256 chainId) internal pure returns (bool) {
-        return
-            chainId == CHAIN_ETHEREUM ||
-            chainId == CHAIN_ARBITRUM ||
-            chainId == CHAIN_AVALANCHE ||
-            chainId == CHAIN_BASE ||
-            chainId == CHAIN_BNB ||
-            chainId == CHAIN_GNOSIS ||
-            chainId == CHAIN_LINEA ||
-            chainId == CHAIN_MANTLE ||
-            chainId == CHAIN_OPTIMISM ||
-            chainId == CHAIN_POLYGON ||
-            chainId == CHAIN_POLYGONZKEVM;
+        return chainId == CHAIN_ETHEREUM || chainId == CHAIN_ARBITRUM || chainId == CHAIN_AVALANCHE
+            || chainId == CHAIN_BASE || chainId == CHAIN_BNB || chainId == CHAIN_GNOSIS || chainId == CHAIN_LINEA
+            || chainId == CHAIN_MANTLE || chainId == CHAIN_OPTIMISM || chainId == CHAIN_POLYGON
+            || chainId == CHAIN_POLYGONZKEVM;
     }
 
     function _isSavingsDeployed(uint256 chainId) internal pure returns (bool) {
-        return
-            chainId == CHAIN_ETHEREUM ||
-            chainId == CHAIN_ARBITRUM ||
-            chainId == CHAIN_AVALANCHE ||
-            chainId == CHAIN_BASE ||
-            chainId == CHAIN_BNB ||
-            chainId == CHAIN_CELO ||
-            chainId == CHAIN_GNOSIS ||
-            chainId == CHAIN_OPTIMISM ||
-            chainId == CHAIN_POLYGON ||
-            chainId == CHAIN_POLYGONZKEVM;
+        return chainId == CHAIN_ETHEREUM || chainId == CHAIN_ARBITRUM || chainId == CHAIN_AVALANCHE
+            || chainId == CHAIN_BASE || chainId == CHAIN_BNB || chainId == CHAIN_CELO || chainId == CHAIN_GNOSIS
+            || chainId == CHAIN_OPTIMISM || chainId == CHAIN_POLYGON || chainId == CHAIN_POLYGONZKEVM;
     }
 
     function _revertOnWrongFunctioCall(uint256 chainId) internal pure returns (bool) {
@@ -778,43 +715,35 @@ contract CheckRoles is Utils {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     function _authorizedOwner(uint256 chainId, address owner) internal returns (bool) {
-        return
-            owner == address(0) ||
-            owner == _chainToContract(chainId, ContractType.GovernorMultisig) ||
-            // owner == _chainToContract(chainId, ContractType.GuardianMultisig) ||
-            owner == _chainToContract(chainId, ContractType.Timelock) ||
-            owner == _chainToContract(chainId, ContractType.CoreBorrow) ||
-            owner == _chainToContract(chainId, ContractType.ProxyAdmin) ||
-            ((chainId == CHAIN_SOURCE) ? owner == _chainToContract(chainId, ContractType.Governor) : false);
+        return owner == address(0) || owner == _chainToContract(chainId, ContractType.GovernorMultisig)
+        // owner == _chainToContract(chainId, ContractType.GuardianMultisig) ||
+        || owner == _chainToContract(chainId, ContractType.Timelock)
+            || owner == _chainToContract(chainId, ContractType.CoreBorrow)
+            || owner == _chainToContract(chainId, ContractType.ProxyAdmin)
+            || ((chainId == CHAIN_SOURCE) ? owner == _chainToContract(chainId, ContractType.Governor) : false);
     }
 
     function _authorizedGovernor(uint256 chainId, address governor) internal returns (bool) {
-        return
-            governor == address(0) ||
-            governor == _chainToContract(chainId, ContractType.GovernorMultisig) ||
-            governor == _chainToContract(chainId, ContractType.Timelock) ||
-            governor == _chainToContract(chainId, ContractType.CoreBorrow) ||
-            governor == _chainToContract(chainId, ContractType.ProxyAdmin) ||
-            ((chainId == CHAIN_SOURCE) ? governor == _chainToContract(chainId, ContractType.Governor) : false);
+        return governor == address(0) || governor == _chainToContract(chainId, ContractType.GovernorMultisig)
+            || governor == _chainToContract(chainId, ContractType.Timelock)
+            || governor == _chainToContract(chainId, ContractType.CoreBorrow)
+            || governor == _chainToContract(chainId, ContractType.ProxyAdmin)
+            || ((chainId == CHAIN_SOURCE) ? governor == _chainToContract(chainId, ContractType.Governor) : false);
     }
 
     function _authorizedGuardian(uint256 chainId, address guardian) internal returns (bool) {
-        return
-            guardian == address(0) ||
-            guardian == _chainToContract(chainId, ContractType.GovernorMultisig) ||
-            guardian == _chainToContract(chainId, ContractType.GuardianMultisig) ||
-            guardian == _chainToContract(chainId, ContractType.Timelock) ||
-            guardian == _chainToContract(chainId, ContractType.CoreBorrow) ||
-            guardian == _chainToContract(chainId, ContractType.ProxyAdmin) ||
-            ((chainId == CHAIN_SOURCE) ? guardian == _chainToContract(chainId, ContractType.Governor) : false);
+        return guardian == address(0) || guardian == _chainToContract(chainId, ContractType.GovernorMultisig)
+            || guardian == _chainToContract(chainId, ContractType.GuardianMultisig)
+            || guardian == _chainToContract(chainId, ContractType.Timelock)
+            || guardian == _chainToContract(chainId, ContractType.CoreBorrow)
+            || guardian == _chainToContract(chainId, ContractType.ProxyAdmin)
+            || ((chainId == CHAIN_SOURCE) ? guardian == _chainToContract(chainId, ContractType.Governor) : false);
     }
 
     /// @notice Vault Managers are also minter
     function _authorizedMinter(uint256 chainId, address minter) internal returns (bool) {
-        return
-            minter == address(0) ||
-            minter == _chainToContract(chainId, ContractType.GovernorMultisig) ||
-            minter == _chainToContract(chainId, ContractType.Timelock);
+        return minter == address(0) || minter == _chainToContract(chainId, ContractType.GovernorMultisig)
+            || minter == _chainToContract(chainId, ContractType.Timelock);
     }
 
     function _authorizedCore(uint256 chainId, address core) internal returns (bool) {
@@ -828,17 +757,14 @@ contract CheckRoles is Utils {
 
     // TODO need to be fine grained for multiple stablecoins
     function _authorizedFlashloaner(uint256 chainId, address loaner) internal returns (bool) {
-        return
-            loaner == address(0) ||
-            loaner == _chainToContract(chainId, ContractType.TreasuryAgEUR) ||
-            loaner == _chainToContract(chainId, ContractType.TreasuryAgUSD);
+        return loaner == address(0) || loaner == _chainToContract(chainId, ContractType.TreasuryAgEUR)
+            || loaner == _chainToContract(chainId, ContractType.TreasuryAgUSD);
     }
 
     function _authorizedProposer(uint256 chainId, address proposer) internal returns (bool) {
-        return
-            (chainId == CHAIN_SOURCE)
-                ? proposer == _chainToContract(chainId, ContractType.Governor)
-                : proposer == _chainToContract(chainId, ContractType.ProposalReceiver);
+        return (chainId == CHAIN_SOURCE)
+            ? proposer == _chainToContract(chainId, ContractType.Governor)
+            : proposer == _chainToContract(chainId, ContractType.ProposalReceiver);
     }
 
     function _authorizedExecutor(uint256 chainId, address executor) internal returns (bool) {
@@ -867,25 +793,23 @@ contract CheckRoles is Utils {
     }
 
     function _authorizedTrusted(uint256 chainId, address trusted) internal returns (bool) {
-        return
-            trusted == _chainToContract(chainId, ContractType.GovernorMultisig) ||
-            trusted == _chainToContract(chainId, ContractType.GuardianMultisig) ||
-            trusted == _chainToContract(chainId, ContractType.Timelock) ||
-            trusted == _chainToContract(chainId, ContractType.CoreBorrow) ||
-            trusted == _chainToContract(chainId, ContractType.ProxyAdmin) ||
-            // trusted == oldDeployer ||
-            // trusted == oldKeeper ||
-            // trusted == oldKeeperPolygon ||
-            // trusted == oldKeeperPolygon2 ||
-            // trusted == merklKeeper ||
-            ((chainId == CHAIN_SOURCE) ? trusted == _chainToContract(chainId, ContractType.Governor) : false);
+        return trusted == _chainToContract(chainId, ContractType.GovernorMultisig)
+            || trusted == _chainToContract(chainId, ContractType.GuardianMultisig)
+            || trusted == _chainToContract(chainId, ContractType.Timelock)
+            || trusted == _chainToContract(chainId, ContractType.CoreBorrow)
+            || trusted == _chainToContract(chainId, ContractType.ProxyAdmin)
+        // trusted == oldDeployer ||
+        // trusted == oldKeeper ||
+        // trusted == oldKeeperPolygon ||
+        // trusted == oldKeeperPolygon2 ||
+        // trusted == merklKeeper ||
+        || ((chainId == CHAIN_SOURCE) ? trusted == _chainToContract(chainId, ContractType.Governor) : false);
     }
 
     function _authorizedDistributor(uint256 chainId, address distributor) internal returns (bool) {
-        return
-            (chainId == CHAIN_ETHEREUM)
-                ? distributor == _chainToContract(chainId, ContractType.AngleDistributor)
-                : false;
+        return (chainId == CHAIN_ETHEREUM)
+            ? distributor == _chainToContract(chainId, ContractType.AngleDistributor)
+            : false;
     }
 
     function _authorizedProxyAdminOwner(uint256 chainId, address owner) internal returns (bool) {
@@ -893,8 +817,7 @@ contract CheckRoles is Utils {
     }
 
     function _authorizedTreasury(uint256 chainId, address treasury) internal returns (bool) {
-        return
-            treasury == _chainToContract(chainId, ContractType.TreasuryAgEUR) ||
-            treasury == _chainToContract(chainId, ContractType.TreasuryAgUSD);
+        return treasury == _chainToContract(chainId, ContractType.TreasuryAgEUR)
+            || treasury == _chainToContract(chainId, ContractType.TreasuryAgUSD);
     }
 }

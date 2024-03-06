@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import "oz/utils/ReentrancyGuard.sol";
+import "oz-v5/utils/ReentrancyGuard.sol";
 import "lz/lzApp/NonblockingLzApp.sol";
 import "./utils/Errors.sol";
 
@@ -25,12 +25,11 @@ contract ProposalReceiver is NonblockingLzApp, ReentrancyGuard {
     constructor(address _endpoint) NonblockingLzApp(_endpoint) Ownable(msg.sender) {}
 
     // overriding the virtual function in LzReceiver
-    function _blockingLzReceive(
-        uint16 _srcChainId,
-        bytes memory _srcAddress,
-        uint64 _nonce,
-        bytes memory _payload
-    ) internal virtual override {
+    function _blockingLzReceive(uint16 _srcChainId, bytes memory _srcAddress, uint64 _nonce, bytes memory _payload)
+        internal
+        virtual
+        override
+    {
         bytes32 hashedPayload = keccak256(_payload);
         uint256 gasToStoreAndEmit = 30000; // enough gas to ensure we can store the payload and emit the event
 
@@ -50,8 +49,8 @@ contract ProposalReceiver is NonblockingLzApp, ReentrancyGuard {
     /// @notice Executes the proposal
     /// @dev Called by LayerZero Endpoint when a message from the source is received
     function _nonblockingLzReceive(uint16, bytes memory, uint64, bytes memory _payload) internal virtual override {
-        (address[] memory targets, uint256[] memory values, string[] memory signatures, bytes[] memory calldatas) = abi
-            .decode(_payload, (address[], uint[], string[], bytes[]));
+        (address[] memory targets, uint256[] memory values, string[] memory signatures, bytes[] memory calldatas) =
+            abi.decode(_payload, (address[], uint256[], string[], bytes[]));
 
         for (uint256 i = 0; i < targets.length; i++) {
             _executeTransaction(targets[i], values[i], signatures[i], calldatas[i]);
@@ -59,18 +58,15 @@ contract ProposalReceiver is NonblockingLzApp, ReentrancyGuard {
         emit ProposalExecuted(_payload);
     }
 
-    function _executeTransaction(
-        address target,
-        uint256 value,
-        string memory signature,
-        bytes memory data
-    ) private nonReentrant {
-        bytes memory callData = bytes(signature).length == 0
-            ? data
-            : abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
+    function _executeTransaction(address target, uint256 value, string memory signature, bytes memory data)
+        private
+        nonReentrant
+    {
+        bytes memory callData =
+            bytes(signature).length == 0 ? data : abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
 
         // solium-disable-next-line security/no-call-value
-        (bool success, ) = target.call{ value: value }(callData);
+        (bool success,) = target.call{value: value}(callData);
         if (!success) revert OmnichainGovernanceExecutorTxExecReverted();
     }
 

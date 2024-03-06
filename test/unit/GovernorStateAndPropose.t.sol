@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.9;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { Strings } from "oz/utils/Strings.sol";
+import {IGovernor} from "oz-v5/governance/IGovernor.sol";
+import {IVotes} from "oz-v5/governance/extensions/GovernorVotes.sol";
+import {Strings} from "oz-v5/utils/Strings.sol";
 
-import { Test, stdError } from "forge-std/Test.sol";
-import { Vm } from "forge-std/Vm.sol";
+import {Test, stdError} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
-import { AngleGovernor } from "contracts/AngleGovernor.sol";
-import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
-import { ProposalSender } from "contracts/ProposalSender.sol";
-import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
-import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
+import {AngleGovernor} from "contracts/AngleGovernor.sol";
+import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
+import {ProposalSender} from "contracts/ProposalSender.sol";
+import {VeANGLEVotingDelegation} from "contracts/VeANGLEVotingDelegation.sol";
+import {TimelockControllerWithCounter, TimelockController} from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
 import "../Utils.t.sol";
@@ -81,10 +81,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernor.GovernorInsufficientProposerVotes.selector,
-                whale,
-                votes,
-                angleGovernor.proposalThreshold()
+                IGovernor.GovernorInsufficientProposerVotes.selector, whale, votes, angleGovernor.proposalThreshold()
             )
         );
         hoax(whale);
@@ -110,10 +107,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
 
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernor.GovernorInvalidProposalLength.selector,
-                    targets.length,
-                    calldatas.length,
-                    values.length
+                    IGovernor.GovernorInvalidProposalLength.selector, targets.length, calldatas.length, values.length
                 )
             );
             hoax(whale);
@@ -130,10 +124,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
 
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernor.GovernorInvalidProposalLength.selector,
-                    targets.length,
-                    calldatas.length,
-                    values.length
+                    IGovernor.GovernorInvalidProposalLength.selector, targets.length, calldatas.length, values.length
                 )
             );
             hoax(whale);
@@ -153,10 +144,7 @@ contract GovernorStateAndProposeTest is Test, Utils {
 
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernor.GovernorInvalidProposalLength.selector,
-                    targets.length,
-                    calldatas.length,
-                    values.length
+                    IGovernor.GovernorInvalidProposalLength.selector, targets.length, calldatas.length, values.length
                 )
             );
             hoax(whale);
