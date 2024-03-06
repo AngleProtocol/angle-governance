@@ -2,23 +2,23 @@
 
 pragma solidity ^0.8.19;
 
-import { IveANGLEVotingDelegation } from "contracts/interfaces/IveANGLEVotingDelegation.sol";
-import { deployMockANGLE, deployVeANGLE } from "../scripts/test/DeployANGLE.s.sol";
-import { ERC20 } from "oz/token/ERC20/ERC20.sol";
+import {IveANGLEVotingDelegation} from "contracts/interfaces/IveANGLEVotingDelegation.sol";
+import {deployMockANGLE, deployVeANGLE} from "../scripts/test/DeployANGLE.s.sol";
+import {ERC20} from "oz-v5/token/ERC20/ERC20.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "./external/VyperDeployer.sol";
 
-import { AngleGovernor } from "contracts/AngleGovernor.sol";
-import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
-import { ProposalSender } from "contracts/ProposalSender.sol";
-import { VeANGLEVotingDelegation, ECDSA } from "contracts/VeANGLEVotingDelegation.sol";
-import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
+import {AngleGovernor} from "contracts/AngleGovernor.sol";
+import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
+import {ProposalSender} from "contracts/ProposalSender.sol";
+import {VeANGLEVotingDelegation, ECDSA} from "contracts/VeANGLEVotingDelegation.sol";
+import {TimelockControllerWithCounter, TimelockController} from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 import "./Constants.t.sol";
 import "./Utils.t.sol";
 
-import { Test, stdError } from "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
+import {Test, stdError} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 
 contract Fixture is Test {
     uint256 public constant FORK_BLOCK_NUMBER = 1152;
@@ -61,10 +61,10 @@ contract Fixture is Test {
 
         // Deploy necessary contracts - for governance to be deployed
         vyperDeployer = new VyperDeployer();
-        (address _mockANGLE, , ) = deployMockANGLE();
+        (address _mockANGLE,,) = deployMockANGLE();
         ANGLE = ERC20(_mockANGLE);
         deal(address(ANGLE), mainnetMultisig, GOVERNOR_INIT_BALANCE);
-        (address _mockVeANGLE, , ) = deployVeANGLE(vyperDeployer, _mockANGLE, mainnetMultisig);
+        (address _mockVeANGLE,,) = deployVeANGLE(vyperDeployer, _mockANGLE, mainnetMultisig);
         veANGLE = IveANGLE(_mockVeANGLE);
         _setupDealAndLockANGLE(alice, 1_000_000 * 1e18, 365 days);
         _setupDealAndLockANGLE(bob, 333_000 * 1e18, 4 * 365 days);

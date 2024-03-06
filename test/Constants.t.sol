@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.9;
 
-import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
+import {ILayerZeroEndpoint} from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
+import {IVotes} from "oz-v5/governance/extensions/GovernorVotes.sol";
 
 uint48 constant initialVotingDelay = 1800;
 uint32 constant initialVotingPeriod = 36000;

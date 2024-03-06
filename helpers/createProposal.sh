@@ -18,6 +18,7 @@ function usage {
   echo -e "\t9: Polygon ZkEvm"
   echo -e "\t10: Optimism"
   echo -e "\t11: Linea"
+  echo -e "\t12: Fork"
   echo ""
 }
 
@@ -64,6 +65,7 @@ function main {
         echo "- 9: Polygon ZkEvm"
         echo "- 10: Optimism"
         echo "- 11: Linea"
+        echo "- 12: Fork"
         echo "- 100: All"
 
         read chains

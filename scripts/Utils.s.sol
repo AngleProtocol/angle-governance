@@ -2,12 +2,12 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import { AngleGovernor } from "contracts/AngleGovernor.sol";
-import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
-import { ProposalSender } from "contracts/ProposalSender.sol";
-import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
-import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
-import { ITreasury } from "borrow/interfaces/ITreasury.sol";
+import {AngleGovernor} from "contracts/AngleGovernor.sol";
+import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
+import {ProposalSender} from "contracts/ProposalSender.sol";
+import {TimelockControllerWithCounter} from "contracts/TimelockControllerWithCounter.sol";
+import {ILayerZeroEndpoint} from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
+import {ITreasury} from "borrow/interfaces/ITreasury.sol";
 import "utils/src/CommonUtils.sol";
 import "./Constants.s.sol";
 

@@ -1,7 +1,7 @@
 ds-test/=lib/forge-std/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
-oz/=lib/new-oz/contracts/
-oz-upgradeable/=lib/new-oz-upgradeable/contracts/
+oz-v5/=lib/new-oz/contracts/
+oz-upgradeable-v5/=lib/new-oz-upgradeable/contracts/
 lz/=lib/solidity-examples/contracts
 stringutils/=lib/solidity-stringutils
 borrow/=lib/borrow-contracts/contracts
@@ -11,5 +11,7 @@ contracts/=contracts
 test/=test
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts
+oz-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts
+oz/=lib/openzeppelin-contracts/contracts
 @chainlink/=lib/chainlink
 utils/=lib/utils

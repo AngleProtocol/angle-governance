@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: ISC
 pragma solidity ^0.8.20;
 
-import { ECDSA } from "oz/utils/cryptography/ECDSA.sol";
-import { EIP712 } from "oz/utils/cryptography/EIP712.sol";
-import { Math } from "oz/utils/math/Math.sol";
-import { SafeCast } from "oz/utils/math/SafeCast.sol";
-import { IERC5805 } from "oz/interfaces/IERC5805.sol";
-import { IveANGLE } from "./interfaces/IveANGLE.sol";
-import { IveANGLEVotingDelegation } from "./interfaces/IveANGLEVotingDelegation.sol";
+import {ECDSA} from "oz-v5/utils/cryptography/ECDSA.sol";
+import {EIP712} from "oz-v5/utils/cryptography/EIP712.sol";
+import {Math} from "oz-v5/utils/math/Math.sol";
+import {SafeCast} from "oz-v5/utils/math/SafeCast.sol";
+import {IERC5805} from "oz-v5/interfaces/IERC5805.sol";
+import {IveANGLE} from "./interfaces/IveANGLE.sol";
+import {IveANGLEVotingDelegation} from "./interfaces/IveANGLEVotingDelegation.sol";
 
 /// @title VeANGLEVotingDelegation
 /// @notice Contract that keeps track of voting weights and delegations, leveraging veANGLE
@@ -45,8 +45,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
     /// @notice Mapping from delegate to weekly rounded time of expiry to the aggregated values at time of expiration.
     /// Mirrors veANGLE expiration.
-    mapping(address delegate => mapping(uint256 week => IveANGLEVotingDelegation.Expiration))
-        public $expiredDelegations;
+    mapping(address delegate => mapping(uint256 week => IveANGLEVotingDelegation.Expiration)) public $expiredDelegations;
 
     /// @notice Constructor of the contract, called on deployment
     /// @param veANGLE Address of veANGLE contract
@@ -58,10 +57,11 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param delegateAddress Address of delegate
     /// @param index Integer index of the checkpoint
     /// @return delegateCheckpoint DelegateCheckpoint of ```delegate``` at ```index```
-    function getCheckpoint(
-        address delegateAddress,
-        uint32 index
-    ) external view returns (IveANGLEVotingDelegation.DelegateCheckpoint memory) {
+    function getCheckpoint(address delegateAddress, uint32 index)
+        external
+        view
+        returns (IveANGLEVotingDelegation.DelegateCheckpoint memory)
+    {
         return $delegateCheckpoints[delegateAddress][index];
     }
 
@@ -71,15 +71,14 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param voter Address of voter
     /// @param timestamp A block.timestamp, typically corresponding to a proposal snapshot
     /// @return delegatedWeight Voting weight corresponding to all ```delegateAccount```'s received delegations
-    function _calculateDelegatedWeight(
-        address voter,
-        uint256 timestamp
-    ) internal view returns (uint256 delegatedWeight) {
+    function _calculateDelegatedWeight(address voter, uint256 timestamp)
+        internal
+        view
+        returns (uint256 delegatedWeight)
+    {
         // Check if delegate account has any delegations
-        IveANGLEVotingDelegation.DelegateCheckpoint memory checkpoint = _checkpointBinarySearch({
-            _$checkpoints: $delegateCheckpoints[voter],
-            timestamp: timestamp
-        });
+        IveANGLEVotingDelegation.DelegateCheckpoint memory checkpoint =
+            _checkpointBinarySearch({_$checkpoints: $delegateCheckpoints[voter], timestamp: timestamp});
 
         // If checkpoint is empty, short circuit and return 0 delegated weight
         if (checkpoint.timestamp == 0) {
@@ -88,12 +87,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         // It's possible that some delegated veANGLE has expired.
         // Add up all expirations during this time period, week by week.
-        (uint256 totalExpiredBias, uint256 totalExpiredSlope) = _calculateExpirations({
-            account: voter,
-            start: checkpoint.timestamp,
-            end: timestamp,
-            checkpoint: checkpoint
-        });
+        (uint256 totalExpiredBias, uint256 totalExpiredSlope) =
+            _calculateExpirations({account: voter, start: checkpoint.timestamp, end: timestamp, checkpoint: checkpoint});
 
         uint256 expirationAdjustedBias = checkpoint.normalizedBias - totalExpiredBias;
         uint256 expirationAdjustedSlope = checkpoint.normalizedSlope - totalExpiredSlope;
@@ -119,7 +114,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         uint256 firstDelegationTimestamp = $delegations[voter].firstDelegationTimestamp;
         // Never delegated OR this timestamp is before the first delegation by account
         if (firstDelegationTimestamp == 0 || timestamp < firstDelegationTimestamp) {
-            try VE_ANGLE.balanceOf({ addr: voter, _t: timestamp }) returns (uint256 _balance) {
+            try VE_ANGLE.balanceOf({addr: voter, _t: timestamp}) returns (uint256 _balance) {
                 return _balance;
             } catch {}
         }
@@ -132,12 +127,13 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @dev See _calculateExpirations
     /// @param delegateAddress Address of delegate
     /// @return calculatedCheckpoint A new DelegateCheckpoint to write based on expirations since previous checkpoint
-    function calculateExpiredDelegations(
-        address delegateAddress
-    ) public view returns (IveANGLEVotingDelegation.DelegateCheckpoint memory calculatedCheckpoint) {
-        IveANGLEVotingDelegation.DelegateCheckpoint[] storage $userDelegationCheckpoints = $delegateCheckpoints[
-            delegateAddress
-        ];
+    function calculateExpiredDelegations(address delegateAddress)
+        public
+        view
+        returns (IveANGLEVotingDelegation.DelegateCheckpoint memory calculatedCheckpoint)
+    {
+        IveANGLEVotingDelegation.DelegateCheckpoint[] storage $userDelegationCheckpoints =
+            $delegateCheckpoints[delegateAddress];
 
         // This ensures that checkpoints take effect at the next epoch
         uint256 checkpointTimestamp = ((block.timestamp / 1 days) * 1 days) + 1 days;
@@ -146,9 +142,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         // Nothing to expire if no one delegated to you
         if (checkpointsLength == 0) return calculatedCheckpoint;
 
-        IveANGLEVotingDelegation.DelegateCheckpoint memory lastCheckpoint = $userDelegationCheckpoints[
-            checkpointsLength - 1
-        ];
+        IveANGLEVotingDelegation.DelegateCheckpoint memory lastCheckpoint =
+            $userDelegationCheckpoints[checkpointsLength - 1];
 
         // Nothing expired because the most recent checkpoint is already written
         if (lastCheckpoint.timestamp == checkpointTimestamp) {
@@ -201,9 +196,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param timestamp A block.timestamp, typically corresponding to a proposal snapshot
     /// @return totalVotingWeight Voting weight of ```voter``` at ```timestamp```
     function _getVotingWeight(address voter, uint256 timestamp) internal view returns (uint256 totalVotingWeight) {
-        totalVotingWeight =
-            _calculateVotingWeight({ voter: voter, timestamp: timestamp }) +
-            _calculateDelegatedWeight({ voter: voter, timestamp: timestamp });
+        totalVotingWeight = _calculateVotingWeight({voter: voter, timestamp: timestamp})
+            + _calculateDelegatedWeight({voter: voter, timestamp: timestamp});
     }
 
     /// @notice Calculates a voter's weight at ```timestamp```
@@ -211,14 +205,14 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param timepoint A block.timestamp, typically corresponding to a proposal snapshot
     /// @return votingWeight Voting weight of ```voterAddress``` at ```timepoint```
     function getVotes(address voter, uint256 timepoint) external view returns (uint256) {
-        return _getVotingWeight({ voter: voter, timestamp: timepoint });
+        return _getVotingWeight({voter: voter, timestamp: timepoint});
     }
 
     /// @notice Calculates a voter's weight at the current block.timestamp
     /// @param voter Address of voter
     /// @return votingWeight Voting weight of ```voterAddress``` at ```block.timestamp```
     function getVotes(address voter) external view returns (uint256 votingWeight) {
-        votingWeight = _getVotingWeight({ voter: voter, timestamp: block.timestamp });
+        votingWeight = _getVotingWeight({voter: voter, timestamp: block.timestamp});
     }
 
     /// @notice Calculates a voter's weight at ```timepoint```
@@ -228,7 +222,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     function getPastVotes(address voter, uint256 timepoint) external view returns (uint256 pastVotingWeight) {
         if (timepoint >= block.timestamp) revert IveANGLEVotingDelegation.TimestampInFuture();
 
-        pastVotingWeight = _getVotingWeight({ voter: voter, timestamp: timepoint });
+        pastVotingWeight = _getVotingWeight({voter: voter, timestamp: timepoint});
     }
 
     /// @notice Retrieves the total supply of veANGLE at ```blockNumber```
@@ -256,7 +250,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @notice Delegates votes from signer to ```delegatee``` at the next epoch
     /// @param delegatee Address to delegate to
     function delegate(address delegatee) external {
-        _delegate({ delegator: msg.sender, delegatee: delegatee });
+        _delegate({delegator: msg.sender, delegatee: delegatee});
     }
 
     /// @notice Delegates votes from signer to ```delegatee```
@@ -266,22 +260,16 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param v Recovery ID
     /// @param r Output of an ECDSA signature
     /// @param s Output of an ECDSA signature
-    function delegateBySig(
-        address delegatee,
-        uint256 nonce,
-        uint256 expiry,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public virtual override {
+    function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s)
+        public
+        virtual
+        override
+    {
         // Revert if signature is expired
         if (block.timestamp > expiry) revert IveANGLEVotingDelegation.SignatureExpired();
 
         address signer = ECDSA.recover(
-            _hashTypedDataV4(keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
-            v,
-            r,
-            s
+            _hashTypedDataV4(keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee, nonce, expiry))), v, r, s
         );
 
         // Increment nonce and check against incremented value
@@ -303,11 +291,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         // This ensures that checkpoints take effect at the next epoch
         uint256 checkpointTimestamp = ((block.timestamp / 1 days) * 1 days) + 1 days;
 
-        IveANGLEVotingDelegation.NormalizedVeANGLELockInfo
-            memory normalizedDelegatorVeANGLELockInfo = _getNormalizedveANGLELockInfo({
-                delegator: delegator,
-                checkpointTimestamp: checkpointTimestamp
-            });
+        IveANGLEVotingDelegation.NormalizedVeANGLELockInfo memory normalizedDelegatorVeANGLELockInfo =
+            _getNormalizedveANGLELockInfo({delegator: delegator, checkpointTimestamp: checkpointTimestamp});
 
         _moveVotingPowerFromPreviousDelegate({
             previousDelegation: previousDelegation,
@@ -331,11 +316,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             slope: uint64(normalizedDelegatorVeANGLELockInfo.slope)
         });
 
-        emit DelegateChanged({
-            delegator: delegator,
-            fromDelegate: previousDelegation.delegate,
-            toDelegate: delegatee
-        });
+        emit DelegateChanged({delegator: delegator, fromDelegate: previousDelegation.delegate, toDelegate: delegatee});
     }
 
     /// @notice Retrieves lock information from veANGLE.
@@ -343,10 +324,11 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     /// @param delegator Address of the delegator
     /// @param checkpointTimestamp block.timestamp of the next checkpoint epoch
     /// @return normalizedVeANGLELockInfo Information about delegator's lock from veANGLE contract, normalized
-    function _getNormalizedveANGLELockInfo(
-        address delegator,
-        uint256 checkpointTimestamp
-    ) private view returns (IveANGLEVotingDelegation.NormalizedVeANGLELockInfo memory normalizedVeANGLELockInfo) {
+    function _getNormalizedveANGLELockInfo(address delegator, uint256 checkpointTimestamp)
+        private
+        view
+        returns (IveANGLEVotingDelegation.NormalizedVeANGLELockInfo memory normalizedVeANGLELockInfo)
+    {
         // Check expiry in case we need to revert
         uint256 expiry = VE_ANGLE.locked(delegator).end;
         if (expiry <= checkpointTimestamp) revert IveANGLEVotingDelegation.CantDelegateLockExpired();
@@ -354,9 +336,9 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         // Most recent epoch
         uint256 epoch = VE_ANGLE.user_point_epoch(delegator);
         // Values for delegator at the most recent epoch
-        (int128 userBias, int128 userSlope, , ) = VE_ANGLE.user_point_history({ _addr: delegator, _idx: epoch });
+        (int128 userBias, int128 userSlope,,) = VE_ANGLE.user_point_history({_addr: delegator, _idx: epoch});
         // Get the timestamp of the last update in veANGLE user history
-        uint256 lastUpdate = VE_ANGLE.user_point_history__ts({ _addr: delegator, _idx: epoch });
+        uint256 lastUpdate = VE_ANGLE.user_point_history__ts({_addr: delegator, _idx: epoch});
 
         // Set return values
         normalizedVeANGLELockInfo.slope = SafeCast.toUint256(userSlope);
@@ -414,15 +396,13 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         // Remove voting power from previous delegate, if they exist
         if (previousDelegation.delegate != address(0)) {
             // Get the last Checkpoint for previous delegate
-            IveANGLEVotingDelegation.DelegateCheckpoint[] storage $previousDelegationCheckpoints = $delegateCheckpoints[
-                previousDelegation.delegate
-            ];
+            IveANGLEVotingDelegation.DelegateCheckpoint[] storage $previousDelegationCheckpoints =
+                $delegateCheckpoints[previousDelegation.delegate];
             uint256 accountCheckpointsLength = $previousDelegationCheckpoints.length;
             // NOTE: we know that _accountsCheckpointLength > 0
             // because we have already checked that the previous delegation exists
-            IveANGLEVotingDelegation.DelegateCheckpoint memory lastCheckpoint = $previousDelegationCheckpoints[
-                accountCheckpointsLength - 1
-            ];
+            IveANGLEVotingDelegation.DelegateCheckpoint memory lastCheckpoint =
+                $previousDelegationCheckpoints[accountCheckpointsLength - 1];
             uint256 oldWeightOldDelegate = _getVotingWeight(previousDelegation.delegate, checkpointTimestamp);
 
             // Handle Expirations
@@ -433,9 +413,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             // See testExpiredLockRedelegateNoVotingWeight().
             if (previousDelegation.expiry > checkpointTimestamp) {
                 // Calculations
-                IveANGLEVotingDelegation.Expiration memory expiration = $expiredDelegations[
-                    previousDelegation.delegate
-                ][previousDelegation.expiry];
+                IveANGLEVotingDelegation.Expiration memory expiration =
+                    $expiredDelegations[previousDelegation.delegate][previousDelegation.expiry];
                 // All expiration fields will never exceed their size so subtraction doesnt need to be checked
                 // and they can be unsafely cast
                 unchecked {
@@ -473,7 +452,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             emit DelegateVotesChanged({
                 delegate: previousDelegation.delegate,
                 previousVotes: oldWeightOldDelegate,
-                newVotes: _getVotingWeight({ voter: previousDelegation.delegate, timestamp: checkpointTimestamp })
+                newVotes: _getVotingWeight({voter: previousDelegation.delegate, timestamp: checkpointTimestamp})
             });
         }
     }
@@ -488,9 +467,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         uint256 checkpointTimestamp
     ) private {
         // Get the last checkpoint for the new delegate
-        IveANGLEVotingDelegation.DelegateCheckpoint[] storage $newDelegateCheckpoints = $delegateCheckpoints[
-            newDelegate
-        ];
+        IveANGLEVotingDelegation.DelegateCheckpoint[] storage $newDelegateCheckpoints =
+            $delegateCheckpoints[newDelegate];
         uint256 accountCheckpointsLength = $newDelegateCheckpoints.length;
         IveANGLEVotingDelegation.DelegateCheckpoint memory lastCheckpoint = accountCheckpointsLength == 0
             ? IveANGLEVotingDelegation.DelegateCheckpoint(0, 0, 0)
@@ -499,9 +477,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
 
         // Handle expiration
         // Calculations
-        IveANGLEVotingDelegation.Expiration memory expiration = $expiredDelegations[newDelegate][
-            delegatorVeANGLELockInfo.expiry
-        ];
+        IveANGLEVotingDelegation.Expiration memory expiration =
+            $expiredDelegations[newDelegate][delegatorVeANGLELockInfo.expiry];
 
         // NOTE: All expiration fields will never exceed their size so addition doesnt need to be checked
         // and can be unsafely cast
@@ -536,7 +513,7 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
         emit DelegateVotesChanged({
             delegate: newDelegate,
             previousVotes: oldWeightNewDelegate,
-            newVotes: _getVotingWeight({ voter: newDelegate, timestamp: checkpointTimestamp })
+            newVotes: _getVotingWeight({voter: newDelegate, timestamp: checkpointTimestamp})
         });
     }
 
@@ -560,13 +537,12 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
     ) private view returns (IveANGLEVotingDelegation.DelegateCheckpoint memory newCheckpoint) {
         // If this is the first checkpoint, create a new one and early return
         if (previousCheckpoint.timestamp == 0) {
-            return
-                IveANGLEVotingDelegation.DelegateCheckpoint({
-                    // can be unsafely cast because values will never exceed uint128 max
-                    timestamp: uint128(checkpointTimestamp),
-                    normalizedBias: uint128(deltaBias),
-                    normalizedSlope: uint128(deltaSlope)
-                });
+            return IveANGLEVotingDelegation.DelegateCheckpoint({
+                // can be unsafely cast because values will never exceed uint128 max
+                timestamp: uint128(checkpointTimestamp),
+                normalizedBias: uint128(deltaBias),
+                normalizedSlope: uint128(deltaSlope)
+            });
         }
 
         newCheckpoint.timestamp = previousCheckpoint.timestamp;
@@ -646,8 +622,8 @@ contract VeANGLEVotingDelegation is EIP712, IERC5805 {
             } else {
                 // Total values will always be less than or equal to a checkpoint's values
                 uint256 currentWeek = WEEK + (start / WEEK) * WEEK;
-                mapping(uint256 => IveANGLEVotingDelegation.Expiration)
-                    storage $delegateExpirations = $expiredDelegations[account];
+                mapping(uint256 => IveANGLEVotingDelegation.Expiration) storage $delegateExpirations =
+                    $expiredDelegations[account];
                 // Sum values from currentWeek until end
                 while (currentWeek <= end) {
                     IveANGLEVotingDelegation.Expiration memory expiration = $delegateExpirations[currentWeek];

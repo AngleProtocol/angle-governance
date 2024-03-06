@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 import "./BaseActor.t.sol";
-import { IERC5805 } from "oz/interfaces/IERC5805.sol";
-import { MockANGLE } from "../../external/MockANGLE.sol";
+import {IERC5805} from "oz-v5/interfaces/IERC5805.sol";
+import {MockANGLE} from "../../external/MockANGLE.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "contracts/utils/Errors.sol";
 
@@ -15,12 +15,9 @@ contract Delegator is BaseActor {
     mapping(address => address[]) public reverseDelegations;
     address[] public delegatees;
 
-    constructor(
-        uint256 _nbrActor,
-        IERC20 _agToken,
-        address _veToken,
-        address _veDelegation
-    ) BaseActor(_nbrActor, "Delegator", _agToken) {
+    constructor(uint256 _nbrActor, IERC20 _agToken, address _veToken, address _veDelegation)
+        BaseActor(_nbrActor, "Delegator", _agToken)
+    {
         veToken = IveANGLE(_veToken);
         veDelegation = IERC5805(_veDelegation);
     }
@@ -60,9 +57,8 @@ contract Delegator is BaseActor {
         reverseDelegations[toDelegate].push(_currentActor);
         for (uint256 i; i < reverseDelegations[currentDelegatee].length; i++) {
             if (reverseDelegations[currentDelegatee][i] == _currentActor) {
-                reverseDelegations[currentDelegatee][i] = reverseDelegations[currentDelegatee][
-                    reverseDelegations[currentDelegatee].length - 1
-                ];
+                reverseDelegations[currentDelegatee][i] =
+                    reverseDelegations[currentDelegatee][reverseDelegations[currentDelegatee].length - 1];
                 reverseDelegations[currentDelegatee].pop();
                 break;
             }

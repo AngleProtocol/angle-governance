@@ -2,21 +2,21 @@
 
 pragma solidity ^0.8.9;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { GovernorCountingSimple } from "oz/governance/extensions/GovernorCountingSimple.sol";
-import { Strings } from "oz/utils/Strings.sol";
-import { ERC20 } from "oz/token/ERC20/ERC20.sol";
+import {IGovernor} from "oz-v5/governance/IGovernor.sol";
+import {IVotes} from "oz-v5/governance/extensions/GovernorVotes.sol";
+import {GovernorCountingSimple} from "oz-v5/governance/extensions/GovernorCountingSimple.sol";
+import {Strings} from "oz-v5/utils/Strings.sol";
+import {ERC20} from "oz-v5/token/ERC20/ERC20.sol";
 
-import { stdStorage, StdStorage, Test, stdError } from "forge-std/Test.sol";
-import { Vm } from "forge-std/Vm.sol";
+import {stdStorage, StdStorage, Test, stdError} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
-import { deployMockANGLE, MockANGLE } from "../../scripts/test/DeployANGLE.s.sol";
-import { AngleGovernor } from "contracts/AngleGovernor.sol";
-import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
-import { ProposalSender } from "contracts/ProposalSender.sol";
-import { VeANGLEVotingDelegation } from "contracts/VeANGLEVotingDelegation.sol";
-import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
+import {deployMockANGLE, MockANGLE} from "../../scripts/test/DeployANGLE.s.sol";
+import {AngleGovernor} from "contracts/AngleGovernor.sol";
+import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
+import {ProposalSender} from "contracts/ProposalSender.sol";
+import {VeANGLEVotingDelegation} from "contracts/VeANGLEVotingDelegation.sol";
+import {TimelockControllerWithCounter, TimelockController} from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 
 import "../Utils.t.sol";
@@ -45,7 +45,7 @@ contract GovernorShortCircuitTest is Test, Utils {
 
         vm.roll(block.number + 1152);
         vm.warp(block.timestamp + 10 days);
-        (address _mockANGLE, , ) = deployMockANGLE();
+        (address _mockANGLE,,) = deployMockANGLE();
         ANGLE = MockANGLE(_mockANGLE);
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
 
@@ -92,11 +92,10 @@ contract GovernorShortCircuitTest is Test, Utils {
         angleGovernor.castVote(proposalId, uint8(GovernorCountingSimple.VoteType.Against));
     }
 
-    function _proposeTx(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas
-    ) public returns (uint256 pid) {
+    function _proposeTx(address[] memory targets, uint256[] memory values, bytes[] memory calldatas)
+        public
+        returns (uint256 pid)
+    {
         vm.mockCall(
             address(veANGLEDelegation),
             abi.encodeWithSelector(veANGLEDelegation.getPastVotes.selector, address(proposer)),
@@ -127,9 +126,7 @@ contract GovernorShortCircuitTest is Test, Utils {
         mineBlocksBySecond(angleGovernor.votingPeriod());
 
         assertEq(
-            uint256(IGovernor.ProposalState.Succeeded),
-            uint256(angleGovernor.state(pid)),
-            "Proposal state is succeeded"
+            uint256(IGovernor.ProposalState.Succeeded), uint256(angleGovernor.state(pid)), "Proposal state is succeeded"
         );
 
         stdstore.target(address(angleGovernor)).sig("timelock()").checked_write(address(angleGovernor));
@@ -190,9 +187,7 @@ contract GovernorShortCircuitTest is Test, Utils {
         _votePassingQuorum(pid);
 
         assertEq(
-            uint256(IGovernor.ProposalState.Succeeded),
-            uint256(angleGovernor.state(pid)),
-            "Proposal state is succeeded"
+            uint256(IGovernor.ProposalState.Succeeded), uint256(angleGovernor.state(pid)), "Proposal state is succeeded"
         );
 
         // majorityFor allows skipping delay but still timelock
@@ -201,9 +196,7 @@ contract GovernorShortCircuitTest is Test, Utils {
         assertEq(ANGLE.balanceOf(bob), amount, "Bob received ANGLE");
         assertEq(ANGLE.balanceOf(address(angleGovernor)), 0, "angleGovernor has no ANGLE");
         assertEq(
-            uint256(IGovernor.ProposalState.Executed),
-            uint256(angleGovernor.state(pid)),
-            "Proposal state is executed"
+            uint256(IGovernor.ProposalState.Executed), uint256(angleGovernor.state(pid)), "Proposal state is executed"
         );
     }
 
@@ -235,9 +228,7 @@ contract GovernorShortCircuitTest is Test, Utils {
         _voteDefeatQuorum(pid);
 
         assertEq(
-            uint256(IGovernor.ProposalState.Defeated),
-            uint256(angleGovernor.state(pid)),
-            "Proposal state is defeated"
+            uint256(IGovernor.ProposalState.Defeated), uint256(angleGovernor.state(pid)), "Proposal state is defeated"
         );
 
         vm.expectRevert(
