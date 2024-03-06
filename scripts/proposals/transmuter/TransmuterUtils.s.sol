@@ -11,7 +11,7 @@ import {ContractType, BASE_18} from "utils/src/Constants.sol";
 contract TransmuterUtils is Script, CommonUtils {
     using strings for *;
 
-    string constant JSON_SELECTOR_PATH = "./selectors.json";
+    string constant JSON_SELECTOR_PATH = "./scripts/proposals/transmuter/selectors.json";
     uint256 constant BPS = 1e14;
 
     address constant EUROC = 0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c;
