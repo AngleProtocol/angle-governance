@@ -7,6 +7,7 @@ function usage {
   echo ""
   echo -e "script: path to the script to run"
   echo -e "chain: chain(s) to run the script on (separate with commas)"
+  echo -e "\t0: Fork"
   echo -e "\t1: Ethereum Mainnet"
   echo -e "\t2: Arbitrum"
   echo -e "\t3: Polygon"
@@ -18,7 +19,6 @@ function usage {
   echo -e "\t9: Polygon ZkEvm"
   echo -e "\t10: Optimism"
   echo -e "\t11: Linea"
-  echo -e "\t12: Fork"
   echo ""
 }
 
@@ -54,6 +54,7 @@ function main {
         echo ""
 
         echo "Which chain(s) would you like to run the script on ? (separate with commas)"
+        echo "- 0: Fork"
         echo "- 1: Ethereum Mainnet"
         echo "- 2: Arbitrum"
         echo "- 3: Polygon"
@@ -65,7 +66,6 @@ function main {
         echo "- 9: Polygon ZkEvm"
         echo "- 10: Optimism"
         echo "- 11: Linea"
-        echo "- 12: Fork"
         echo "- 100: All"
 
         read chains
@@ -119,9 +119,9 @@ function main {
     echo "Would you like to create the proposal ? (yes/no)"
     read execute
 
-    if [[ $execute == "yes" ]]; then
-        FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
-    fi
+    # if [[ $execute == "yes" ]]; then
+    #     FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+    # fi
 }
 
 main $@

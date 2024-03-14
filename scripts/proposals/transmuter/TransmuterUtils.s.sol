@@ -23,17 +23,16 @@ contract TransmuterUtils is Script, CommonUtils {
     address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     uint128 constant FIREWALL_MINT_EUROC = 0;
-    uint128 constant FIREWALL_BURN_EUROC = uint128(5 * BPS);
+    uint128 constant USER_PROTECTION_EUROC = uint128(5 * BPS);
     uint128 constant FIREWALL_MINT_BC3M = uint128(BASE_18);
-    uint128 constant FIREWALL_BURN_BC3M = uint128(100 * BPS);
+    uint128 constant USER_PROTECTION_BC3M = uint128(10 * BPS);
     uint96 constant DEVIATION_THRESHOLD_BC3M = uint96(100 * BPS);
     uint32 constant HEARTBEAT = uint32(1 days);
 
-    address constant GETTERS = 0x37eB0572eb61db3B819570Cf65114ff6dB6C06A2;
-    address constant REDEEMER = 0x028e1f0DB25DAF4ce8C895215deAfbCE7A873b24;
-    address constant SETTERS_GOVERNOR = 0xc3ef7ed4F97450Ae8dA2473068375788BdeB5c5c;
-    address constant SWAPPER = 0x954eC713a3915B504a6F288563e5218F597e1895;
-    address constant ORACLE = 0x44E3d3BBa34E16a67c633dAF86114284FC628819;
+    address constant GETTERS = 0xB55639FdcD12503fE85e3B4D4639142C9D7951aa;
+    address constant REDEEMER = 0xFE2Ff814800Bb1df4E415ac88338f07471C8c87B;
+    address constant SETTERS_GOVERNOR = 0xb3047F769f8ae481F99a71C488037D31e1dA6707;
+    address constant SWAPPER = 0xeF0B788D254a7CC0278FC61C52486Db56dd74308;
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                         HELPERS                                                     

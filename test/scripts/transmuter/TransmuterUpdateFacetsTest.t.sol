@@ -18,7 +18,8 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
 
     // TODO COMPLETE
     bytes public oracleConfigEUROC =
-        hex"0000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000001c00000000000000000000000004305fb66699c3b2702d4d05cf36551390a4c69c600000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000276fa85158bf14ede77087fe3ae472f66213f6ea2f5b411cb2de472794990fa5ca995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000012750000000000000000000000000000000000000000000000000000000000001275000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001c6bf52634000";
+        hex"0000000000000000000000004305fb66699c3b2702d4d05cf36551390a4c69c600000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000276fa85158bf14ede77087fe3ae472f66213f6ea2f5b411cb2de472794990fa5ca995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000001275000000000000000000000000000000000000000000000000000000000000127500000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000";
+    // 
 
     function setUp() public override {
         super.setUp();
@@ -28,7 +29,7 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
         vm.mockCall(
             address(0x6E27A25999B3C665E44D903B2139F5a4Be2B6C26),
             abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(uint80(0), int256(11949000000), uint256(1710170200), uint256(1710170200), uint80(0))
+            abi.encode(uint80(0), int256(11949000000), uint256(1710857504), uint256(1710857504), uint80(0))
         );
 
         chainIds = _executeProposalWithFork();
@@ -74,7 +75,7 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
             assertEq(collatInfoEUROC.isBurnLive, 1);
             assertEq(collatInfoEUROC.decimals, 6);
             assertEq(collatInfoEUROC.onlyWhitelisted, 0);
-            assertApproxEqRel(collatInfoEUROC.normalizedStables, 10893124 * BASE_18, 100 * BPS);
+            assertApproxEqRel(collatInfoEUROC.normalizedStables, 10593543 * BASE_18, 100 * BPS);
             assertEq(collatInfoEUROC.oracleConfig, oracleConfigEUROC);
             assertEq(collatInfoEUROC.whitelistData.length, 0);
             assertEq(collatInfoEUROC.managerData.subCollaterals.length, 0);
@@ -137,7 +138,8 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
                 );
                 assertEq(
                     hyperparams,
-                    hex"0000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000002386f26fc10000"
+                    abi.encode(FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M)
+                    // hex"0000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000002386f26fc10000"
                 );
 
                 (uint256 maxValue, uint96 deviationThreshold, uint96 lastUpdateTimestamp, uint32 heartbeat) =
@@ -188,32 +190,35 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
     function _testGetOracleValues() internal {
-        _checkOracleValues(address(EUROC), BASE_18, FIREWALL_MINT_EUROC, FIREWALL_BURN_EUROC);
-        _checkOracleValues(address(BC3M), (11944 * BASE_18) / 100, FIREWALL_MINT_BC3M, FIREWALL_BURN_BC3M);
+        _checkOracleValues(address(EUROC), BASE_18, FIREWALL_MINT_EUROC, USER_PROTECTION_EUROC);
+        _checkOracleValues(address(BC3M), (11949 * BASE_18) / 100, FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M);
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                         CHECKS                                                      
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    function _checkOracleValues(address collateral, uint256 targetValue, uint128 firewallMint, uint128 firewallBurn)
+    function _checkOracleValues(address collateral, uint256 targetValue, uint128 firewallMint, uint128 userProtection)
         internal
     {
         (uint256 mint, uint256 burn, uint256 ratio, uint256 minRatio, uint256 redemption) =
             transmuter.getOracleValues(collateral);
         assertApproxEqRel(targetValue, redemption, 200 * BPS);
-        assertEq(burn, redemption);
-        if (redemption * BASE_18 < targetValue * (BASE_18 - firewallBurn)) {
+
+        if (targetValue * (BASE_18 - userProtection) < redemption * BASE_18 && redemption * BASE_18 < targetValue * (BASE_18 + userProtection) ) assertEq(burn, targetValue);
+        else assertEq(burn, redemption);
+        
+        if(targetValue * (BASE_18 - userProtection) < redemption * BASE_18 && redemption * BASE_18 < targetValue * (BASE_18 + userProtection)){
+            assertEq(mint,targetValue);
+            assertEq(ratio,BASE_18);
+        } else if (redemption * BASE_18 > targetValue * (BASE_18 + firewallMint)) {
+            assertEq(mint, targetValue);
+            assertEq(ratio, BASE_18);
+        } else if(redemption < targetValue){
             assertEq(mint, redemption);
             assertEq(ratio, (redemption * BASE_18) / targetValue);
-        } else if (redemption < targetValue) {
+        } else{
             assertEq(mint, redemption);
-            assertEq(ratio, BASE_18);
-        } else if (redemption * BASE_18 < targetValue * ((BASE_18 + firewallMint))) {
-            assertEq(mint, redemption);
-            assertEq(ratio, BASE_18);
-        } else {
-            assertEq(mint, targetValue);
             assertEq(ratio, BASE_18);
         }
     }
