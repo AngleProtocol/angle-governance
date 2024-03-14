@@ -12,6 +12,8 @@ contract TransmuterUtils is Script, CommonUtils {
     using strings for *;
 
     string constant JSON_SELECTOR_PATH = "./scripts/proposals/transmuter/selectors.json";
+    string constant JSON_SELECTOR_PATH_REPLACE = "./scripts/proposals/transmuter/selectors_replace.json";
+    string constant JSON_SELECTOR_PATH_ADD = "./scripts/proposals/transmuter/selectors_add.json";
     uint256 constant BPS = 1e14;
 
     address constant EUROC = 0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c;
@@ -47,6 +49,20 @@ contract TransmuterUtils is Script, CommonUtils {
         out = new bytes32[](_in.length);
         for (uint256 i = 0; i < _in.length; ++i) {
             out[i] = _bytes4ToBytes32(_in[i]);
+        }
+    }
+
+    function _arrayBytes32ToBytes4Exclude(bytes4[] memory _in, bytes4 toExclude) internal pure returns (bytes32[] memory out) {
+        out = new bytes32[](_in.length);
+        uint256 length = 0;
+        for (uint256 i = 0; i < _in.length; ++i) {
+            if(_in[i] != toExclude){
+                out[length] = _bytes4ToBytes32(_in[i]);
+                length++;
+            }
+        }
+        assembly {
+            mstore(out, length)
         }
     }
 

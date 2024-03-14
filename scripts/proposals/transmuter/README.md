@@ -1,8 +1,18 @@
 # Guide to test facets update
 
-## Angle-Tranmuter repo
+## Angle-Transmuter repo
 
-To test that new facets are non breaking changes run:
+First you need to have `selectors_replace.json` and `selectors_add.json` in the script folder. As there is no direct way 
+to differentiate between the previous selectors and the one added, you first need to run:
+```bash
+yarn generate
+```
+
+This will populate the `scripts/selector.json` file, you then need to copy paste all selectors that needs to be replace in `scripts/selectors_replace.json`,
+which are all except the `updateOracle(address)` one which should be `0x1cb44dfc00000000000000000000000000000000000000000000000000000000`. This one should be 
+put `scripts/selector_add.json`.
+
+You are all set to test that new facets are non breaking changes:
 ```bash
 yarn test --match-contract UpdateTransmuterFacets
 ```
@@ -34,6 +44,8 @@ Get the addresses for the deployed contracts, you will get a log of this format:
 ```
 
 ## Angle-Governance repo
+
+First you need to copy paste the previous files `selectors_replace.json` and `selectors_add.json` into `./scripts/proposals/transmuter/selectors_replace.json` and `./scripts/proposals/transmuter/selectors_add.json`
 
 Update the address previously logged into `./TransmuterUtils.s.sol` and run:
 
