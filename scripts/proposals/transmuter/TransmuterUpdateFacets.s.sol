@@ -15,7 +15,6 @@ import {DiamondEtherscan} from "transmuter/transmuter/facets/DiamondEtherscan.so
 import {DiamondLoupe} from "transmuter/transmuter/facets/DiamondLoupe.sol";
 import {DiamondProxy} from "transmuter/transmuter/DiamondProxy.sol";
 import {Getters} from "transmuter/transmuter/facets/Getters.sol";
-import {Oracle} from "transmuter/transmuter/facets/Oracle.sol";
 import {Redeemer} from "transmuter/transmuter/facets/Redeemer.sol";
 import {RewardHandler} from "transmuter/transmuter/facets/RewardHandler.sol";
 import {SettersGovernor} from "transmuter/transmuter/facets/SettersGovernor.sol";
@@ -26,38 +25,16 @@ import {ITransmuter, IDiamondCut, ISettersGovernor} from "transmuter/interfaces/
 contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
     using stdJson for string;
 
-    string[] facetNames;
     string[] replaceFacetNames;
     string[] addFacetNames;
-    address[] facetAddressList;
+    address[] replaceFacetAddressList;
+    address[] addFacetAddressList;
 
     ITransmuter transmuter;
     IERC20 agEUR;
     address governor;
 
     SubCall[] private subCalls;
-
-    function _generateFacets() private {
-        // First generate the selectors
-        facetNames.push("DiamondCut");
-        facetNames.push("DiamondLoupe");
-        facetNames.push("Getters");
-        facetNames.push("Oracle");
-        facetNames.push("Redeemer");
-        facetNames.push("RewardHandler");
-        facetNames.push("SettersGovernor");
-        facetNames.push("SettersGuardian");
-        facetNames.push("Swapper");
-        facetNames.push("DiamondEtherscan");
-
-        string memory json = "";
-        for (uint256 i = 0; i < facetNames.length; ++i) {
-            bytes4[] memory selectors = _generateSelectors(facetNames[i]);
-            vm.serializeBytes32(json, facetNames[i], _arrayBytes4ToBytes32(selectors));
-        }
-        string memory finalJson = vm.serializeString(json, "useless", "");
-        vm.writeJson(finalJson, JSON_SELECTOR_PATH);
-    }
 
     function _updateFacets(uint256 chainId) private {
         uint256 executionChainId = chainId;
@@ -71,32 +48,33 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
         Storage.FacetCut[] memory addCut;
 
         replaceFacetNames.push("Getters");
-        facetAddressList.push(GETTERS);
+        replaceFacetAddressList.push(GETTERS);
 
         replaceFacetNames.push("Redeemer");
-        facetAddressList.push(REDEEMER);
+        replaceFacetAddressList.push(REDEEMER);
 
         replaceFacetNames.push("SettersGovernor");
-        facetAddressList.push(SETTERS_GOVERNOR);
+        replaceFacetAddressList.push(SETTERS_GOVERNOR);
 
         replaceFacetNames.push("Swapper");
-        facetAddressList.push(SWAPPER);
+        replaceFacetAddressList.push(SWAPPER);
 
-        addFacetNames.push("Oracle");
-        facetAddressList.push(ORACLE);
+        addFacetNames.push("SettersGovernor");
+        addFacetAddressList.push(SETTERS_GOVERNOR);
 
-        string memory json = vm.readFile(JSON_SELECTOR_PATH);
         {
+            string memory jsonReplace = vm.readFile(JSON_SELECTOR_PATH_REPLACE);
             // Build appropriate payload
             uint256 n = replaceFacetNames.length;
             replaceCut = new Storage.FacetCut[](n);
             for (uint256 i = 0; i < n; ++i) {
                 // Get Selectors from json
-                bytes4[] memory selectors =
-                    _arrayBytes32ToBytes4(json.readBytes32Array(string.concat("$.", replaceFacetNames[i])));
+                bytes4[] memory selectors = _arrayBytes32ToBytes4(
+                    jsonReplace.readBytes32Array(string.concat("$.", replaceFacetNames[i]))
+                );
 
                 replaceCut[i] = Storage.FacetCut({
-                    facetAddress: facetAddressList[i],
+                    facetAddress: replaceFacetAddressList[i],
                     action: Storage.FacetCutAction.Replace,
                     functionSelectors: selectors
                 });
@@ -104,19 +82,20 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
         }
 
         {
+            string memory jsonAdd = vm.readFile(JSON_SELECTOR_PATH_ADD);
             // Build appropriate payload
-            uint256 r = replaceFacetNames.length;
             uint256 n = addFacetNames.length;
             addCut = new Storage.FacetCut[](n);
             for (uint256 i = 0; i < n; ++i) {
                 // Get Selectors from json
-                bytes4[] memory selectors =
-                    _arrayBytes32ToBytes4(json.readBytes32Array(string.concat("$.", addFacetNames[i])));
+                bytes4[] memory selectors = _arrayBytes32ToBytes4(
+                    jsonAdd.readBytes32Array(string.concat("$.", addFacetNames[i]))
+                );
                 addCut[i] = Storage.FacetCut({
-                    facetAddress: facetAddressList[r + i],
+                    facetAddress: addFacetAddressList[i],
                     action: Storage.FacetCutAction.Add,
                     functionSelectors: selectors
-                });
+                });   
             }
         }
 
@@ -197,7 +176,6 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
         string memory description = "ipfs://";
 
-        _generateFacets();
         for (uint256 i = 0; i < chainIds.length; i++) {
             _updateFacets(chainIds[i]);
         }
