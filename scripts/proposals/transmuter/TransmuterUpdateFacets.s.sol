@@ -145,7 +145,7 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
                         targetTypeEUROC,
                         oracleDataEUROC,
                         targetDataEUROC,
-                        abi.encode(FIREWALL_MINT_EUROC, FIREWALL_BURN_EUROC)
+                        abi.encode(FIREWALL_MINT_EUROC, USER_PROTECTION_EUROC)
                     )
                 )
             )
@@ -165,7 +165,7 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
                         oracleDataBC3M,
                         // We can hope that the oracleDataBC3M won't move much before the proposal is executed
                         abi.encode(currentBC3MPrice, DEVIATION_THRESHOLD_BC3M, uint96(block.timestamp), HEARTBEAT),
-                        abi.encode(FIREWALL_MINT_BC3M, FIREWALL_BURN_BC3M)
+                        abi.encode(FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M)
                     )
                 )
             )
