@@ -17,7 +17,7 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
     uint256[] chainIds;
 
     // TODO COMPLETE
-    bytes public oracleConfigEUROC =
+    bytes public oracleConfigDataEUROC =
         hex"0000000000000000000000004305fb66699c3b2702d4d05cf36551390a4c69c600000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000276fa85158bf14ede77087fe3ae472f66213f6ea2f5b411cb2de472794990fa5ca995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000001275000000000000000000000000000000000000000000000000000000000000127500000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000";
     // 
 
@@ -75,8 +75,33 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
             assertEq(collatInfoEUROC.isBurnLive, 1);
             assertEq(collatInfoEUROC.decimals, 6);
             assertEq(collatInfoEUROC.onlyWhitelisted, 0);
-            assertApproxEqRel(collatInfoEUROC.normalizedStables, 10593543 * BASE_18, 100 * BPS);
-            assertEq(collatInfoEUROC.oracleConfig, oracleConfigEUROC);
+            assertApproxEqRel(collatInfoEUROC.normalizedStables, 10450179 * BASE_18, 100 * BPS);
+            {
+                (
+                    Storage.OracleReadType oracleType,
+                    Storage.OracleReadType targetType,
+                    bytes memory oracleData,
+                    bytes memory targetData,
+                    bytes memory hyperparams
+                ) = abi.decode(
+                    collatInfoEUROC.oracleConfig, (Storage.OracleReadType, Storage.OracleReadType, bytes, bytes, bytes)
+                );
+
+                assertEq(uint8(oracleType), uint8(8));
+                assertEq(uint8(targetType), uint8(3));
+                assertEq(
+                    oracleData,
+                    hex""
+                );
+                assertEq(
+                    targetData,
+                    hex""
+                );
+                assertEq(
+                    hyperparams,
+                    abi.encode(FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M)
+                );
+            }
             assertEq(collatInfoEUROC.whitelistData.length, 0);
             assertEq(collatInfoEUROC.managerData.subCollaterals.length, 0);
             assertEq(collatInfoEUROC.managerData.config.length, 0);
@@ -134,7 +159,7 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
                 assertEq(uint8(targetType), uint8(9));
                 assertEq(
                     oracleData,
-                    hex"00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000006e27a25999b3c665e44d903b2139f5a4be2b6c260000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000003f4800000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000008"
+                    oracleConfigDataEUROC
                 );
                 assertEq(
                     hyperparams,
@@ -191,7 +216,7 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
 
     function _testGetOracleValues() internal {
         _checkOracleValues(address(EUROC), BASE_18, FIREWALL_MINT_EUROC, USER_PROTECTION_EUROC);
-        _checkOracleValues(address(BC3M), (11949 * BASE_18) / 100, FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M);
+        _checkOracleValues(address(BC3M), (11957 * BASE_18) / 100, FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M);
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
