@@ -47,7 +47,15 @@ contract ScriptHelpers is Test, Utils {
         vm.stopPrank();
     }
 
+    function _executeProposalWithFork() public returns (uint256[] memory) {
+        return _executeProposalInternal(true);
+    }
+
     function _executeProposal() public returns (uint256[] memory) {
+        return _executeProposalInternal(false);
+    }
+
+    function _executeProposalInternal(bool isFork) public returns (uint256[] memory) {
         (
             bytes[] memory calldatas,
             string memory description,
@@ -56,7 +64,7 @@ contract ScriptHelpers is Test, Utils {
             uint256[] memory chainIds
         ) = _deserializeJson();
 
-        vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
+        vm.selectFork(forkIdentifier[isFork ? CHAIN_FORK : CHAIN_SOURCE]);
         {
             AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_SOURCE, ContractType.Governor)));
 

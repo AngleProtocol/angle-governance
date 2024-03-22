@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { console } from "forge-std/console.sol";
 import { Wrapper } from "../Wrapper.s.sol";
-import { GovernorVotesQuorumFraction } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorVotesQuorumFraction } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
 import { GovernorShortCircuit } from "contracts/external/GovernorShortCircuit.sol";
 import "../../Constants.s.sol";
 
@@ -42,11 +42,14 @@ contract IncreaseQuorum is Wrapper {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
         string memory description = "ipfs://QmXpXXaUYCtUb4w9T2kEtu8t1JwpSv7tqTFwMETKgimcsf";
 
-        /** TODO  complete */
+        /**
+         * TODO  complete
+         */
         uint256 quorum = 20;
         uint256 quorumShortCircuit = 75;
-        /** END  complete */
-
+        /**
+         * END  complete
+         */
         for (uint256 i = 0; i < chainIds.length; i++) {
             _setQuorum(chainIds[i], quorum);
             _setQuorumShortCircuit(chainIds[i], quorumShortCircuit);

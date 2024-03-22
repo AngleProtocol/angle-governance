@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.10;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { SafeCast } from "oz/utils/math/SafeCast.sol";
-import { Strings } from "oz/utils/Strings.sol";
-import { MessageHashUtils } from "oz/utils/cryptography/MessageHashUtils.sol";
-import { GovernorCountingSimple } from "oz/governance/extensions/GovernorCountingSimple.sol";
-import { GovernorVotesQuorumFraction } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { IVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { SafeCast } from "oz-v5/utils/math/SafeCast.sol";
+import { Strings } from "oz-v5/utils/Strings.sol";
+import { MessageHashUtils } from "oz-v5/utils/cryptography/MessageHashUtils.sol";
+import { GovernorCountingSimple } from "oz-v5/governance/extensions/GovernorCountingSimple.sol";
+import { GovernorVotesQuorumFraction } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
 
 import { Test, stdError } from "forge-std/Test.sol";
 import { Vm } from "forge-std/Vm.sol";

@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import { BaseActor, IERC20, IERC20Metadata, AngleGovernor, TestStorage } from "./BaseActor.t.sol";
 import { console } from "forge-std/console.sol";
 import { ProposalStore, Proposal } from "../stores/ProposalStore.sol";
-import { IGovernor } from "oz/governance/IGovernor.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
 
 contract Voter is BaseActor {
     AngleGovernor internal _angleGovernor;

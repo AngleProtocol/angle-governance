@@ -1,7 +1,10 @@
 {
   "solidity.compileUsingRemoteVersion": "0.8.20",
-  "[solidity]": {
-    "editor.defaultFormatter": "JuanBlanco.solidity",
-    "editor.formatOnSave": true
+  "[typescript]": {
+    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
   },
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "editor.formatOnSave": true,
 }

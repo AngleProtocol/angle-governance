@@ -5,8 +5,8 @@ import { console } from "forge-std/console.sol";
 import { IVaultManager } from "borrow/interfaces/IVaultManager.sol";
 import { ITreasury } from "borrow/interfaces/ITreasury.sol";
 import { IAgToken } from "borrow/interfaces/IAgToken.sol";
-import { IERC721Metadata } from "oz/token/ERC721/extensions/IERC721Metadata.sol";
-import { IAccessControl } from "oz/access/IAccessControl.sol";
+import { IERC721Metadata } from "oz-v5/token/ERC721/extensions/IERC721Metadata.sol";
+import { IAccessControl } from "oz-v5/access/IAccessControl.sol";
 import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
 import { ProposalSender } from "contracts/ProposalSender.sol";
 import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
@@ -270,7 +270,7 @@ contract CheckRoles is Utils {
                 }
             }
 
-            if (_isAngleDeployed(chainId) && chainId != CHAIN_POLYGON)
+            if (_isAngleDeployed(chainId) && chainId != CHAIN_POLYGON) {
                 _checkOnLZToken(
                     chainId,
                     ILayerZeroBridge(_chainToContract(chainId, ContractType.AngleLZ)),
@@ -278,6 +278,7 @@ contract CheckRoles is Utils {
                     ContractType.Angle,
                     ContractType.TreasuryAgEUR
                 );
+            }
 
             if (_isMerklDeployed(chainId)) {
                 IAccessControlCore distributionCreator = IAccessControlCore(
@@ -358,9 +359,11 @@ contract CheckRoles is Utils {
             _checkVaultManagers(chainId, ContractType.TreasuryAgEUR);
             _checkVaultManagers(chainId, ContractType.TreasuryAgUSD);
 
-            if (_revertOnWrongFunctioCall(chainId))
-                for (uint256 i = 0; i < allContracts.length; i++)
+            if (_revertOnWrongFunctioCall(chainId)) {
+                for (uint256 i = 0; i < allContracts.length; i++) {
                     _checkGlobalAccessControl(chainId, IGenericAccessControl(allContracts[i]));
+                }
+            }
         }
 
         // Contract to check roles on
@@ -420,9 +423,11 @@ contract CheckRoles is Utils {
                 jsonActorIndex++;
             }
 
-            if (_revertOnWrongFunctioCall(chainId))
-                for (uint256 j = 0; j < allContracts.length; j++)
+            if (_revertOnWrongFunctioCall(chainId)) {
+                for (uint256 j = 0; j < allContracts.length; j++) {
                     _checkAddressAccessControl(chainId, IGenericAccessControl(allContracts[j]), actor);
+                }
+            }
 
             if (_isMerklDeployed(chainId)) {
                 CoreBorrow coreMerkl = CoreBorrow(_chainToContract(chainId, ContractType.CoreMerkl));
@@ -474,8 +479,9 @@ contract CheckRoles is Utils {
                     jsonActorIndex++;
                 }
             }
-            if (outputActor.toSlice().len() != 0)
+            if (outputActor.toSlice().len() != 0) {
                 output = vm.serializeString(json, vm.toString(listAddressToCheck[i]), outputActor);
+            }
         }
     }
 

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.20;
 
-import { Governor } from "oz/governance/Governor.sol";
-import { GovernorCountingSimple } from "oz/governance/extensions/GovernorCountingSimple.sol";
-import { SafeCast } from "oz/utils/math/SafeCast.sol";
+import { Governor } from "oz-v5/governance/Governor.sol";
+import { GovernorCountingSimple } from "oz-v5/governance/extensions/GovernorCountingSimple.sol";
+import { SafeCast } from "oz-v5/utils/math/SafeCast.sol";
 
 import "../utils/Errors.sol";
 
@@ -138,8 +138,9 @@ abstract contract GovernorCountingFractional is Governor {
      * vote before or after.
      */
     function _countVoteNominal(uint256 proposalId, address account, uint128 totalWeight, uint8 support) internal {
-        if (_proposalVotersWeightCast[proposalId][account] > 0)
+        if (_proposalVotersWeightCast[proposalId][account] > 0) {
             revert GovernorCountingFractionalVoteWouldExceedWeight();
+        }
 
         _proposalVotersWeightCast[proposalId][account] = totalWeight;
 

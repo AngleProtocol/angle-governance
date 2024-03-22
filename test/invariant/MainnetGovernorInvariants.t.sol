@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.19;
 
-import { IERC20 } from "oz/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "oz/token/ERC20/extensions/IERC20Metadata.sol";
-import "oz/utils/Strings.sol";
+import { IERC20 } from "oz-v5/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
+import "oz-v5/utils/Strings.sol";
 import { Voter } from "./actors/Voter.t.sol";
 import { Proposer } from "./actors/Proposer.t.sol";
 import { BadVoter } from "./actors/BadVoter.t.sol";
 import { Fixture, AngleGovernor } from "../Fixture.t.sol";
 import { ProposalStore, Proposal } from "./stores/ProposalStore.sol";
-import { IGovernor } from "oz/governance/IGovernor.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
 import { TimestampStore } from "./stores/TimestampStore.sol";
 
 //solhint-disable

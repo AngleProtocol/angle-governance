@@ -1,6 +1,6 @@
 pragma solidity ^0.8.19;
 
-import { IAccessControl } from "oz/access/IAccessControl.sol";
+import { IAccessControl } from "oz-v5/access/IAccessControl.sol";
 import { IAccessControlManager } from "interfaces/IAccessControlManager.sol";
 
 interface IAccessControlCore {

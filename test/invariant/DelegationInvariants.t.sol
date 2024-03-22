@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.19;
 
-import { IERC20 } from "oz/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "oz/token/ERC20/extensions/IERC20Metadata.sol";
-import "oz/utils/Strings.sol";
+import { IERC20 } from "oz-v5/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
+import "oz-v5/utils/Strings.sol";
 import { Delegator } from "./actors/Delegator.t.sol";
 import { Param } from "./actors/Param.t.sol";
 import { Fixture, AngleGovernor } from "../Fixture.t.sol";
@@ -35,8 +35,9 @@ contract DelegationInvariants is Fixture {
         _paramHandler = new Param(_NUM_PARAMS, ANGLE, _timestampStore);
 
         // Label newly created addresses
-        for (uint256 i; i < _NUM_DELEGATORS; i++)
+        for (uint256 i; i < _NUM_DELEGATORS; i++) {
             vm.label(_delegatorHandler.actors(i), string.concat("Delegator ", Strings.toString(i)));
+        }
         vm.label({ account: address(_timestampStore), newLabel: "TimestampStore" });
         vm.label({ account: address(_paramHandler), newLabel: "Param" });
 
@@ -88,8 +89,9 @@ contract DelegationInvariants is Fixture {
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             address actor = _delegatorHandler.actors(i);
             address delegatee = _delegatorHandler.delegations(actor);
-            if (delegatee != address(0) && delegatee != actor)
+            if (delegatee != address(0) && delegatee != actor) {
                 assertEq(token.getVotes(actor), 0, "Delegator should have null vote");
+            }
         }
     }
 

@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.9;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { IAccessControl } from "oz/access/IAccessControl.sol";
-import { Strings } from "oz/utils/Strings.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { IVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { IAccessControl } from "oz-v5/access/IAccessControl.sol";
+import { Strings } from "oz-v5/utils/Strings.sol";
 
 import { console } from "forge-std/console.sol";
 import { Test, stdError } from "forge-std/Test.sol";
@@ -114,13 +114,16 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         uint64 defaultBlockConfirmation = 0;
 
-        /** Can be modified  */
+        /**
+         * Can be modified
+         */
         uint16 version = 2;
         uint16 chainId = 1;
         uint16 configType = 2;
         uint64 blockConfirmation = 365;
-        /** Stop  */
-
+        /**
+         * Stop
+         */
         address[] memory targets = new address[](1);
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
@@ -146,10 +149,13 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
 
         uint64 defaultVersion = 2;
 
-        /** Can be modified  */
+        /**
+         * Can be modified
+         */
         uint16 version = 1;
-        /** Stop  */
-
+        /**
+         * Stop
+         */
         address[] memory targets = new address[](1);
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
@@ -186,7 +192,7 @@ contract ProposalLayerZeroRelayer is SimulationSetup {
         bytes
             memory payload = hex"000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000a0cb889707d426a7a386870a03bc70d1b06975980000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000012401d5062a000000000000000000000000a0cb889707d426a7a386870a03bc70d1b0697598000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015180000000000000000000000000000000000000000000000000000000000000002464d6235300000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         bytes memory adapterParams = abi.encodePacked(uint16(1), uint256(300000));
-        (uint nativeFee, uint zroFee) = proposalSender().estimateFees(_getLZChainId(137), payload, adapterParams);
+        (uint256 nativeFee, uint256 zroFee) = proposalSender().estimateFees(_getLZChainId(137), payload, adapterParams);
         assertEq(zroFee, 0);
         assertGt(nativeFee, 0);
         assertLe(nativeFee, 0.1 ether);

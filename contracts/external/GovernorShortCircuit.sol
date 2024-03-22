@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.20;
 
-import { Checkpoints } from "oz/utils/structs/Checkpoints.sol";
-import { IERC5805 } from "oz/interfaces/IERC5805.sol";
-import { GovernorVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { GovernorVotesQuorumFraction } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { Checkpoints } from "oz-v5/utils/structs/Checkpoints.sol";
+import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
+import { GovernorVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { GovernorVotesQuorumFraction } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
 import { GovernorCountingFractional, SafeCast } from "./GovernorCountingFractional.sol";
 
 import "../utils/Errors.sol";
