@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.20;
 
-import {Checkpoints} from "oz-v5/utils/structs/Checkpoints.sol";
-import {IERC5805} from "oz-v5/interfaces/IERC5805.sol";
-import {GovernorVotes} from "oz-v5/governance/extensions/GovernorVotes.sol";
-import {GovernorVotesQuorumFraction} from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {GovernorCountingFractional, SafeCast} from "./GovernorCountingFractional.sol";
+import { Checkpoints } from "oz-v5/utils/structs/Checkpoints.sol";
+import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
+import { GovernorVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { GovernorVotesQuorumFraction } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorCountingFractional, SafeCast } from "./GovernorCountingFractional.sol";
 
 import "../utils/Errors.sol";
 
@@ -83,8 +83,9 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
         }
 
         // Otherwise, do the binary search
-        shortCircuitNumeratorAtTimepoint =
-            _$shortCircuitNumeratorHistory.upperLookupRecent(SafeCast.toUint32(timepoint));
+        shortCircuitNumeratorAtTimepoint = _$shortCircuitNumeratorHistory.upperLookupRecent(
+            SafeCast.toUint32(timepoint)
+        );
     }
 
     /// @notice Returns the latest short circuit numerator
@@ -96,7 +97,8 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
         if (snapshotBlockNumber == 0 || snapshotBlockNumber >= block.number) revert InvalidTimepoint();
 
         shortCircuitThresholdAtTimepoint =
-            (token().getPastTotalSupply(snapshotBlockNumber) * shortCircuitNumerator(timepoint)) / quorumDenominator();
+            (token().getPastTotalSupply(snapshotBlockNumber) * shortCircuitNumerator(timepoint)) /
+            quorumDenominator();
     }
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,12 +123,10 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
     /// @param proposalId Proposal ID
     /// @return isShortCircuitFor Represents if short circuit threshold for votes were reached or not
     /// @return isShortCircuitAgainst Represents if short circuit threshold against votes were reached or not
-    function _shortCircuit(uint256 proposalId)
-        internal
-        view
-        returns (bool isShortCircuitFor, bool isShortCircuitAgainst)
-    {
-        (uint256 againstVoteWeight, uint256 forVoteWeight,) = proposalVotes(proposalId);
+    function _shortCircuit(
+        uint256 proposalId
+    ) internal view returns (bool isShortCircuitFor, bool isShortCircuitAgainst) {
+        (uint256 againstVoteWeight, uint256 forVoteWeight, ) = proposalVotes(proposalId);
 
         uint256 proposalVoteStart = proposalSnapshot(proposalId);
         uint256 shortCircuitThresholdValue = shortCircuitThreshold(proposalVoteStart);
@@ -160,6 +160,9 @@ abstract contract GovernorShortCircuit is GovernorVotes, GovernorCountingFractio
     function _setVotingDelayBlocks(uint256 votingDelayBlocks) internal {
         uint256 oldVotingDelayBlocks = $votingDelayBlocks;
         $votingDelayBlocks = votingDelayBlocks;
-        emit VotingDelayBlocksSet({oldVotingDelayBlocks: oldVotingDelayBlocks, newVotingDelayBlocks: votingDelayBlocks});
+        emit VotingDelayBlocksSet({
+            oldVotingDelayBlocks: oldVotingDelayBlocks,
+            newVotingDelayBlocks: votingDelayBlocks
+        });
     }
 }

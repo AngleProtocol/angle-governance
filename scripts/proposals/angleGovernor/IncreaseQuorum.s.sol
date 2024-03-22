@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/console.sol";
-import {Wrapper} from "../Wrapper.s.sol";
-import {GovernorVotesQuorumFraction} from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {GovernorShortCircuit} from "contracts/external/GovernorShortCircuit.sol";
+import { console } from "forge-std/console.sol";
+import { Wrapper } from "../Wrapper.s.sol";
+import { GovernorVotesQuorumFraction } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorShortCircuit } from "contracts/external/GovernorShortCircuit.sol";
 import "../../Constants.s.sol";
 
 contract IncreaseQuorum is Wrapper {
@@ -55,8 +55,12 @@ contract IncreaseQuorum is Wrapper {
             _setQuorumShortCircuit(chainIds[i], quorumShortCircuit);
         }
 
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas, uint256[] memory chainIds2) =
-            _wrap(subCalls);
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            uint256[] memory chainIds2
+        ) = _wrap(subCalls);
         _serializeJson(targets, values, calldatas, chainIds2, description);
     }
 }

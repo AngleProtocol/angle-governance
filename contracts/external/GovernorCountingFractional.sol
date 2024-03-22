@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.20;
 
-import {Governor} from "oz-v5/governance/Governor.sol";
-import {GovernorCountingSimple} from "oz-v5/governance/extensions/GovernorCountingSimple.sol";
-import {SafeCast} from "oz-v5/utils/math/SafeCast.sol";
+import { Governor } from "oz-v5/governance/Governor.sol";
+import { GovernorCountingSimple } from "oz-v5/governance/extensions/GovernorCountingSimple.sol";
+import { SafeCast } from "oz-v5/utils/math/SafeCast.sol";
 
 import "../utils/Errors.sol";
 
@@ -64,12 +64,9 @@ abstract contract GovernorCountingFractional is Governor {
     /**
      * @dev Accessor to the internal vote counts.
      */
-    function proposalVotes(uint256 proposalId)
-        public
-        view
-        virtual
-        returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes)
-    {
+    function proposalVotes(
+        uint256 proposalId
+    ) public view virtual returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.againstVotes, proposalVote.forVotes, proposalVote.abstainVotes);
     }
@@ -112,11 +109,13 @@ abstract contract GovernorCountingFractional is Governor {
      *
      * See `_countVoteNominal` and `_countVoteFractional` for more details.
      */
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256 totalWeight, bytes memory voteData)
-        internal
-        virtual
-        override
-    {
+    function _countVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        uint256 totalWeight,
+        bytes memory voteData
+    ) internal virtual override {
         if (totalWeight == 0) revert GovernorCountingFractionalNoWeight();
         if (_proposalVotersWeightCast[proposalId][account] >= totalWeight) {
             revert GovernorCountingFractionalAllWeightCast();
@@ -177,9 +176,12 @@ abstract contract GovernorCountingFractional is Governor {
      * Note that if partial votes are cast, all remaining weight must be cast
      * with _countVoteFractional: _countVoteNominal will revert.
      */
-    function _countVoteFractional(uint256 proposalId, address account, uint128 totalWeight, bytes memory voteData)
-        internal
-    {
+    function _countVoteFractional(
+        uint256 proposalId,
+        address account,
+        uint128 totalWeight,
+        bytes memory voteData
+    ) internal {
         if (voteData.length != 48) revert GovernorCountingFractionalInvalidVoteData();
 
         (uint128 _againstVotes, uint128 _forVotes, uint128 _abstainVotes) = _decodePackedVotes(voteData);
@@ -210,11 +212,9 @@ abstract contract GovernorCountingFractional is Governor {
      * language limitation which prevents slicing bytes stored in memory, rather
      * than calldata.
      */
-    function _decodePackedVotes(bytes memory voteData)
-        internal
-        pure
-        returns (uint128 againstVotes, uint128 forVotes, uint128 abstainVotes)
-    {
+    function _decodePackedVotes(
+        bytes memory voteData
+    ) internal pure returns (uint128 againstVotes, uint128 forVotes, uint128 abstainVotes) {
         assembly {
             againstVotes := shr(128, mload(add(voteData, 0x20)))
             forVotes := and(_VOTEMASK, mload(add(voteData, 0x20)))

@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.19;
 
-import {IERC20} from "oz-v5/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20 } from "oz-v5/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
 import "oz-v5/utils/Strings.sol";
-import {Voter} from "./actors/Voter.t.sol";
-import {Fixture, AngleGovernor} from "../Fixture.t.sol";
-import {ProposalStore} from "./stores/ProposalStore.sol";
+import { Voter } from "./actors/Voter.t.sol";
+import { Fixture, AngleGovernor } from "../Fixture.t.sol";
+import { ProposalStore } from "./stores/ProposalStore.sol";
 
 //solhint-disable
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
 contract BasicInvariants is Fixture {
     uint256 internal constant _NUM_VOTER = 10;

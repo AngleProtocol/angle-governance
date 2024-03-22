@@ -2,11 +2,11 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import {StdAssertions} from "forge-std/Test.sol";
+import { StdAssertions } from "forge-std/Test.sol";
 import "stringutils/strings.sol";
 
-import {CommonUtils} from "utils/src/CommonUtils.sol";
-import {ContractType, BASE_18} from "utils/src/Constants.sol";
+import { CommonUtils } from "utils/src/CommonUtils.sol";
+import { ContractType, BASE_18 } from "utils/src/Constants.sol";
 
 contract TransmuterUtils is Script, CommonUtils {
     using strings for *;
@@ -51,11 +51,14 @@ contract TransmuterUtils is Script, CommonUtils {
         }
     }
 
-    function _arrayBytes32ToBytes4Exclude(bytes4[] memory _in, bytes4 toExclude) internal pure returns (bytes32[] memory out) {
+    function _arrayBytes32ToBytes4Exclude(
+        bytes4[] memory _in,
+        bytes4 toExclude
+    ) internal pure returns (bytes32[] memory out) {
         out = new bytes32[](_in.length);
         uint256 length = 0;
         for (uint256 i = 0; i < _in.length; ++i) {
-            if(_in[i] != toExclude){
+            if (_in[i] != toExclude) {
                 out[length] = _bytes4ToBytes32(_in[i]);
                 length++;
             }

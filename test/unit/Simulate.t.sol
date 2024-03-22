@@ -2,20 +2,20 @@
 
 pragma solidity ^0.8.9;
 
-import {IGovernor} from "oz-v5/governance/IGovernor.sol";
-import {IVotes} from "oz-v5/governance/extensions/GovernorVotes.sol";
-import {Strings} from "oz-v5/utils/Strings.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { IVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { Strings } from "oz-v5/utils/Strings.sol";
 
-import {console} from "forge-std/console.sol";
-import {Vm} from "forge-std/Vm.sol";
+import { console } from "forge-std/console.sol";
+import { Vm } from "forge-std/Vm.sol";
 
-import {AngleGovernor} from "contracts/AngleGovernor.sol";
-import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
-import {ProposalSender} from "contracts/ProposalSender.sol";
+import { AngleGovernor } from "contracts/AngleGovernor.sol";
+import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
+import { ProposalSender } from "contracts/ProposalSender.sol";
 
-import {Proposal, SubCall} from "./Proposal.sol";
-import {SimulationSetup} from "./SimulationSetup.t.sol";
-import {ILayerZeroEndpoint} from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
+import { Proposal, SubCall } from "./Proposal.sol";
+import { SimulationSetup } from "./SimulationSetup.t.sol";
+import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
 import "stringutils/strings.sol";
 import "../Constants.t.sol";
 
@@ -36,11 +36,11 @@ contract ProposalSimulateTest is SimulationSetup {
         vm.warp(block.timestamp + governor().votingPeriod() + 1);
 
         vm.recordLogs();
-        governor().execute{value: 1 ether}(targets, values, calldatas, keccak256(bytes(description)));
+        governor().execute{ value: 1 ether }(targets, values, calldatas, keccak256(bytes(description)));
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         // Mainnet execution
-        (address[] memory batchTargets,,) = filterChainSubCalls(1, p);
+        (address[] memory batchTargets, , ) = filterChainSubCalls(1, p);
         if (batchTargets.length > 0) {
             executeTimelock(1, p);
         }
@@ -52,7 +52,10 @@ contract ProposalSimulateTest is SimulationSetup {
                 vm.selectFork(forkIdentifier[chainId]);
                 hoax(address(_lzEndPoint(chainId)));
                 proposalReceiver(chainId).lzReceive(
-                    _getLZChainId(1), abi.encodePacked(proposalSender(), proposalReceiver(chainId)), 0, payload
+                    _getLZChainId(1),
+                    abi.encodePacked(proposalSender(), proposalReceiver(chainId)),
+                    0,
+                    payload
                 );
 
                 // Final test

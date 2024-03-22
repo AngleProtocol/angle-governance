@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: ISC
 pragma solidity ^0.8.19;
 
-import {IveANGLEVotingDelegation} from "contracts/interfaces/IveANGLEVotingDelegation.sol";
-import {Test, stdError} from "forge-std/Test.sol";
-import {deployMockANGLE, deployVeANGLE} from "../../scripts/test/DeployANGLE.s.sol";
-import {ERC20} from "oz-v5/token/ERC20/ERC20.sol";
+import { IveANGLEVotingDelegation } from "contracts/interfaces/IveANGLEVotingDelegation.sol";
+import { Test, stdError } from "forge-std/Test.sol";
+import { deployMockANGLE, deployVeANGLE } from "../../scripts/test/DeployANGLE.s.sol";
+import { ERC20 } from "oz-v5/token/ERC20/ERC20.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "../external/VyperDeployer.sol";
 
-import {AngleGovernor} from "contracts/AngleGovernor.sol";
-import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
-import {ProposalSender} from "contracts/ProposalSender.sol";
-import {VeANGLEVotingDelegation, ECDSA} from "contracts/VeANGLEVotingDelegation.sol";
-import {TimelockControllerWithCounter, TimelockController} from "contracts/TimelockControllerWithCounter.sol";
+import { AngleGovernor } from "contracts/AngleGovernor.sol";
+import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
+import { ProposalSender } from "contracts/ProposalSender.sol";
+import { VeANGLEVotingDelegation, ECDSA } from "contracts/VeANGLEVotingDelegation.sol";
+import { TimelockControllerWithCounter, TimelockController } from "contracts/TimelockControllerWithCounter.sol";
 import "contracts/utils/Errors.sol" as Errors;
 import "../Constants.t.sol";
 import "../Utils.t.sol";
@@ -71,11 +71,11 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
 
         vyperDeployer = new VyperDeployer();
 
-        (address _mockANGLE,,) = deployMockANGLE();
+        (address _mockANGLE, , ) = deployMockANGLE();
         ANGLE = ERC20(_mockANGLE);
         deal(address(ANGLE), mainnetMultisig, 300_000_000e18);
 
-        (address _mockVeANGLE,,) = deployVeANGLE(vyperDeployer, _mockANGLE, mainnetMultisig);
+        (address _mockVeANGLE, , ) = deployVeANGLE(vyperDeployer, _mockANGLE, mainnetMultisig);
         veANGLE = IveANGLE(_mockVeANGLE);
 
         _setupDealAndLockANGLE();
@@ -170,7 +170,9 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
     // Assert that this account has weight themselves when they haven't delegated
     function test_RevertWhen_NoDelegationHasWeight() public {
         assertEq(
-            token.getVotes(accounts[0]), veANGLE.balanceOf(accounts[0]), "getVotes and veANGLE balance are identical"
+            token.getVotes(accounts[0]),
+            veANGLE.balanceOf(accounts[0]),
+            "getVotes and veANGLE balance are identical"
         );
     }
 
@@ -259,10 +261,11 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
 
     function test_DelegateBySig() public {
         dealCreateLockANGLE(eoaOwners[0], 100e18);
-        (, string memory name, string memory version, uint256 chainId, address verifyingContract,,) =
-            token.eip712Domain();
-        bytes32 TYPE_HASH =
-            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+        (, string memory name, string memory version, uint256 chainId, address verifyingContract, , ) = token
+            .eip712Domain();
+        bytes32 TYPE_HASH = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
         bytes32 domainSeparator = keccak256(
             abi.encode(TYPE_HASH, keccak256(bytes(name)), keccak256(bytes(version)), chainId, verifyingContract)
         );
@@ -386,7 +389,11 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         vm.warp(delegationStarts + 1 days - 1);
 
         assertGt(token.getVotes(bob, block.timestamp), 0, "Bob still has voting power until next epoch");
-        assertEq(0, token.getVotes(charlie, block.timestamp), "Bill should still have no voting power until next epoch");
+        assertEq(
+            0,
+            token.getVotes(charlie, block.timestamp),
+            "Bill should still have no voting power until next epoch"
+        );
         assertEq(
             0,
             token.getVotes(accounts[0], block.timestamp),
@@ -538,7 +545,9 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         vm.warp(expiration + 1 days);
 
         assertEq(
-            token.getVotes(bob), veANGLE.balanceOf(accounts[0]), "Self delegation is equivalent to veANGLE balance"
+            token.getVotes(bob),
+            veANGLE.balanceOf(accounts[0]),
+            "Self delegation is equivalent to veANGLE balance"
         );
     }
 
@@ -590,7 +599,9 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         token.delegate(bob);
 
         assertLe(
-            weight, token.getVotes(accounts[0], block.timestamp - 1), "accounts[0] still has weight before delegation"
+            weight,
+            token.getVotes(accounts[0], block.timestamp - 1),
+            "accounts[0] still has weight before delegation"
         );
         assertEq(
             weight,
@@ -599,7 +610,9 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         );
 
         assertLe(
-            weightA, token.getVotes(accounts[1], block.timestamp - 1), "accounts[1] still has weight before delegation"
+            weightA,
+            token.getVotes(accounts[1], block.timestamp - 1),
+            "accounts[1] still has weight before delegation"
         );
         assertEq(
             weightA,
@@ -626,10 +639,14 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         vm.warp(tsRoundedToCheckpoint);
 
         assertEq(
-            0, token.getVotes(accounts[0], block.timestamp), "accounts[0]'s delegation kicks in so they have no weight"
+            0,
+            token.getVotes(accounts[0], block.timestamp),
+            "accounts[0]'s delegation kicks in so they have no weight"
         );
         assertEq(
-            0, token.getVotes(accounts[1], block.timestamp), "accounts[1]'s delegation kicks in so they have no weight"
+            0,
+            token.getVotes(accounts[1], block.timestamp),
+            "accounts[1]'s delegation kicks in so they have no weight"
         );
 
         uint256 bobWeight = token.getVotes(bob, block.timestamp);
@@ -703,7 +720,9 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         assertEq(weight, 0, "Delegator has no weight");
         assertEq(weightA, 0, "Delegator has no weight");
         assertEq(
-            veANGLEBalance + veANGLEBalanceA, delegateWeight, "delegate's weight == veANGLE balance of both delegators"
+            veANGLEBalance + veANGLEBalanceA,
+            delegateWeight,
+            "delegate's weight == veANGLE balance of both delegators"
         );
     }
 

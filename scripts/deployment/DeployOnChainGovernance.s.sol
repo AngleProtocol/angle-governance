@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import {console} from "forge-std/console.sol";
-import {stdJson} from "forge-std/StdJson.sol";
+import { console } from "forge-std/console.sol";
+import { stdJson } from "forge-std/StdJson.sol";
 import "stringutils/strings.sol";
 import "../Utils.s.sol";
 import "oz-v5/interfaces/IERC20.sol";
 
-import {IveANGLEVotingDelegation} from "contracts/interfaces/IveANGLEVotingDelegation.sol";
-import {deployMockANGLE, deployVeANGLE} from "../test/DeployANGLE.s.sol";
-import {ERC20} from "oz-v5/token/ERC20/ERC20.sol";
+import { IveANGLEVotingDelegation } from "contracts/interfaces/IveANGLEVotingDelegation.sol";
+import { deployMockANGLE, deployVeANGLE } from "../test/DeployANGLE.s.sol";
+import { ERC20 } from "oz-v5/token/ERC20/ERC20.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "../../test/external/VyperDeployer.sol";
 
-import {AngleGovernor} from "contracts/AngleGovernor.sol";
-import {ProposalReceiver} from "contracts/ProposalReceiver.sol";
-import {ProposalSender} from "contracts/ProposalSender.sol";
-import {TimelockControllerWithCounter} from "contracts/TimelockControllerWithCounter.sol";
-import {VeANGLEVotingDelegation, ECDSA} from "contracts/VeANGLEVotingDelegation.sol";
+import { AngleGovernor } from "contracts/AngleGovernor.sol";
+import { ProposalReceiver } from "contracts/ProposalReceiver.sol";
+import { ProposalSender } from "contracts/ProposalSender.sol";
+import { TimelockControllerWithCounter } from "contracts/TimelockControllerWithCounter.sol";
+import { VeANGLEVotingDelegation, ECDSA } from "contracts/VeANGLEVotingDelegation.sol";
 
 /// @dev To deploy on a different chain, just replace the import of the `Constants.s.sol` file by a file which has the
 /// constants defined for the chain of your choice.
