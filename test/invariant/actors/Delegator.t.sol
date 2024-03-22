@@ -2,12 +2,12 @@
 pragma solidity ^0.8.19;
 
 import "./BaseActor.t.sol";
-import {IERC5805} from "oz-v5/interfaces/IERC5805.sol";
-import {MockANGLE} from "../../external/MockANGLE.sol";
+import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
+import { MockANGLE } from "../../external/MockANGLE.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "contracts/utils/Errors.sol";
-import {console} from "forge-std/console.sol";
-import {TimestampStore} from "../stores/TimestampStore.sol";
+import { console } from "forge-std/console.sol";
+import { TimestampStore } from "../stores/TimestampStore.sol";
 
 contract Delegator is BaseActor {
     IveANGLE public veToken;
@@ -60,8 +60,9 @@ contract Delegator is BaseActor {
         reverseDelegations[toDelegate].push(_currentActor);
         for (uint256 i; i < reverseDelegations[currentDelegatee].length; i++) {
             if (reverseDelegations[currentDelegatee][i] == _currentActor) {
-                reverseDelegations[currentDelegatee][i] =
-                    reverseDelegations[currentDelegatee][reverseDelegations[currentDelegatee].length - 1];
+                reverseDelegations[currentDelegatee][i] = reverseDelegations[currentDelegatee][
+                    reverseDelegations[currentDelegatee].length - 1
+                ];
                 reverseDelegations[currentDelegatee].pop();
                 break;
             }

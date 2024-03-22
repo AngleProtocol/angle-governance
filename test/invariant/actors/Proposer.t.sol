@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import {BaseActor, IERC20, IERC20Metadata, AngleGovernor, TestStorage} from "./BaseActor.t.sol";
-import {console} from "forge-std/console.sol";
-import {IGovernor} from "oz-v5/governance/IGovernor.sol";
-import {ProposalStore, Proposal} from "../stores/ProposalStore.sol";
-import {IERC5805} from "oz-v5/interfaces/IERC5805.sol";
-import {TimestampStore} from "../stores/TimestampStore.sol";
+import { BaseActor, IERC20, IERC20Metadata, AngleGovernor, TestStorage } from "./BaseActor.t.sol";
+import { console } from "forge-std/console.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { ProposalStore, Proposal } from "../stores/ProposalStore.sol";
+import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
+import { TimestampStore } from "../stores/TimestampStore.sol";
 
 contract Proposer is BaseActor {
     AngleGovernor internal _angleGovernor;
@@ -59,8 +59,12 @@ contract Proposer is BaseActor {
             return;
         }
         Proposal memory proposal = proposalStore.getRandomProposal(proposalId);
-        uint256 proposalHash =
-            _angleGovernor.hashProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+        uint256 proposalHash = _angleGovernor.hashProposal(
+            proposal.target,
+            proposal.value,
+            proposal.data,
+            proposal.description
+        );
         uint256 proposalSnapshot = _angleGovernor.proposalSnapshot(proposalHash);
         timestampStore.increaseCurrentTimestamp(_angleGovernor.proposalDeadline(proposalHash));
         timestampStore.increaseCurrentBlockNumber(
@@ -75,8 +79,8 @@ contract Proposer is BaseActor {
                     IGovernor.GovernorUnexpectedProposalState.selector,
                     proposalHash,
                     currentState,
-                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded))
-                        | bytes32(1 << uint8(IGovernor.ProposalState.Queued))
+                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded)) |
+                        bytes32(1 << uint8(IGovernor.ProposalState.Queued))
                 )
             );
         }
@@ -92,8 +96,12 @@ contract Proposer is BaseActor {
             return;
         }
         Proposal memory proposal = proposalStore.getRandomProposal(proposalId);
-        uint256 proposalHash =
-            _angleGovernor.hashProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+        uint256 proposalHash = _angleGovernor.hashProposal(
+            proposal.target,
+            proposal.value,
+            proposal.data,
+            proposal.description
+        );
         uint256 proposalSnapshot = _angleGovernor.proposalSnapshot(proposalHash);
         IGovernor.ProposalState currentState = _angleGovernor.state(proposalHash);
         if (currentState != IGovernor.ProposalState.Succeeded) {
@@ -102,8 +110,8 @@ contract Proposer is BaseActor {
                     IGovernor.GovernorUnexpectedProposalState.selector,
                     proposalHash,
                     currentState,
-                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded))
-                        | bytes32(1 << uint8(IGovernor.ProposalState.Queued))
+                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded)) |
+                        bytes32(1 << uint8(IGovernor.ProposalState.Queued))
                 )
             );
         }

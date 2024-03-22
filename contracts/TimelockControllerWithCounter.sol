@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {TimelockController} from "oz-v5/governance/TimelockController.sol";
+import { TimelockController } from "oz-v5/governance/TimelockController.sol";
 
 /// @title AngleGovernor
 /// @author Angle Labs, Inc
@@ -24,9 +24,12 @@ contract TimelockControllerWithCounter is TimelockController {
                                                       CONSTRUCTOR                                                   
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    constructor(uint256 minDelay, address[] memory proposers, address[] memory executors, address admin)
-        TimelockController(minDelay, proposers, executors, admin)
-    {}
+    constructor(
+        uint256 minDelay,
+        address[] memory proposers,
+        address[] memory executors,
+        address admin
+    ) TimelockController(minDelay, proposers, executors, admin) {}
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                   EXTERNAL OVERRIDES                                                

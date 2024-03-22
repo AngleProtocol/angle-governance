@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/console.sol";
-import {IAccessControl} from "oz-v5/access/IAccessControl.sol";
-import {Wrapper} from "../Wrapper.s.sol";
+import { console } from "forge-std/console.sol";
+import { IAccessControl } from "oz-v5/access/IAccessControl.sol";
+import { Wrapper } from "../Wrapper.s.sol";
 import "../../Constants.s.sol";
 
 contract AddExecutor is Wrapper {
@@ -16,7 +16,10 @@ contract AddExecutor is Wrapper {
         bytes32 EXECUTOR_ROLE = TimelockController(payable(timelock)).EXECUTOR_ROLE();
         subCalls.push(
             SubCall(
-                chainId, timelock, 0, abi.encodeWithSelector(IAccessControl.grantRole.selector, EXECUTOR_ROLE, executor)
+                chainId,
+                timelock,
+                0,
+                abi.encodeWithSelector(IAccessControl.grantRole.selector, EXECUTOR_ROLE, executor)
             )
         );
     }
@@ -36,8 +39,12 @@ contract AddExecutor is Wrapper {
             _addExecutorRole(chainIds[i], executor);
         }
 
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas, uint256[] memory chainIds2) =
-            _wrap(subCalls);
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            uint256[] memory chainIds2
+        ) = _wrap(subCalls);
         _serializeJson(targets, values, calldatas, chainIds2, description);
     }
 }

@@ -2,19 +2,19 @@
 
 pragma solidity ^0.8.19;
 
-import {IERC20} from "oz-v5/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20 } from "oz-v5/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
 import "oz-v5/utils/Strings.sol";
-import {Voter} from "./actors/Voter.t.sol";
-import {Proposer} from "./actors/Proposer.t.sol";
-import {BadVoter} from "./actors/BadVoter.t.sol";
-import {Fixture, AngleGovernor} from "../Fixture.t.sol";
-import {ProposalStore, Proposal} from "./stores/ProposalStore.sol";
-import {IGovernor} from "oz-v5/governance/IGovernor.sol";
-import {TimestampStore} from "./stores/TimestampStore.sol";
+import { Voter } from "./actors/Voter.t.sol";
+import { Proposer } from "./actors/Proposer.t.sol";
+import { BadVoter } from "./actors/BadVoter.t.sol";
+import { Fixture, AngleGovernor } from "../Fixture.t.sol";
+import { ProposalStore, Proposal } from "./stores/ProposalStore.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { TimestampStore } from "./stores/TimestampStore.sol";
 
 //solhint-disable
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
 contract MainnetGovernorInvariants is Fixture {
     uint256 internal constant _NUM_VOTER = 10;
@@ -43,7 +43,7 @@ contract MainnetGovernorInvariants is Fixture {
         _badVoterHandler = new BadVoter(angleGovernor, ANGLE, _NUM_VOTER, _proposalStore);
 
         // Label newly created addresses
-        vm.label({account: address(_proposalStore), newLabel: "ProposalStore"});
+        vm.label({ account: address(_proposalStore), newLabel: "ProposalStore" });
         for (uint256 i; i < _NUM_VOTER; i++) {
             vm.label(_voterHandler.actors(i), string.concat("Voter ", Strings.toString(i)));
             _setupDealAndLockANGLE(_voterHandler.actors(i), 100000000e18, 4 * 365 days);
@@ -67,7 +67,7 @@ contract MainnetGovernorInvariants is Fixture {
         {
             bytes4[] memory selectors = new bytes4[](1);
             selectors[0] = Voter.vote.selector;
-            targetSelector(FuzzSelector({addr: address(_voterHandler), selectors: selectors}));
+            targetSelector(FuzzSelector({ addr: address(_voterHandler), selectors: selectors }));
         }
         {
             bytes4[] memory selectors = new bytes4[](4);
@@ -75,13 +75,13 @@ contract MainnetGovernorInvariants is Fixture {
             selectors[1] = Proposer.execute.selector;
             selectors[2] = Proposer.tryToExecute.selector;
             selectors[3] = Proposer.skipVotingDelay.selector;
-            targetSelector(FuzzSelector({addr: address(_proposerHandler), selectors: selectors}));
+            targetSelector(FuzzSelector({ addr: address(_proposerHandler), selectors: selectors }));
         }
         {
             bytes4[] memory selectors = new bytes4[](2);
             selectors[0] = BadVoter.voteNonExistantProposal.selector;
             selectors[1] = BadVoter.executeNonReadyProposals.selector;
-            targetSelector(FuzzSelector({addr: address(_badVoterHandler), selectors: selectors}));
+            targetSelector(FuzzSelector({ addr: address(_badVoterHandler), selectors: selectors }));
         }
     }
 
@@ -90,8 +90,12 @@ contract MainnetGovernorInvariants is Fixture {
         Proposal[] memory proposals = _proposalStore.getProposals();
         for (uint256 i; i < proposalLength; i++) {
             Proposal memory proposal = proposals[i];
-            uint256 proposalHash =
-                angleGovernor.hashProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+            uint256 proposalHash = angleGovernor.hashProposal(
+                proposal.target,
+                proposal.value,
+                proposal.data,
+                proposal.description
+            );
             uint256 totalSupply = veANGLE.totalSupply();
             (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = angleGovernor.proposalVotes(proposalHash);
             assertLe(againstVotes + forVotes + abstainVotes, totalSupply, "Votes should be under total supply");
@@ -103,8 +107,12 @@ contract MainnetGovernorInvariants is Fixture {
         Proposal[] memory proposals = _proposalStore.getProposals();
         for (uint256 i; i < proposalLength; i++) {
             Proposal memory proposal = proposals[i];
-            uint256 proposalHash =
-                angleGovernor.hashProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+            uint256 proposalHash = angleGovernor.hashProposal(
+                proposal.target,
+                proposal.value,
+                proposal.data,
+                proposal.description
+            );
             IGovernor.ProposalState currentState = angleGovernor.state(proposalHash);
             uint256 snapshot = angleGovernor.proposalSnapshot(proposalHash);
             uint256 deadline = angleGovernor.proposalDeadline(proposalHash);
@@ -134,16 +142,20 @@ contract MainnetGovernorInvariants is Fixture {
         Proposal[] memory oldProposals = _proposalStore.getOldProposals();
         for (uint256 i; i < oldProposals.length; i++) {
             Proposal memory proposal = oldProposals[i];
-            uint256 proposalHash =
-                angleGovernor.hashProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+            uint256 proposalHash = angleGovernor.hashProposal(
+                proposal.target,
+                proposal.value,
+                proposal.data,
+                proposal.description
+            );
             IGovernor.ProposalState currentState = angleGovernor.state(proposalHash);
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor.GovernorUnexpectedProposalState.selector,
                     proposalHash,
                     currentState,
-                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded))
-                        | bytes32(1 << uint8(IGovernor.ProposalState.Queued))
+                    bytes32(1 << uint8(IGovernor.ProposalState.Succeeded)) |
+                        bytes32(1 << uint8(IGovernor.ProposalState.Queued))
                 )
             );
             angleGovernor.execute(proposal.target, proposal.value, proposal.data, proposal.description);
@@ -154,8 +166,12 @@ contract MainnetGovernorInvariants is Fixture {
         Proposal[] memory oldProposals = _proposalStore.getOldProposals();
         for (uint256 i; i < oldProposals.length; i++) {
             Proposal memory proposal = oldProposals[i];
-            uint256 proposalHash =
-                angleGovernor.hashProposal(proposal.target, proposal.value, proposal.data, proposal.description);
+            uint256 proposalHash = angleGovernor.hashProposal(
+                proposal.target,
+                proposal.value,
+                proposal.data,
+                proposal.description
+            );
             IGovernor.ProposalState currentState = angleGovernor.state(proposalHash);
             if (currentState != IGovernor.ProposalState.Active) {
                 vm.expectRevert(

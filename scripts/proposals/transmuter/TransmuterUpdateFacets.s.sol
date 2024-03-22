@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/console.sol";
-import {stdJson} from "forge-std/StdJson.sol";
-import {Wrapper} from "../Wrapper.s.sol";
-import {TransmuterUtils} from "./TransmuterUtils.s.sol";
+import { console } from "forge-std/console.sol";
+import { stdJson } from "forge-std/StdJson.sol";
+import { Wrapper } from "../Wrapper.s.sol";
+import { TransmuterUtils } from "./TransmuterUtils.s.sol";
 import "../../Constants.s.sol";
-import {OldTransmuter} from "../../interfaces/ITransmuter.sol";
+import { OldTransmuter } from "../../interfaces/ITransmuter.sol";
 
-import {IERC20} from "oz-v5/token/ERC20/IERC20.sol";
+import { IERC20 } from "oz-v5/token/ERC20/IERC20.sol";
 import "transmuter/transmuter/Storage.sol" as Storage;
-import {DiamondCut} from "transmuter/transmuter/facets/DiamondCut.sol";
-import {DiamondEtherscan} from "transmuter/transmuter/facets/DiamondEtherscan.sol";
-import {DiamondLoupe} from "transmuter/transmuter/facets/DiamondLoupe.sol";
-import {DiamondProxy} from "transmuter/transmuter/DiamondProxy.sol";
-import {Getters} from "transmuter/transmuter/facets/Getters.sol";
-import {Redeemer} from "transmuter/transmuter/facets/Redeemer.sol";
-import {RewardHandler} from "transmuter/transmuter/facets/RewardHandler.sol";
-import {SettersGovernor} from "transmuter/transmuter/facets/SettersGovernor.sol";
-import {SettersGuardian} from "transmuter/transmuter/facets/SettersGuardian.sol";
-import {Swapper} from "transmuter/transmuter/facets/Swapper.sol";
-import {ITransmuter, IDiamondCut, ISettersGovernor} from "transmuter/interfaces/ITransmuter.sol";
+import { DiamondCut } from "transmuter/transmuter/facets/DiamondCut.sol";
+import { DiamondEtherscan } from "transmuter/transmuter/facets/DiamondEtherscan.sol";
+import { DiamondLoupe } from "transmuter/transmuter/facets/DiamondLoupe.sol";
+import { DiamondProxy } from "transmuter/transmuter/DiamondProxy.sol";
+import { Getters } from "transmuter/transmuter/facets/Getters.sol";
+import { Redeemer } from "transmuter/transmuter/facets/Redeemer.sol";
+import { RewardHandler } from "transmuter/transmuter/facets/RewardHandler.sol";
+import { SettersGovernor } from "transmuter/transmuter/facets/SettersGovernor.sol";
+import { SettersGuardian } from "transmuter/transmuter/facets/SettersGuardian.sol";
+import { Swapper } from "transmuter/transmuter/facets/Swapper.sol";
+import { ITransmuter, IDiamondCut, ISettersGovernor } from "transmuter/interfaces/ITransmuter.sol";
 
 contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
     using stdJson for string;
@@ -95,7 +95,7 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
                     facetAddress: addFacetAddressList[i],
                     action: Storage.FacetCutAction.Add,
                     functionSelectors: selectors
-                });   
+                });
             }
         }
 
@@ -107,10 +107,10 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
             bytes memory targetDataEUROC
         ) = OldTransmuter(address(transmuter)).getOracle(address(EUROC));
 
-        (Storage.OracleReadType oracleTypeBC3M,, bytes memory oracleDataBC3M,) =
-            OldTransmuter(address(transmuter)).getOracle(address(BC3M));
+        (Storage.OracleReadType oracleTypeBC3M, , bytes memory oracleDataBC3M, ) = OldTransmuter(address(transmuter))
+            .getOracle(address(BC3M));
 
-        (,,,, uint256 currentBC3MPrice) = transmuter.getOracleValues(address(BC3M));
+        (, , , , uint256 currentBC3MPrice) = transmuter.getOracleValues(address(BC3M));
 
         bytes memory callData;
         // set the right implementations
@@ -180,8 +180,12 @@ contract TransmuterUpdateFacets is Wrapper, TransmuterUtils {
             _updateFacets(chainIds[i]);
         }
 
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas, uint256[] memory chainIds2) =
-            _wrap(subCalls);
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            uint256[] memory chainIds2
+        ) = _wrap(subCalls);
         _serializeJson(targets, values, calldatas, chainIds2, description);
     }
 }

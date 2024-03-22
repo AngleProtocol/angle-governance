@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import {stdJson} from "forge-std/StdJson.sol";
-import {console} from "forge-std/console.sol";
-import {ScriptHelpers} from "../ScriptHelpers.t.sol";
-import {TransmuterUtils} from "../../../scripts/proposals/transmuter/TransmuterUtils.s.sol";
+import { stdJson } from "forge-std/StdJson.sol";
+import { console } from "forge-std/console.sol";
+import { ScriptHelpers } from "../ScriptHelpers.t.sol";
+import { TransmuterUtils } from "../../../scripts/proposals/transmuter/TransmuterUtils.s.sol";
 import "../../../scripts/Constants.s.sol";
-import {OldTransmuter} from "../../../scripts/interfaces/ITransmuter.sol";
+import { OldTransmuter } from "../../../scripts/interfaces/ITransmuter.sol";
 import "transmuter/transmuter/Storage.sol" as Storage;
-import {AggregatorV3Interface} from "transmuter/interfaces/external/chainlink/AggregatorV3Interface.sol";
+import { AggregatorV3Interface } from "transmuter/interfaces/external/chainlink/AggregatorV3Interface.sol";
 
 contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
     using stdJson for string;
@@ -19,7 +19,8 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
     // TODO COMPLETE
     bytes public oracleConfigDataEUROC =
         hex"0000000000000000000000004305fb66699c3b2702d4d05cf36551390a4c69c600000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000276fa85158bf14ede77087fe3ae472f66213f6ea2f5b411cb2de472794990fa5ca995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000001275000000000000000000000000000000000000000000000000000000000000127500000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000";
-    // 
+
+    //
 
     function setUp() public override {
         super.setUp();
@@ -84,23 +85,15 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
                     bytes memory targetData,
                     bytes memory hyperparams
                 ) = abi.decode(
-                    collatInfoEUROC.oracleConfig, (Storage.OracleReadType, Storage.OracleReadType, bytes, bytes, bytes)
-                );
+                        collatInfoEUROC.oracleConfig,
+                        (Storage.OracleReadType, Storage.OracleReadType, bytes, bytes, bytes)
+                    );
 
                 assertEq(uint8(oracleType), uint8(8));
                 assertEq(uint8(targetType), uint8(3));
-                assertEq(
-                    oracleData,
-                    hex""
-                );
-                assertEq(
-                    targetData,
-                    hex""
-                );
-                assertEq(
-                    hyperparams,
-                    abi.encode(FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M)
-                );
+                assertEq(oracleData, hex"");
+                assertEq(targetData, hex"");
+                assertEq(hyperparams, abi.encode(FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M));
             }
             assertEq(collatInfoEUROC.whitelistData.length, 0);
             assertEq(collatInfoEUROC.managerData.subCollaterals.length, 0);
@@ -152,32 +145,32 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
                     bytes memory targetData,
                     bytes memory hyperparams
                 ) = abi.decode(
-                    collatInfoBC3M.oracleConfig, (Storage.OracleReadType, Storage.OracleReadType, bytes, bytes, bytes)
-                );
+                        collatInfoBC3M.oracleConfig,
+                        (Storage.OracleReadType, Storage.OracleReadType, bytes, bytes, bytes)
+                    );
 
                 assertEq(uint8(oracleType), uint8(0));
                 assertEq(uint8(targetType), uint8(9));
-                assertEq(
-                    oracleData,
-                    oracleConfigDataEUROC
-                );
+                assertEq(oracleData, oracleConfigDataEUROC);
                 assertEq(
                     hyperparams,
                     abi.encode(FIREWALL_MINT_BC3M, USER_PROTECTION_BC3M)
                     // hex"0000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000002386f26fc10000"
                 );
 
-                (uint256 maxValue, uint96 deviationThreshold, uint96 lastUpdateTimestamp, uint32 heartbeat) =
-                    abi.decode(targetData, (uint256, uint96, uint96, uint32));
+                (uint256 maxValue, uint96 deviationThreshold, uint96 lastUpdateTimestamp, uint32 heartbeat) = abi
+                    .decode(targetData, (uint256, uint96, uint96, uint32));
 
-                assertApproxEqRel(maxValue, 1195 * BASE_18 / 10, 10 * BPS);
+                assertApproxEqRel(maxValue, (1195 * BASE_18) / 10, 10 * BPS);
                 assertEq(deviationThreshold, DEVIATION_THRESHOLD_BC3M);
                 assertEq(heartbeat, HEARTBEAT);
             }
 
             {
-                (Storage.WhitelistType whitelist, bytes memory data) =
-                    abi.decode(collatInfoBC3M.whitelistData, (Storage.WhitelistType, bytes));
+                (Storage.WhitelistType whitelist, bytes memory data) = abi.decode(
+                    collatInfoBC3M.whitelistData,
+                    (Storage.WhitelistType, bytes)
+                );
                 address keyringGuard = abi.decode(data, (address));
                 assertEq(uint8(whitelist), uint8(Storage.WhitelistType.BACKED));
                 assertEq(keyringGuard, 0x9391B14dB2d43687Ea1f6E546390ED4b20766c46);
@@ -223,26 +216,36 @@ contract TransmuterUpdateFacetsTest is ScriptHelpers, TransmuterUtils {
                                                         CHECKS                                                      
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    function _checkOracleValues(address collateral, uint256 targetValue, uint128 firewallMint, uint128 userProtection)
-        internal
-    {
-        (uint256 mint, uint256 burn, uint256 ratio, uint256 minRatio, uint256 redemption) =
-            transmuter.getOracleValues(collateral);
+    function _checkOracleValues(
+        address collateral,
+        uint256 targetValue,
+        uint128 firewallMint,
+        uint128 userProtection
+    ) internal {
+        (uint256 mint, uint256 burn, uint256 ratio, uint256 minRatio, uint256 redemption) = transmuter.getOracleValues(
+            collateral
+        );
         assertApproxEqRel(targetValue, redemption, 200 * BPS);
 
-        if (targetValue * (BASE_18 - userProtection) < redemption * BASE_18 && redemption * BASE_18 < targetValue * (BASE_18 + userProtection) ) assertEq(burn, targetValue);
+        if (
+            targetValue * (BASE_18 - userProtection) < redemption * BASE_18 &&
+            redemption * BASE_18 < targetValue * (BASE_18 + userProtection)
+        ) assertEq(burn, targetValue);
         else assertEq(burn, redemption);
-        
-        if(targetValue * (BASE_18 - userProtection) < redemption * BASE_18 && redemption * BASE_18 < targetValue * (BASE_18 + userProtection)){
-            assertEq(mint,targetValue);
-            assertEq(ratio,BASE_18);
+
+        if (
+            targetValue * (BASE_18 - userProtection) < redemption * BASE_18 &&
+            redemption * BASE_18 < targetValue * (BASE_18 + userProtection)
+        ) {
+            assertEq(mint, targetValue);
+            assertEq(ratio, BASE_18);
         } else if (redemption * BASE_18 > targetValue * (BASE_18 + firewallMint)) {
             assertEq(mint, targetValue);
             assertEq(ratio, BASE_18);
-        } else if(redemption < targetValue){
+        } else if (redemption < targetValue) {
             assertEq(mint, redemption);
             assertEq(ratio, (redemption * BASE_18) / targetValue);
-        } else{
+        } else {
             assertEq(mint, redemption);
             assertEq(ratio, BASE_18);
         }

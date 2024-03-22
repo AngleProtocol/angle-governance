@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.19;
 
-import {IERC20} from "oz-v5/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20 } from "oz-v5/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
 import "oz-v5/utils/Strings.sol";
-import {Delegator} from "./actors/Delegator.t.sol";
-import {Param} from "./actors/Param.t.sol";
-import {Fixture, AngleGovernor} from "../Fixture.t.sol";
-import {TimestampStore} from "./stores/TimestampStore.sol";
+import { Delegator } from "./actors/Delegator.t.sol";
+import { Param } from "./actors/Param.t.sol";
+import { Fixture, AngleGovernor } from "../Fixture.t.sol";
+import { TimestampStore } from "./stores/TimestampStore.sol";
 
 //solhint-disable
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
 contract DelegationInvariants is Fixture {
     uint256 internal constant _NUM_DELEGATORS = 10;
@@ -38,8 +38,8 @@ contract DelegationInvariants is Fixture {
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             vm.label(_delegatorHandler.actors(i), string.concat("Delegator ", Strings.toString(i)));
         }
-        vm.label({account: address(_timestampStore), newLabel: "TimestampStore"});
-        vm.label({account: address(_paramHandler), newLabel: "Param"});
+        vm.label({ account: address(_timestampStore), newLabel: "TimestampStore" });
+        vm.label({ account: address(_paramHandler), newLabel: "Param" });
 
         targetContract(address(_delegatorHandler));
         targetContract(address(_paramHandler));
@@ -51,12 +51,12 @@ contract DelegationInvariants is Fixture {
             selectors[2] = Delegator.withdraw.selector;
             selectors[3] = Delegator.extendLockTime.selector;
             selectors[4] = Delegator.extendLockAmount.selector;
-            targetSelector(FuzzSelector({addr: address(_delegatorHandler), selectors: selectors}));
+            targetSelector(FuzzSelector({ addr: address(_delegatorHandler), selectors: selectors }));
         }
         {
             bytes4[] memory selectors = new bytes4[](1);
             selectors[0] = Param.wrap.selector;
-            targetSelector(FuzzSelector({addr: address(_paramHandler), selectors: selectors}));
+            targetSelector(FuzzSelector({ addr: address(_paramHandler), selectors: selectors }));
         }
     }
 
@@ -65,7 +65,9 @@ contract DelegationInvariants is Fixture {
             address actor = _delegatorHandler.actors(i);
 
             assertEq(
-                token.delegates(actor), _delegatorHandler.delegations(actor), "delegatee should be the same as actor"
+                token.delegates(actor),
+                _delegatorHandler.delegations(actor),
+                "delegatee should be the same as actor"
             );
         }
         for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
@@ -107,8 +109,10 @@ contract DelegationInvariants is Fixture {
     }
 
     function invariant_SumDelegationExternalEqualTotalSupply() public useCurrentTimestampBlock {
-        uint256 totalVotes =
-            token.getVotes(alice) + token.getVotes(bob) + token.getVotes(charlie) + token.getVotes(dylan);
+        uint256 totalVotes = token.getVotes(alice) +
+            token.getVotes(bob) +
+            token.getVotes(charlie) +
+            token.getVotes(dylan);
 
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             address actor = _delegatorHandler.actors(i);
@@ -133,8 +137,10 @@ contract DelegationInvariants is Fixture {
     }
 
     function invariant_SumDelegationInternalEqualTotalSupply() public useCurrentTimestampBlock {
-        uint256 totalVotes =
-            token.getVotes(alice) + token.getVotes(bob) + token.getVotes(charlie) + token.getVotes(dylan);
+        uint256 totalVotes = token.getVotes(alice) +
+            token.getVotes(bob) +
+            token.getVotes(charlie) +
+            token.getVotes(dylan);
 
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             address actor = _delegatorHandler.actors(i);
