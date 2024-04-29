@@ -11,10 +11,6 @@
 	path = lib/solidity-stringutils
 	url = https://github.com/Arachnid/solidity-stringutils
 	ignore = dirty
-[submodule "lib/angle-transmuter"]
-	path = lib/angle-transmuter
-	url = https://github.com/AngleProtocol/angle-transmuter
-	branch = feat--oracles-with-firewalls-on-mint-and-burn
 [submodule "lib/borrow-contracts"]
 	path = lib/borrow-contracts
 	url = https://github.com/AngleProtocol/borrow-contracts
