@@ -29,10 +29,10 @@ contract TransmuterUtils is Script, CommonUtils {
     uint96 constant DEVIATION_THRESHOLD_BC3M = uint96(100 * BPS);
     uint32 constant HEARTBEAT = uint32(1 days);
 
-    address constant GETTERS = 0xB55639FdcD12503fE85e3B4D4639142C9D7951aa;
-    address constant REDEEMER = 0xFE2Ff814800Bb1df4E415ac88338f07471C8c87B;
-    address constant SETTERS_GOVERNOR = 0xb3047F769f8ae481F99a71C488037D31e1dA6707;
-    address constant SWAPPER = 0xeF0B788D254a7CC0278FC61C52486Db56dd74308;
+    address constant GETTERS = 0x99fe8557A8F322525262720C52b7d57c56924012;
+    address constant REDEEMER = 0xa09735EfbcfF6E76e6EfFF82A9Ad996A85cd0725;
+    address constant SETTERS_GOVERNOR = 0x49c7B39A2E01869d39548F232F9B1586DA8Ef9c2;
+    address constant SWAPPER = 0xD838bF7fB3b420ac93A7d9f5b40230F78b33536F;
 
     /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                         HELPERS                                                     
