@@ -99,9 +99,7 @@ contract AngleGovernor is
             return ProposalState.Succeeded;
         } else if (isShortCircuitAgainst) {
             return ProposalState.Defeated;
-        } else {
-            return currentState;
-        }
+        } else return currentState;
     }
 
     /// @inheritdoc GovernorVotesQuorumFraction

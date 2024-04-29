@@ -138,9 +138,8 @@ abstract contract GovernorCountingFractional is Governor {
      * vote before or after.
      */
     function _countVoteNominal(uint256 proposalId, address account, uint128 totalWeight, uint8 support) internal {
-        if (_proposalVotersWeightCast[proposalId][account] > 0) {
+        if (_proposalVotersWeightCast[proposalId][account] > 0)
             revert GovernorCountingFractionalVoteWouldExceedWeight();
-        }
 
         _proposalVotersWeightCast[proposalId][account] = totalWeight;
 
