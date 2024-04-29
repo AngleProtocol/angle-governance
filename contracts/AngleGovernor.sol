@@ -6,7 +6,8 @@ import { IVotes } from "oz-v5/governance/utils/IVotes.sol";
 
 import { Governor } from "oz-v5/governance/Governor.sol";
 import { GovernorPreventLateQuorum } from "oz-v5/governance/extensions/GovernorPreventLateQuorum.sol";
-import { GovernorVotesQuorumFraction, GovernorVotes } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorVotes } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorVotesQuorumFraction } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
 import { GovernorSettings } from "oz-v5/governance/extensions/GovernorSettings.sol";
 import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
 
