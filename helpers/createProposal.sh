@@ -97,7 +97,7 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    FOUNDRY_PROFILE=dev forge script $script -vvv
+    forge script $script -vvv
 
     if [ $? -ne 0 ]; then
         echo ""
@@ -108,7 +108,7 @@ function main {
     testContract="${script}Test"
     echo ""
     echo "Running test"
-    FOUNDRY_PROFILE=dev forge test --match-contract $testContract -vvv
+    forge test --match-contract $testContract -vvv
 
     if [ $? -ne 0 ]; then
         echo ""
@@ -120,7 +120,7 @@ function main {
     read execute
 
     if [[ $execute == "yes" ]]; then
-        FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+        forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
     fi
 }
 

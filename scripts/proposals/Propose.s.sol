@@ -27,9 +27,8 @@ contract Propose is Utils {
             uint256[] memory chainIds
         ) = _deserializeJson();
 
-        uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_MAINNET"), 0);
-        vm.rememberKey(deployerPrivateKey);
-
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        address deployer = vm.addr(deployerPrivateKey);
         vm.startBroadcast(deployerPrivateKey);
 
         AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_SOURCE, ContractType.Governor)));

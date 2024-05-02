@@ -40,7 +40,7 @@ contract IncreaseQuorum is Wrapper {
 
     function run() external {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
-        string memory description = "ipfs://QmXpXXaUYCtUb4w9T2kEtu8t1JwpSv7tqTFwMETKgimcsf";
+        string memory description = "ipfs://QmbcRv3pSuvamZ7TtYu55gbnnUmkrxPPNU2GX6NGJecSfQ";
 
         /**
          * TODO  complete
