@@ -61,12 +61,11 @@ contract ConnectAgTokenSideChainMultiBridge is Wrapper {
             })
         );
 
-        ChainContract[] memory chainContracts = _getConnectedChains(stableName);
+        (uint256[] memory chainIds, address[] memory contracts) = _getConnectedChains(stableName);
 
         // Set trusted remote from current chain
-        for (uint256 i = 0; i < chainContracts.length; i++) {
-            ChainContract memory chainContract = chainContracts[i];
-            if (chainContract.chainId == chainId) {
+        for (uint256 i = 0; i < contracts.length; i++) {
+            if (chainIds[i] == chainId) {
                 continue;
             }
 
@@ -77,29 +76,28 @@ contract ConnectAgTokenSideChainMultiBridge is Wrapper {
                     0,
                     abi.encodeWithSelector(
                         LzApp.setTrustedRemote.selector,
-                        _getLZChainId(chainContract.chainId),
-                        abi.encodePacked(chainContract.token, lzToken)
+                        _getLZChainId(chainIds[i]),
+                        abi.encodePacked(contracts[i], lzToken)
                     )
                 )
             );
         }
 
         // Set trusted remote from all connected chains
-        for (uint256 i = 0; i < chainContracts.length; i++) {
-            ChainContract memory chainContract = chainContracts[i];
-            if (chainContract.chainId == chainId) {
+        for (uint256 i = 0; i < contracts.length; i++) {
+            if (chainIds[i] == chainId) {
                 continue;
             }
 
             subCalls.push(
                 SubCall(
-                    chainContract.chainId,
-                    chainContract.token,
+                    chainIds[i],
+                    contracts[i],
                     0,
                     abi.encodeWithSelector(
                         LzApp.setTrustedRemote.selector,
                         _getLZChainId(chainId),
-                        abi.encodePacked(lzToken, chainContract.token)
+                        abi.encodePacked(lzToken, contracts[i])
                     )
                 )
             );

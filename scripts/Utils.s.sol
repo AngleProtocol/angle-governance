@@ -59,22 +59,6 @@ contract Utils is Script, CommonUtils {
         forkIdentifier[CHAIN_LINEA] = lineaFork;
     }
 
-    function _getConnectedChains(string memory token) internal returns (ChainContract[] memory) {
-        string[] memory cmd = new string[](3);
-        cmd[0] = "node";
-        cmd[1] = "utils/getConnectedChains.js";
-        cmd[2] = token;
-
-        bytes memory res = vm.ffi(cmd);
-        address[] memory contracts = vm.parseJsonAddressArray(string(res), ".contracts");
-        uint256[] memory chains = vm.parseJsonUintArray(string(res), ".chains");
-        ChainContract[] memory chainContracts = new ChainContract[](contracts.length);
-        for (uint256 i = 0; i < contracts.length; i++) {
-            chainContracts[i] = ChainContract(chains[i], contracts[i]);
-        }
-        return chainContracts;
-    }
-
     function _deserializeJson()
         internal
         returns (bytes[] memory, string memory, address[] memory, uint256[] memory, uint256[] memory)

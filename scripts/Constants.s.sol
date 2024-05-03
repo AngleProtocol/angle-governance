@@ -22,11 +22,6 @@ struct SubCall {
     bytes data;
 }
 
-struct ChainContract {
-    uint256 chainId;
-    address token;
-}
-
 uint256 constant timelockDelay = 1 days;
 uint48 constant initialVotingDelay = 1 days;
 uint256 constant initialVotingDelayBlocks = 1 days / 12;
