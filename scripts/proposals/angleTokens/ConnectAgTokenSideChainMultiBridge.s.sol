@@ -19,6 +19,8 @@ contract ConnectAgTokenSideChainMultiBridge is Wrapper {
         address token = vm.envAddress("TOKEN");
         address lzToken = vm.envAddress("LZ_TOKEN");
         string memory stableName = vm.envString("STABLE_NAME");
+        uint256 totalLimit = vm.envUint("TOTAL_LIMIT");
+        uint256 hourlyLimit = vm.envUint("HOURLY_LIMIT");
         uint256 chainTotalHourlyLimit = vm.envUint("CHAIN_TOTAL_HOURLY_LIMIT");
         /** END  complete */
 
@@ -27,7 +29,14 @@ contract ConnectAgTokenSideChainMultiBridge is Wrapper {
                 chainId: chainId,
                 target: token,
                 value: 0,
-                data: abi.encodeWithSelector(AgTokenSideChainMultiBridge.addBridgeToken.selector, lzToken)
+                data: abi.encodeWithSelector(
+                    AgTokenSideChainMultiBridge.addBridgeToken.selector,
+                    lzToken,
+                    totalLimit,
+                    hourlyLimit,
+                    0,
+                    false
+                )
             })
         );
 
@@ -64,12 +73,12 @@ contract ConnectAgTokenSideChainMultiBridge is Wrapper {
             subCalls.push(
                 SubCall(
                     chainId,
-                    token,
+                    lzToken,
                     0,
                     abi.encodeWithSelector(
                         LzApp.setTrustedRemote.selector,
                         _getLZChainId(chainContract.chainId),
-                        abi.encodePacked(chainContract.token, token)
+                        abi.encodePacked(chainContract.token, lzToken)
                     )
                 )
             );
@@ -90,7 +99,7 @@ contract ConnectAgTokenSideChainMultiBridge is Wrapper {
                     abi.encodeWithSelector(
                         LzApp.setTrustedRemote.selector,
                         _getLZChainId(chainId),
-                        abi.encodePacked(token, chainContract.token)
+                        abi.encodePacked(lzToken, chainContract.token)
                     )
                 )
             );
