@@ -62,6 +62,11 @@ contract ScriptHelpers is Test, Utils {
         return _executeProposalInternal(false);
     }
 
+    function getProposalChainIds() public returns (uint256[] memory) {
+        (, , , , uint256[] memory chainIds) = _deserializeJson();
+        return chainIds;
+    }
+
     function _executeProposalInternal(bool isFork) public returns (uint256[] memory) {
         (calldatasHelpers, descriptionHelpers, targetsHelpers, valuesHelpers, chainIdsHelpers) = _deserializeJson();
 
