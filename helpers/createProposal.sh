@@ -97,7 +97,7 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    forge script $script -vvv
+    forge script $script -vvvv
 
     if [ $? -ne 0 ]; then
         echo ""
