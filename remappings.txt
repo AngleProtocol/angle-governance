@@ -13,3 +13,4 @@ test/=test
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts
 @chainlink/=lib/chainlink
 utils/=lib/utils
+angle-tokens=lib/angle-tokens/contracts
