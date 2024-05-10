@@ -2,8 +2,54 @@
 
 source lib/utils/helpers/common.sh
 
+
+function chain_to_name {
+  chain=$1
+
+  case $chain in
+    "0")
+      echo "Fork"
+      ;;
+    "1")
+      echo "Mainnet"
+      ;;
+    "2")
+      echo "Arbitrum"
+      ;;
+    "3")
+      echo "Polygon"
+      ;;
+    "4")
+      echo "Gnosis"
+      ;;
+    "5")
+      echo "Avalanche"
+      ;;
+    "6")
+      echo "Base"
+      ;;
+    "7")
+        echo "BinanceSmartChain"
+        ;;
+    "8")
+        echo "Celo"
+        ;;
+    "9")
+        echo "PolygonZkEvm"
+        ;;
+    "10")
+        echo "Optimism"
+        ;;
+    "11")
+        echo "Linea"
+        ;;
+    *)
+      ;;
+  esac
+}
+
 function usage {
-  echo "bash createAgTokenSideChainMultiBridge.sh <chain> <stableName> <totalLimit> <hourlyLimit> <chainTotalHourlyLimit> <mock> <?expectedAddress>"
+  echo "bash createAngleSideChainMultiBridge.sh <chain> <totalLimit> <hourlyLimit> <chainTotalHourlyLimit> <mock> <?expectedAddress>"
   echo ""
   echo -e "chain: chain to deploy on"
   echo -e "\t0: Fork"
@@ -18,29 +64,27 @@ function usage {
   echo -e "\t9: Polygon ZkEvm"
   echo -e "\t10: Optimism"
   echo -e "\t11: Linea"
-  echo -e "stableName: name of the stable token (ex: EUR)"
-  echo -e "totalLimit: total limit of the bridge"
-  echo -e "hourlyLimit: hourly limit of the bridge"
-  echo -e "chainTotalHourlyLimit: chain total hourly limit"
+  echo -e "totalLimit: total limit for the token"
+  echo -e "hourlyLimit: hourly limit for the token"
+  echo -e "chainTotalHourlyLimit: total hourly limit for the chain"
   echo -e "mock: mock deployment (true/false)"
   echo -e "expectedAddress: expected address for the token (optional)"
   echo ""
 }
 
 function main {
-    if [[ $# -ne 6 && $# -ne 7 ]]; then
+    if [[ $# -ne 5 && $# -ne 6 ]]; then
         usage
         exit 1
     fi
     chain=$1
-    stableName=$2
-    totalLimit=$3
-    hourlyLimit=$4
-    chainTotalHourlyLimit=$5
-    mock=$6
-    expectedAddress=$7
+    totalLimit=$2
+    hourlyLimit=$3
+    chainTotalHourlyLimit=$4
+    mock=$5
+    expectedAddress=$6
 
-    if [ -z "$chain" ] || [ -z "$stableName" ] || [ -z "$totalLimit" ] || [ -z "$hourlyLimit" ] || [ -z "$chainTotalHourlyLimit" ] || [ -z "$mock" ] ; then
+    if [ -z "$chain" ] || [ -z "$totalLimit" ] || [ -z "$hourlyLimit" ] || [ -z "$chainTotalHourlyLimit" ] || [ -z "$mock" ]; then
         echo "Missing arguments"
         exit 1
     fi
@@ -89,15 +133,28 @@ function main {
     fi
 
     export CHAIN_ID=$chainId
+    export CHAIN_NAME=$chainName
     export TOTAL_LIMIT=$totalLimit
     export HOURLY_LIMIT=$hourlyLimit
     export CHAIN_TOTAL_HOURLY_LIMIT=$chainTotalHourlyLimit
-    export STABLE_NAME=$stableName
+
+    if [[ "$mock" == "true" ]]; then
+        echo ""
+        echo "Enter the real governor:"
+        read governor
+
+        if [ -z "$governor" ]; then
+            echo "Missing governor"
+            exit 1
+        fi
+
+        export REAL_GOVERNOR=$governor
+    fi
 
     echo ""
-    echo "Running deployment on chain $chain for stable token $stableName"
+    echo "Running deployment on chain $chainName with total limit: $totalLimit, hourly limit: $hourlyLimit and chain total hourly limit: $chainTotalHourlyLimit"
 
-    cd lib/angle-tokens && MNEMONIC_MAINNET=$MNEMONIC_MAINNET forge script DeployAgTokenSideChainMultiBridge --fork-url $chainUri --verify --broadcast && cd ../..
+    cd lib/angle-tokens && MNEMONIC_MAINNET=$MNEMONIC_MAINNET forge script DeployAngleSideChainMultiBridge --fork-url $chainUri --broadcast --verify && cd ../..
 
     if [ $? -ne 0 ]; then
         echo ""
@@ -109,14 +166,14 @@ function main {
     echo "Deployment successful"
 
     echo ""
-    echo "Would you like to create the proposal for the ag token side chain multi bridge ? (y/n)"
+    echo "Would you like to create the proposal for the token side chain multi bridge ? (yes/no)"
 
     read createProposal
 
     if [[ $createProposal == "yes" ]]; then
 
         echo ""
-        echo "Enter the description:"
+        echo "Enter the description of the proposal:"
         read description
 
         if [ -z "$description" ]; then
@@ -126,7 +183,7 @@ function main {
 
         export DESCRIPTION=$description
 
-        FOUNDRY_PROFILE=dev forge script ConnectAgTokenSideChainMultiBridge --fork-url $mainnet_uri
+        FOUNDRY_PROFILE=dev forge script ConnectAngleSideChainMultiBridge --fork-url $mainnet_uri
 
         if [ $? -ne 0 ]; then
             echo ""
@@ -139,12 +196,11 @@ function main {
         echo "Proposal created successfully"
 
         echo ""
-        echo "Would you like to create the proposal ? (yes/no)"
+        echo "Would you like to execute the proposal ? (yes/no)"
         read execute
 
         if [[ $execute == "yes" ]]; then
-            mainnet_uri=$(chain_to_uri 1)
-            FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+            FOUNDRY_PROFILE=dev forge script Propose --fork-url $mainnet_uri --broadcast
         fi
     fi
 }
