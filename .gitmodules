@@ -38,3 +38,6 @@
 [submodule "lib/utils"]
 	path = lib/utils
 	url = https://github.com/AngleProtocol/utils
+[submodule "lib/angle-tokens"]
+	path = lib/angle-tokens
+	url = https://github.com/AngleProtocol/angle-tokens
