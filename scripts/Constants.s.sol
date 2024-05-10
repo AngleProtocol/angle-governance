@@ -46,3 +46,5 @@ uint64 constant fourPoint3Rate = 1335019428339023872;
 string constant pathProposal = "/scripts/proposals/payload.json";
 address constant proposer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
 address constant whale = 0x41Bc7d0687e6Cea57Fa26da78379DfDC5627C56d;
+
+string constant JSON_ADDRESSES_PATH = "lib/angle-tokens/scripts/addresses.json";

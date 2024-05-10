@@ -6,7 +6,7 @@ import { LzApp } from "lz/lzApp/LzApp.sol";
 import { Wrapper } from "../Wrapper.s.sol";
 import "../../Constants.s.sol";
 
-contract ConnectTokenSideChainMultiBridge is Wrapper {
+contract ConnectAngleSideChainMultiBridge is Wrapper {
     SubCall[] private subCalls;
 
     function run() external {
@@ -14,9 +14,11 @@ contract ConnectTokenSideChainMultiBridge is Wrapper {
 
         /** TODO  complete */
         string memory description = vm.envString("DESCRIPTION");
-        address lzToken = vm.envAddress("LZ_TOKEN");
         bool mock = vm.envOr("MOCK", false);
         /** END  complete */
+
+        string memory json = vm.readFile(JSON_ADDRESSES_PATH);
+        address lzToken = vm.parseJsonAddress(json, ".lzAngle");
 
         (uint256[] memory chainIds, address[] memory contracts) = _getConnectedChains("ANGLE");
 
