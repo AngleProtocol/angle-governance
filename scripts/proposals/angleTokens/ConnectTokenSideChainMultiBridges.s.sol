@@ -15,28 +15,31 @@ contract ConnectTokenSideChainMultiBridge is Wrapper {
         /** TODO  complete */
         string memory description = vm.envString("DESCRIPTION");
         address lzToken = vm.envAddress("LZ_TOKEN");
+        bool mock = vm.envOr("MOCK", false);
         /** END  complete */
 
         (uint256[] memory chainIds, address[] memory contracts) = _getConnectedChains("ANGLE");
 
-        // Set trusted remote from current chain
-        for (uint256 i = 0; i < contracts.length; i++) {
-            if (chainIds[i] == chainId) {
-                continue;
-            }
+        if (!mock) {
+            // Set trusted remote from current chain
+            for (uint256 i = 0; i < contracts.length; i++) {
+                if (chainIds[i] == chainId) {
+                    continue;
+                }
 
-            subCalls.push(
-                SubCall(
-                    chainId,
-                    lzToken,
-                    0,
-                    abi.encodeWithSelector(
-                        LzApp.setTrustedRemote.selector,
-                        _getLZChainId(chainIds[i]),
-                        abi.encodePacked(contracts[i], lzToken)
+                subCalls.push(
+                    SubCall(
+                        chainId,
+                        lzToken,
+                        0,
+                        abi.encodeWithSelector(
+                            LzApp.setTrustedRemote.selector,
+                            _getLZChainId(chainIds[i]),
+                            abi.encodePacked(contracts[i], lzToken)
+                        )
                     )
-                )
-            );
+                );
+            }
         }
 
         // Set trusted remote from all connected chains

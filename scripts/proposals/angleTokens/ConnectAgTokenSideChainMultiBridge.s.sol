@@ -22,65 +22,67 @@ contract ConnectAgTokenSideChainMultiBridge is Wrapper {
         uint256 totalLimit = vm.envUint("TOTAL_LIMIT");
         uint256 hourlyLimit = vm.envUint("HOURLY_LIMIT");
         uint256 chainTotalHourlyLimit = vm.envUint("CHAIN_TOTAL_HOURLY_LIMIT");
+        bool mock = vm.envOr("MOCK", false);
         /** END  complete */
 
-        subCalls.push(
-            SubCall({
-                chainId: chainId,
-                target: token,
-                value: 0,
-                data: abi.encodeWithSelector(
-                    AgTokenSideChainMultiBridge.addBridgeToken.selector,
-                    lzToken,
-                    totalLimit,
-                    hourlyLimit,
-                    0,
-                    false
-                )
-            })
-        );
-
-        subCalls.push(
-            SubCall({
-                chainId: chainId,
-                target: lzToken,
-                value: 0,
-                data: abi.encodeWithSelector(
-                    AgTokenSideChainMultiBridge.setChainTotalHourlyLimit.selector,
-                    chainTotalHourlyLimit
-                )
-            })
-        );
-
-        subCalls.push(
-            SubCall({
-                chainId: chainId,
-                target: lzToken,
-                value: 0,
-                data: abi.encodeWithSelector(OFTCore.setUseCustomAdapterParams.selector, 1)
-            })
-        );
-
         (uint256[] memory chainIds, address[] memory contracts) = _getConnectedChains(stableName);
-
-        // Set trusted remote from current chain
-        for (uint256 i = 0; i < contracts.length; i++) {
-            if (chainIds[i] == chainId) {
-                continue;
-            }
+        if (!mock) {
+            subCalls.push(
+                SubCall({
+                    chainId: chainId,
+                    target: token,
+                    value: 0,
+                    data: abi.encodeWithSelector(
+                        AgTokenSideChainMultiBridge.addBridgeToken.selector,
+                        lzToken,
+                        totalLimit,
+                        hourlyLimit,
+                        0,
+                        false
+                    )
+                })
+            );
 
             subCalls.push(
-                SubCall(
-                    chainId,
-                    lzToken,
-                    0,
-                    abi.encodeWithSelector(
-                        LzApp.setTrustedRemote.selector,
-                        _getLZChainId(chainIds[i]),
-                        abi.encodePacked(contracts[i], lzToken)
+                SubCall({
+                    chainId: chainId,
+                    target: lzToken,
+                    value: 0,
+                    data: abi.encodeWithSelector(
+                        AgTokenSideChainMultiBridge.setChainTotalHourlyLimit.selector,
+                        chainTotalHourlyLimit
                     )
-                )
+                })
             );
+
+            subCalls.push(
+                SubCall({
+                    chainId: chainId,
+                    target: lzToken,
+                    value: 0,
+                    data: abi.encodeWithSelector(OFTCore.setUseCustomAdapterParams.selector, 1)
+                })
+            );
+
+            // Set trusted remote from current chain
+            for (uint256 i = 0; i < contracts.length; i++) {
+                if (chainIds[i] == chainId) {
+                    continue;
+                }
+
+                subCalls.push(
+                    SubCall(
+                        chainId,
+                        lzToken,
+                        0,
+                        abi.encodeWithSelector(
+                            LzApp.setTrustedRemote.selector,
+                            _getLZChainId(chainIds[i]),
+                            abi.encodePacked(contracts[i], lzToken)
+                        )
+                    )
+                );
+            }
         }
 
         // Set trusted remote from all connected chains
