@@ -63,6 +63,9 @@ jobs:
         with:
           registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: Compile foundry
         run: yarn compile --sizes
 
