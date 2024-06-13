@@ -7,6 +7,7 @@ script = "scripts"
 cache_path = "cache"
 gas_reports = ["*"]
 via_ir = true
+evm_version = "cancun"
 sizes = true
 optimizer = true
 optimizer_runs = 1000
