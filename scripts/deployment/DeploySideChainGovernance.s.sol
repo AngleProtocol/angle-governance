@@ -23,27 +23,29 @@ contract DeploySideChainGovernance is Utils {
     TimelockControllerWithCounter public timelock;
 
     function run() external {
-        uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_POLYGON"), "m/44'/60'/0'/0/", 0);
+        uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_MAINNET"), "m/44'/60'/0'/0/", 0);
         vm.startBroadcast(deployerPrivateKey);
         address deployer = vm.addr(deployerPrivateKey);
         vm.label(deployer, "Deployer");
 
         // TODO can be modified to deploy on any chain
         uint256 srcChainId = CHAIN_ETHEREUM;
-        uint256 destChainId = CHAIN_LINEA;
+        uint256 destChainId = CHAIN_MODE;
+        address destSafeMultiSig = 0x7DE8289038DF0b89FFEC71Ee48a2BaD572549027; // guardian
         // END
 
-        address destSafeMultiSig = _chainToContract(destChainId, ContractType.GuardianMultisig);
         ProposalSender proposalSender = ProposalSender(_chainToContract(srcChainId, ContractType.ProposalSender));
         // Deploy relayer receiver and Timelock on end chain
         address[] memory proposers = new address[](0);
         address[] memory executors = new address[](1);
-        executors[0] = destSafeMultiSig; // Means everyone can execute
+        executors[0] = address(0); // Means everyone can execute
 
-        // timelock = new TimelockControllerWithCounter(timelockDelay, proposers, executors, deployer);
-        // proposalReceiver = new ProposalReceiver(address(_lzEndPoint(destChainId)));
-        timelock = TimelockControllerWithCounter(payable(0xd23B51d6F2cB3eC7ca9599D4332a2F10C3CFDF85));
-        proposalReceiver = ProposalReceiver(payable(0x4A44f77978Daa3E92Eb3D97210bd11645cF935Ab));
+        timelock = new TimelockControllerWithCounter(timelockDelay, proposers, executors, deployer);
+        console.log("Timelock address: ", address(timelock));
+
+        proposalReceiver = new ProposalReceiver(address(_lzEndPoint(destChainId)));
+        console.log("ProposalReceiver address: ", address(proposalReceiver));
+
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(proposalReceiver));
         timelock.grantRole(timelock.CANCELLER_ROLE(), destSafeMultiSig);
         timelock.renounceRole(timelock.DEFAULT_ADMIN_ROLE(), deployer);

@@ -33,7 +33,6 @@ contract SimulationSetup is Test, CommonUtils {
     uint256[] chainIds; // To list every needed chainId
     mapping(uint256 => string) mapChainIds;
 
-    mapping(uint256 => uint256) forkIdentifier;
     mapping(uint256 => TimelockControllerWithCounter) internal _timelocks;
     mapping(uint256 => ProposalReceiver) internal _proposalReceivers;
     ProposalSender internal _proposalSender;
@@ -50,6 +49,8 @@ contract SimulationSetup is Test, CommonUtils {
         mapChainIds[1] = "MAINNET";
         mapChainIds[137] = "POLYGON";
         mapChainIds[10] = "OPTIMISM";
+
+        setUpForks();
         // TODO Complete with all deployed chains
 
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
@@ -60,10 +61,6 @@ contract SimulationSetup is Test, CommonUtils {
 
         string memory baseURI = "ETH_NODE_URI_";
         for (uint256 i; i < chainIds.length; i++) {
-            forkIdentifier[chainIds[i]] = vm.createFork(
-                vm.envString(baseURI.toSlice().concat(mapChainIds[chainIds[i]].toSlice()))
-            );
-
             /// TODO Remove this part after deployment
             if (chainIds[i] == 1) {
                 vm.selectFork(forkIdentifier[chainIds[i]]);

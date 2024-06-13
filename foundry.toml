@@ -34,7 +34,7 @@ polygonzkevm = "${ETH_NODE_URI_POLYGON_ZKEVM}"
 bsc = "${ETH_NODE_URI_BSC}"
 base = "${ETH_NODE_URI_BASE}"
 linea = "${ETH_NODE_URI_LINEA}"
-
+mode = "${ETH_NODE_URI_MODE}"
 
 [etherscan]
 arbitrum = { key = "${ARBITRUM_ETHERSCAN_API_KEY}" }
