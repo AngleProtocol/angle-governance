@@ -60,6 +60,9 @@ jobs:
         with:
           version: nightly
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: Compile foundry
         run: yarn compile --sizes
 
