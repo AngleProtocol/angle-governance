@@ -46,12 +46,12 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
           cache: 'pip' # caching pip dependencies
 
       - name: Install viper
         shell: bash
-        run: pip install vyper==0.3.0
+        run: pip install vyper==0.3.10
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -137,12 +137,12 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
           cache: 'pip' # caching pip dependencies
 
       - name: Install viper
         shell: bash
-        run: pip install vyper==0.3.0
+        run: pip install vyper==0.3.10
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -183,12 +183,12 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
           cache: 'pip' # caching pip dependencies
 
       - name: Install viper
         shell: bash
-        run: pip install vyper==0.3.0
+        run: pip install vyper==0.3.10
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -272,7 +272,7 @@ jobs:
         run: forge build --build-info --force
 
       - name: "Run Slither analysis"
-        uses: "crytic/slither-action@v0.3.0"
+        uses: "crytic/slither-action@v0.3.10"
         id: slither
         with:
           fail-on: "none"
