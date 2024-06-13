@@ -110,6 +110,15 @@ jobs:
             out
           key: "build-${{ github.sha }}"
 
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Install viper
+        shell: bash
+        run: pip install vyper==0.3.10
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:

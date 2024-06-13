@@ -97,6 +97,15 @@ jobs:
             node_modules
           key: "build-${{ github.sha }}"
 
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Install viper
+        shell: bash
+        run: pip install vyper==0.3.10
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -214,6 +223,15 @@ jobs:
         with:
           submodules: "recursive"
 
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Install viper
+        shell: bash
+        run: pip install vyper==0.3.10
+
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@v1"
 
@@ -264,6 +282,15 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Install viper
+        shell: bash
+        run: pip install vyper==0.3.10
 
       - name: Compile foundry
         run: forge build --build-info --force
