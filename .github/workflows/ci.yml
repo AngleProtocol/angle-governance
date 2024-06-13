@@ -293,7 +293,7 @@ jobs:
         run: pip install vyper==0.3.10
 
       - name: Compile foundry
-        run: forge build --build-info --force
+        run: forge build --build-info --skip */test/** */scripts/** --force
 
       - name: "Run Slither analysis"
         uses: "crytic/slither-action@v0.3.0"
