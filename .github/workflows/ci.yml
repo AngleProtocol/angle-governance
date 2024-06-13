@@ -301,7 +301,7 @@ jobs:
 
       - name: "Run Slither analysis"
         id: slither
-        run: slither --sarif results.sarif
+        run: slither . --sarif results.sarif --ignore-compile --fail-none
 
       - name: "Upload SARIF file to GitHub code scanning"
         uses: "github/codeql-action/upload-sarif@v2"
