@@ -296,7 +296,7 @@ jobs:
         run: forge build --build-info --force
 
       - name: "Run Slither analysis"
-        uses: "crytic/slither-action@v0.3.10"
+        uses: "crytic/slither-action@v0.3.0"
         id: slither
         with:
           fail-on: "none"
