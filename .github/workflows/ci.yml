@@ -295,13 +295,14 @@ jobs:
       - name: Compile foundry
         run: forge build --build-info --skip */test/** */scripts/** --force
 
-      - name: Install slither
-        shell: bash
-        run: pip install slither-analyzer
-
       - name: "Run Slither analysis"
+        uses: "crytic/slither-action@v0.3.2"
         id: slither
-        run: slither . --sarif results.sarif --ignore-compile --fail-none
+        with:
+          fail-on: "none"
+          sarif: "results.sarif"
+          ignore-compile: true
+          slither-version: "0.10.1"
 
       - name: "Upload SARIF file to GitHub code scanning"
         uses: "github/codeql-action/upload-sarif@v2"
