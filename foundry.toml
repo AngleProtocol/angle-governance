@@ -35,19 +35,10 @@ bsc = "${ETH_NODE_URI_BSC}"
 base = "${ETH_NODE_URI_BASE}"
 linea = "${ETH_NODE_URI_LINEA}"
 mode = "${ETH_NODE_URI_MODE}"
+blast = "${ETH_NODE_URI_BLAST}"
 
 [etherscan]
-arbitrum = { key = "${ARBITRUM_ETHERSCAN_API_KEY}" }
-gnosis = { key = "${GNOSIS_ETHERSCAN_API_KEY}" , url = "https://api.gnosisscan.io/api"}
-mainnet = { key = "${MAINNET_ETHERSCAN_API_KEY}" }
-optimism = { key = "${OPTIMISM_ETHERSCAN_API_KEY}" }
-polygon = { key = "${POLYGON_ETHERSCAN_API_KEY}" }
-avalanche = { key = "${AVALANCHE_ETHERSCAN_API_KEY}" }
-celo = { key = "${CELO_ETHERSCAN_API_KEY}", url = "https://api.celoscan.io/api" }
-polygon-zkevm = { key = "${POLYGON_ZKEVM_ETHERSCAN_API_KEY}", url = "https://api-zkevm.polygonscan.com/api" }
-bsc = { key = "${BSC_ETHERSCAN_API_KEY}"}
-base = { key = "${BASE_ETHERSCAN_API_KEY}", url = "https://api.basescan.org/api" }
-linea = { key = "${LINEA_ETHERSCAN_API_KEY}" }
+blast = { key = "${BLAST_ETHERSCAN_API_KEY}", url = "https://api.blastscan.io/api" }
 
 
 [profile.dev]
