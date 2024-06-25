@@ -1,8 +1,5 @@
 name: "check-roles"
 
-env:
-  FOUNDRY_PROFILE: "ci"
-
 on:
   schedule:
     - cron: "0 0 * * *" # every day at midnight
@@ -17,42 +14,12 @@ jobs:
         chain: [1,42161,137,100,43114,8453,56,42220,1101,10,59144]
     steps:
       - uses: actions/checkout@v3
-        with:
-           submodules: "recursive"
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: "yarn"
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          cache: 'pip' # caching pip dependencies
-
-      - name: Install viper
-        shell: bash
-        run: pip install vyper==0.3.10
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - name: Setup repo
-        uses: ./.github/actions/setup-repo
-        with:
-          registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
-
-      - name: Compile
-        run: forge build
-
-      - uses: nick-fields/retry@v2
-        with:
-          max_attempts: 5
-          command: forge script CheckRoles
-          timeout_minutes: 60
+      - name: Run script
+        run: yarn check-roles
         env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          env:
           ETH_NODE_URI_MAINNET: ${{ secrets.ETH_NODE_URI_MAINNET }}
           ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
           ETH_NODE_URI_AVALANCHE: ${{ secrets.ETH_NODE_URI_AVALANCHE }}
@@ -65,8 +32,3 @@ jobs:
           ETH_NODE_URI_BASE: ${{ secrets.ETH_NODE_URI_BASE }}
           ETH_NODE_URI_LINEA: ${{ secrets.ETH_NODE_URI_LINEA }}
           CHAIN_IDS: ${{ matrix.chain }}
-
-      - name: Run script
-        run: yarn check-roles
-        env:
-          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
