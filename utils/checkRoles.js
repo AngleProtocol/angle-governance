@@ -122,9 +122,9 @@ const _checkAddressAccessControl = async (chainId, chainRegistry, contractToChec
     const [isMinter] = await callReadOnlyFunction(contractToCheck, [addressToCheck], "isMinter", ["address"], ["bool"]);
     if (isMinter && !_authorizedMinter(chainRegistry, addressToCheck)) {
       if (actors.hasOwnProperty(addressToCheck)) {
-        actors[addressToCheck].push(`${contractToCheck} - minter role`);
+        actors[addressToCheck].push(`${contractToCheck.address} - minter role`);
       } else {
-        actors[addressToCheck] = [`${contractToCheck} - minter role`];
+        actors[addressToCheck] = [`${contractToCheck.address} - minter role`];
       }
     }
   } catch (error) {}
@@ -132,9 +132,9 @@ const _checkAddressAccessControl = async (chainId, chainRegistry, contractToChec
     const [isTrusted] = await callReadOnlyFunction(contractToCheck, [addressToCheck], "isTrusted", ["address"], ["bool"]);
     if (isTrusted && !_authorizedTrusted(chainId, chainRegistry, addressToCheck)) {
       if (actors.hasOwnProperty(addressToCheck)) {
-        actors[addressToCheck].push(`${contractToCheck} - trusted role`);
+        actors[addressToCheck].push(`${ccontractToCheck.address} - trusted role`);
       } else {
-        actors[addressToCheck] = [`${contractToCheck} - trusted role`];
+        actors[addressToCheck] = [`${ccontractToCheck.address} - trusted role`];
       }
     }
   } catch (error) {}
@@ -142,9 +142,9 @@ const _checkAddressAccessControl = async (chainId, chainRegistry, contractToChec
     const [isTrusted] = await callReadOnlyFunction(contractToCheck, [addressToCheck], "trusted", ["address"], ["uint256"]);
     if (isTrusted > 0 && !_authorizedTrusted(chainId, chainRegistry, addressToCheck)) {
       if (actors.hasOwnProperty(addressToCheck)) {
-        actors[addressToCheck].push(`${contractToCheck} - trusted role`);
+        actors[addressToCheck].push(`${contractToCheck.address} - trusted role`);
       } else {
-        actors[addressToCheck] = [`${contractToCheck} - trusted role`];
+        actors[addressToCheck] = [`${contractToCheck.address} - trusted role`];
       }
     }
   } catch (error) {}
@@ -154,9 +154,9 @@ const _checkAddressAccessControl = async (chainId, chainRegistry, contractToChec
         const [hasRole] = await callReadOnlyFunction(contractToCheck, [role, addressToCheck], "hasRole", ["bytes32", "address"], ["bool"]);
         if (hasRole && !_mapCheckRoles(i, chainId, addressToCheck)) {
           if (actors.hasOwnProperty(addressToCheck)) {
-            actors[addressToCheck].push(`${contractToCheck} have role: ${_nameRoles(role)}`);
+            actors[addressToCheck].push(`${contractToCheck.address} have role: ${_nameRoles(role)}`);
           } else {
-            actors[addressToCheck] = [`${contractToCheck} have role: ${_nameRoles(role)}`];
+            actors[addressToCheck] = [`${contractToCheck.address} have role: ${_nameRoles(role)}`];
           }
         }
   } catch (error) {}
@@ -243,7 +243,7 @@ const provider = contract.provider;
 let attempt = 0;
   let lastError;
   const maxAttempts = 10;
-  const initialDelay = 100;
+  const initialDelay = 50;
 
   while (attempt < maxAttempts) {
     try {
@@ -323,7 +323,7 @@ const _checkGlobalAccessControl = async (chainRegistry, globalAccessControl) => 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
 const _authorizedCore = (chainRegistry, core) => {
-  return core == chainRegistry.CoreBorrow;
+  return !core || core == chainRegistry.CoreBorrow;
 }
 
 const _authorizedMinter = (chainRegistry, minter) => {
@@ -521,8 +521,6 @@ const checkRoles = async () => {
       }
     }
 
-    console.log("ok1");
-
 
     if (_isCoreChain(chainRegistry)) {
       const angleRouter = AngleRouterPolygon__factory.connect(chainRegistry.AngleRouterV2, provider);
@@ -531,14 +529,10 @@ const checkRoles = async () => {
       }
     }
 
-    console.log("ok4");
-
 
     if (_isAngleDeployed(chainRegistry) && chainId != ChainId.POLYGON) {
       await _checkOnLzToken(chainRegistry, AgTokenSideChainMultiBridge__factory.connect(chainRegistry.bridges.LayerZero, provider), "ANGLE");
     }
-
-    console.log("ok5");
 
 
     if (_isMerklDeployed(chainRegistry)) {
@@ -574,7 +568,6 @@ const checkRoles = async () => {
     await _checkVaultManagers(provider, chainRegistry.EUR.Treasury);
     await _checkVaultManagers(provider, chainRegistry.USD.Treasury);
 
-    console.log("ok");
     if (_revertOnWrongFunctionCall(chainId)) {
       await Promise.all(allContracts.map(async (contractToCheck) => {
         const instance = new ethers.Contract(contractToCheck, [], provider);
