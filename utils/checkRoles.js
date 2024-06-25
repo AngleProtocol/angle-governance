@@ -556,7 +556,7 @@ const checkRoles = async () => {
     const core = CoreBorrow__factory.connect(coreBorrow, provider);
     const timelockContract = Timelock__factory.connect(timelock, provider); 
 
-    await Promise.all(listAddressToCheck.map(async (actor) => {
+    for (const actor of listAddressToCheck) {
       const [isMinterEUR] = await callReadOnlyFunction(EURA, [actor], "isMinter", ["address"], ["bool"]);
       if (isMinterEUR && !_authorizedMinter(chainRegistry, actor)) {
         if (actors.hasOwnProperty(actor)) {
@@ -684,7 +684,7 @@ const checkRoles = async () => {
           }
         }
       }
-    }));
+    };
     console.log(roles, actors);
   }));
 };
