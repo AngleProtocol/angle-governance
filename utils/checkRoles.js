@@ -32,7 +32,7 @@ const _isAngleDeployed = (chainRegistry) => {
 }
 
 const _isCoreChain = (chainRegistry) => {
-  return chainRegistry.CoreBorrow != undefined;
+  return chainRegistry.CoreBorrow && chainRegistry.AngleRouterV2;
 }
 
 const _isSavingsDeployed = (chainRegistry) => {
@@ -385,7 +385,7 @@ const getURIFromChainId = (chainId) => {
     case 43114:
       return process.env.ETH_NODE_URI_AVALANCHE;
     case 8453:
-      return process.env.ETH_NODE_URI_FANTOM;
+      return process.env.ETH_NODE_URI_BASE;
     case 56:
       return process.env.ETH_NODE_URI_BSC;
     case 42220:
@@ -419,7 +419,7 @@ function getAllAddresses(registry) {
 const checkRoles = async () => {
   const chainIds = process.env.CHAIN_IDS.split(",").map((chainId) => parseInt(chainId));
 
-  for (const chainId of chainIds) {
+  await Promise.all(chainIds.map(async (chainId) => {
     const chainRegistry = registry(chainId);
     const provider = new ethers.providers.JsonRpcProvider(getURIFromChainId(chainId));
     const allContracts = await getAllAddresses(chainRegistry);
@@ -544,10 +544,10 @@ const checkRoles = async () => {
     await _checkVaultManagers(provider, chainRegistry.USD.Treasury);
 
     if (_revertOnWrongFunctionCall(chainId)) {
-      for (const contract of allContracts) {
-        const contractInstance = new ethers.Contract(contract, [], provider);
-        _checkGlobalAccessControl(chainRegistry, contractInstance);
-      }
+      await Promise.all(allContracts.map(async (contractToCheck) => {
+        const instance = new ethers.Contract(contractToCheck, [], provider);
+        await _checkGlobalAccessControl(chainRegistry, instance);
+      }));
     }
 
     // Contract to check roles on
@@ -556,7 +556,7 @@ const checkRoles = async () => {
     const core = CoreBorrow__factory.connect(coreBorrow, provider);
     const timelockContract = Timelock__factory.connect(timelock, provider); 
 
-    for (const actor of listAddressToCheck) {
+    await Promise.all(listAddressToCheck.map(async (actor) => {
       const [isMinterEUR] = await callReadOnlyFunction(EURA, [actor], "isMinter", ["address"], ["bool"]);
       if (isMinterEUR && !_authorizedMinter(chainRegistry, actor)) {
         if (actors.hasOwnProperty(actor)) {
@@ -631,10 +631,10 @@ const checkRoles = async () => {
       }
 
       if (_revertOnWrongFunctionCall(chainId)) {
-        for (const contractToCheck of allContracts) {
+        await Promise.all(allContracts.map(async (contractToCheck) => {
           const instance = new ethers.Contract(contractToCheck, [], provider);
           await _checkAddressAccessControl(chainId, chainRegistry, instance, actor);
-        }
+        }));
       }
 
       if (_isMerklDeployed(chainRegistry)) {
@@ -684,12 +684,9 @@ const checkRoles = async () => {
           }
         }
       }
-    }
-
-
-
-  }
-  console.log(roles, actors);
+    }));
+    console.log(roles, actors);
+  }));
 };
 
 /*
