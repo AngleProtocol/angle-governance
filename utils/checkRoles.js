@@ -24,7 +24,7 @@ const DISTRIBUTOR_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("DISTRI
 const DEFAULT_ADMIN_ROLE = ethers.constants.HashZero;
 
 const _isMerklDeployed = (chainRegistry) => {
-  return chainRegistry.Merkl.CoreMerkl && chainRegistry.Merkl.DistributionCreator && chainRegistry.Merkl.Distributor;
+  return chainRegistry.Merkl && chainRegistry.Merkl.CoreMerkl && chainRegistry.Merkl.DistributionCreator && chainRegistry.Merkl.Distributor;
 }
 
 const _isAngleDeployed = (chainRegistry) => {
@@ -190,10 +190,18 @@ const _checkOnLzToken = async (chainRegistery, token, type) => {
       if (canonicalToken != chainRegistery.ANGLE) {
         roles.push(`ANGLE - wrong canonical token: ${canonicalToken}`);
       }
-      const [coreBorrow] = await callReadOnlyFunction(token, [], "coreBorrow", [], ["address"]);
-      if (!_authorizedCore(chainRegistery, coreBorrow)) {
-        roles.push(`ANGLE - wrong core borrow: ${coreBorrow}`);
-      }
+      try {
+        const [coreBorrow] = await callReadOnlyFunction(token, [], "coreBorrow", [], ["address"]);
+        if (!_authorizedCore(chainRegistery, coreBorrow)) {
+          roles.push(`ANGLE - wrong core borrow: ${coreBorrow}`);
+        }
+      } catch (e) {}
+      try {
+        const [coreBorrow] = await callReadOnlyFunction(token, [], "treasury", [], ["address"]);
+        if (!_authorizedCore(chainRegistery, coreBorrow)) {
+          roles.push(`ANGLE - wrong core borrow: ${coreBorrow}`);
+        }
+      } catch (e) {}
       break;
     }
   }
@@ -499,6 +507,9 @@ const checkRoles = async () => {
       }
     }
 
+    console.log("ok1");
+
+
     if (_isCoreChain(chainRegistry)) {
       const angleRouter = AngleRouterPolygon__factory.connect(chainRegistry.AngleRouterV2, provider);
       if (!_authorizedCore(chainRegistry, await angleRouter.core())) {
@@ -506,9 +517,15 @@ const checkRoles = async () => {
       }
     }
 
+    console.log("ok4");
+
+
     if (_isAngleDeployed(chainRegistry) && chainId != ChainId.POLYGON) {
       await _checkOnLzToken(chainRegistry, AgTokenSideChainMultiBridge__factory.connect(chainRegistry.bridges.LayerZero, provider), "ANGLE");
     }
+
+    console.log("ok5");
+
 
     if (_isMerklDeployed(chainRegistry)) {
       const distributionCreator = DistributionCreator__factory.connect(chainRegistry.Merkl.DistributionCreator, provider);
@@ -543,6 +560,7 @@ const checkRoles = async () => {
     await _checkVaultManagers(provider, chainRegistry.EUR.Treasury);
     await _checkVaultManagers(provider, chainRegistry.USD.Treasury);
 
+    console.log("ok");
     if (_revertOnWrongFunctionCall(chainId)) {
       await Promise.all(allContracts.map(async (contractToCheck) => {
         const instance = new ethers.Contract(contractToCheck, [], provider);

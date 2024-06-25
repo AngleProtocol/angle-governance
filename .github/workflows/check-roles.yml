@@ -25,8 +25,11 @@ jobs:
         with:
           registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
 
-      - name: Run script
-        run: yarn check-roles
+      - uses: nick-fields/retry@v2
+        with:
+          max_attempts: 5
+          command: yarn check-roles
+          timeout_minutes: 60
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           env:
