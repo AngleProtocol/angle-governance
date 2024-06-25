@@ -417,7 +417,6 @@ function getAllAddresses(registry) {
 }
 
 const checkRoles = async () => {
-  process.env.CHAIN_IDS="1";
   const chainIds = process.env.CHAIN_IDS.split(",").map((chainId) => parseInt(chainId));
 
   for (const chainId of chainIds) {
