@@ -240,15 +240,29 @@ const data = iface.encodeFunctionData(functionName, params);
 
 const provider = contract.provider;
 
-const result = await provider.call({
-  to: contract.address,
-  data
-})
+let attempt = 0;
+  let lastError;
+  const maxAttempts = 10;
+  const initialDelay = 100;
 
-  // Decode the result, if necessary
-  const decodedResult = ethers.utils.defaultAbiCoder.decode(functionReturnType, result);
+  while (attempt < maxAttempts) {
+    try {
+      const result = await provider.call({
+        to: contract.address,
+        data
+      });
 
-  return decodedResult;
+      // Decode the result, if necessary
+      const decodedResult = ethers.utils.defaultAbiCoder.decode(functionReturnType, result);
+
+      return decodedResult;
+    } catch (error) {
+      lastError = error;
+      attempt++;
+      await new Promise(resolve => setTimeout(resolve, initialDelay * attempt));
+    }
+  }
+  throw lastError;
 }
 
 const _checkGlobalAccessControl = async (chainRegistry, globalAccessControl) => {
