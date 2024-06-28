@@ -3,7 +3,7 @@ name: "check-roles"
 on:
   schedule:
     - cron: "0 0 * * *" # every day at midnight
-  push:
+  workflow_dispatch:
 
 jobs:
   check-roles:
