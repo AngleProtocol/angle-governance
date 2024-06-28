@@ -688,11 +688,7 @@ function getAllAddresses(registry) {
   return addresses;
 }
 
-const checkRoles = async () => {
-  const chainIds = process.env.CHAIN_IDS.split(",").map((chainId) =>
-    parseInt(chainId)
-  );
-
+const checkRoles = async (chainIds) => {
   const embeds = [];
 
   await Promise.all(
@@ -1258,7 +1254,6 @@ async function updateMessageWithRolesAndActors(roles, actors) {
   return message;
 }
 
-/*
 
 const getChannel = (discordClient, channelName) => {
   return discordClient.channels.cache.find(
@@ -1275,26 +1270,24 @@ const client = new Client({
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
 
+  const chainIds = process.env.CHAIN_IDS.split(",").map((chainId) =>
+    parseInt(chainId)
+  );
+
   const channel = getChannel(client, rolesChannel);
   if (!channel) {
     console.log("discord channel not found");
     return;
   }
 
-  const embeds = await checkRoles();
-
-  return;
-
-  const content = readFileSync("./scripts/roles.json");
-  const roles = JSON.parse(content);
-  const chains = Object.keys(roles);
+  const embeds = await checkRoles(chainIds);
 
   const lastMessages = (
     await channel.messages.fetch({ limit: 20, sort: "timestamp" })
   )
     .map((m) => m.embeds)
     .flat();
-  const latestChainIdsMessages = chains
+  const latestChainIdsMessages = chainIds
     .map((chain) => lastMessages.find((m) => m?.title == `⛓️ Chain: ${chain}`))
     .filter((m) => m);
   for (const embed of embeds) {
@@ -1320,7 +1313,6 @@ client.on("ready", async () => {
 
 client.login(process.env.DISCORD_TOKEN);
 
-*/
 
 (async () => {
   await checkRoles();
