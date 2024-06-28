@@ -32,7 +32,6 @@ jobs:
           timeout_minutes: 60
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-          env:
           ETH_NODE_URI_MAINNET: ${{ secrets.ETH_NODE_URI_MAINNET }}
           ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
           ETH_NODE_URI_AVALANCHE: ${{ secrets.ETH_NODE_URI_AVALANCHE }}
@@ -45,3 +44,11 @@ jobs:
           ETH_NODE_URI_BASE: ${{ secrets.ETH_NODE_URI_BASE }}
           ETH_NODE_URI_LINEA: ${{ secrets.ETH_NODE_URI_LINEA }}
           CHAIN_IDS: ${{ matrix.chain }}
+
+      - name: Notify Discord on Failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_ROLES_ON_CHAIN }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "Failed to check roles for chain ${{ matrix.chain }} (https://github.com/AngleProtocol/angle-governance/actions/runs/${{ github.run_id }})"
