@@ -50,5 +50,7 @@
     "solhint": "^3.5.1",
     "solhint-plugin-prettier": "^0.0.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "viem": "^2.16.3"
+  }
 }
