@@ -11,7 +11,6 @@ import { BadVoter } from "./actors/BadVoter.t.sol";
 import { Fixture, AngleGovernor } from "../Fixture.t.sol";
 import { ProposalStore, Proposal } from "./stores/ProposalStore.sol";
 import { IGovernor } from "oz/governance/IGovernor.sol";
-import { TimestampStore } from "./stores/TimestampStore.sol";
 
 //solhint-disable
 import { console } from "forge-std/console.sol";
@@ -25,21 +24,13 @@ contract MainnetGovernorInvariants is Fixture {
 
     // Keep track of current proposals
     ProposalStore internal _proposalStore;
-    TimestampStore internal _timestampStore;
-
-    modifier useCurrentTimestampBlock() {
-        vm.warp(_timestampStore.currentTimestamp());
-        vm.roll(_timestampStore.currentBlockNumber());
-        _;
-    }
 
     function setUp() public virtual override {
         super.setUp();
 
         _proposalStore = new ProposalStore();
-        _timestampStore = new TimestampStore();
         _voterHandler = new Voter(angleGovernor, ANGLE, _NUM_VOTER, _proposalStore);
-        _proposerHandler = new Proposer(angleGovernor, ANGLE, 1, _proposalStore, token, _timestampStore);
+        _proposerHandler = new Proposer(angleGovernor, ANGLE, 1, _proposalStore, token);
         _badVoterHandler = new BadVoter(angleGovernor, ANGLE, _NUM_VOTER, _proposalStore);
 
         // Label newly created addresses
@@ -85,7 +76,7 @@ contract MainnetGovernorInvariants is Fixture {
         }
     }
 
-    function invariant_VotesUnderTotalsupply() public useCurrentTimestampBlock {
+    function invariant_VotesUnderTotalsupply() public {
         uint256 proposalLength = _proposalStore.nbProposals();
         Proposal[] memory proposals = _proposalStore.getProposals();
         for (uint256 i; i < proposalLength; i++) {
@@ -102,7 +93,7 @@ contract MainnetGovernorInvariants is Fixture {
         }
     }
 
-    function invariant_ProposalsCorrectState() public useCurrentTimestampBlock {
+    function invariant_ProposalsCorrectState() public {
         uint256 proposalLength = _proposalStore.nbProposals();
         Proposal[] memory proposals = _proposalStore.getProposals();
         for (uint256 i; i < proposalLength; i++) {
@@ -138,7 +129,7 @@ contract MainnetGovernorInvariants is Fixture {
         }
     }
 
-    function invariant_CannotExecuteTwiceProposal() public useCurrentTimestampBlock {
+    function invariant_CannotExecuteTwiceProposal() public {
         Proposal[] memory oldProposals = _proposalStore.getOldProposals();
         for (uint256 i; i < oldProposals.length; i++) {
             Proposal memory proposal = oldProposals[i];
@@ -162,7 +153,7 @@ contract MainnetGovernorInvariants is Fixture {
         }
     }
 
-    function invariant_CannotVoteExecutedProposal() public useCurrentTimestampBlock {
+    function invariant_CannotVoteExecutedProposal() public {
         Proposal[] memory oldProposals = _proposalStore.getOldProposals();
         for (uint256 i; i < oldProposals.length; i++) {
             Proposal memory proposal = oldProposals[i];

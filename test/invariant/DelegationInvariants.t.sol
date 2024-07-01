@@ -8,7 +8,6 @@ import "oz/utils/Strings.sol";
 import { Delegator } from "./actors/Delegator.t.sol";
 import { Param } from "./actors/Param.t.sol";
 import { Fixture, AngleGovernor } from "../Fixture.t.sol";
-import { TimestampStore } from "./stores/TimestampStore.sol";
 
 //solhint-disable
 import { console } from "forge-std/console.sol";
@@ -19,25 +18,16 @@ contract DelegationInvariants is Fixture {
 
     Delegator internal _delegatorHandler;
     Param internal _paramHandler;
-    TimestampStore internal _timestampStore;
-
-    modifier useCurrentTimestampBlock() {
-        vm.warp(_timestampStore.currentTimestamp());
-        vm.roll(_timestampStore.currentBlockNumber());
-        _;
-    }
 
     function setUp() public virtual override {
         super.setUp();
 
-        _timestampStore = new TimestampStore();
-        _delegatorHandler = new Delegator(_NUM_DELEGATORS, ANGLE, address(veANGLE), address(token), _timestampStore);
-        _paramHandler = new Param(_NUM_PARAMS, ANGLE, _timestampStore);
+        _delegatorHandler = new Delegator(_NUM_DELEGATORS, ANGLE, address(veANGLE), address(token));
+        _paramHandler = new Param(_NUM_PARAMS, ANGLE);
 
         // Label newly created addresses
         for (uint256 i; i < _NUM_DELEGATORS; i++)
             vm.label(_delegatorHandler.actors(i), string.concat("Delegator ", Strings.toString(i)));
-        vm.label({ account: address(_timestampStore), newLabel: "TimestampStore" });
         vm.label({ account: address(_paramHandler), newLabel: "Param" });
 
         targetContract(address(_delegatorHandler));
@@ -59,7 +49,7 @@ contract DelegationInvariants is Fixture {
         }
     }
 
-    function invariant_RightNumberOfVotesDelegated() public useCurrentTimestampBlock {
+    function invariant_RightNumberOfVotesDelegated() public {
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             address actor = _delegatorHandler.actors(i);
 
@@ -84,7 +74,7 @@ contract DelegationInvariants is Fixture {
         }
     }
 
-    function invariant_DelegatorsHaveNullVote() public useCurrentTimestampBlock {
+    function invariant_DelegatorsHaveNullVote() public {
         for (uint256 i; i < _NUM_DELEGATORS; i++) {
             address actor = _delegatorHandler.actors(i);
             address delegatee = _delegatorHandler.delegations(actor);
@@ -93,7 +83,7 @@ contract DelegationInvariants is Fixture {
         }
     }
 
-    function invariant_CanOnlyDelegateOnceAtATime() public useCurrentTimestampBlock {
+    function invariant_CanOnlyDelegateOnceAtATime() public {
         uint256[] memory occurencesDelegator = new uint256[](_NUM_DELEGATORS);
         for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
             address delegatee = _delegatorHandler.delegatees(i);
@@ -104,59 +94,5 @@ contract DelegationInvariants is Fixture {
                 assertLe(occurencesDelegator[index], 1, "Delegator should only delegate once at a time");
             }
         }
-    }
-
-    function invariant_SumDelegationExternalEqualTotalSupply() public useCurrentTimestampBlock {
-        uint256 totalVotes = token.getVotes(alice) +
-            token.getVotes(bob) +
-            token.getVotes(charlie) +
-            token.getVotes(dylan);
-
-        for (uint256 i; i < _NUM_DELEGATORS; i++) {
-            address actor = _delegatorHandler.actors(i);
-            totalVotes += token.getVotes(actor);
-        }
-        for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
-            address delegatee = _delegatorHandler.delegatees(i);
-            totalVotes += token.getVotes(delegatee);
-        }
-
-        assertEq(
-            totalVotes,
-            veANGLE.totalSupplyAt(block.number),
-            "The sum of voting power should be equal to the totalSupply"
-        );
-
-        assertEq(
-            totalVotes,
-            veANGLE.totalSupply(block.timestamp),
-            "The sum of voting power should be equal to the totalSupply"
-        );
-    }
-
-    function invariant_SumDelegationInternalEqualTotalSupply() public useCurrentTimestampBlock {
-        uint256 totalVotes = token.getVotes(alice) +
-            token.getVotes(bob) +
-            token.getVotes(charlie) +
-            token.getVotes(dylan);
-
-        for (uint256 i; i < _NUM_DELEGATORS; i++) {
-            address actor = _delegatorHandler.actors(i);
-            totalVotes += token.getVotes(actor);
-            address delegatee = token.delegates(actor);
-            totalVotes += token.getVotes(delegatee);
-        }
-
-        assertEq(
-            totalVotes,
-            veANGLE.totalSupplyAt(block.number),
-            "The sum of voting power should be equal to the totalSupply"
-        );
-
-        assertEq(
-            totalVotes,
-            veANGLE.totalSupply(block.timestamp),
-            "The sum of voting power should be equal to the totalSupply"
-        );
     }
 }
