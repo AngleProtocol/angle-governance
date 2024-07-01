@@ -709,15 +709,13 @@ const checkRoles = async (chainIds) => {
       const timelock = chainRegistry.Timelock;
       const coreBorrow = chainRegistry.CoreBorrow;
       const proxyAdmin = chainRegistry.ProxyAdmin;
-      const deployer = "0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185";
-      const newDeployer = "0xA9DdD91249DFdd450E81E1c56Ab60E1A62651701";
+      const deployer = "0xA9DdD91249DFdd450E81E1c56Ab60E1A62651701";
       const keeper1 = "0xa9bbbDDe822789F123667044443dc7001fb43C01";
       const keeper2 = "0xa9BB7e640FF985376e67bbb5843bF9a63a2fBa02";
       const merklKeeper = "0x435046800Fb9149eE65159721A92cB7d50a7534b";
 
       listAddressToCheck = [
         deployer,
-        newDeployer,
         keeper1,
         keeper2,
         merklKeeper,
