@@ -283,6 +283,10 @@ jobs:
         with:
           version: nightly
 
+      - name: Install viper
+        shell: bash
+        run: python3 -m pip vyper==0.3.10
+
       - name: Compile foundry
         run: forge build --build-info --skip */test/** */scripts/** --force
 
