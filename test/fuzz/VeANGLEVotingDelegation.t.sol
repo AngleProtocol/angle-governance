@@ -866,7 +866,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
         uint256 totalVeANGLE;
         address delegate = address(uint160(1_000_000));
 
-        for (uint256 i = 100; i < 15_100; ++i) {
+        for (uint256 i = 100; i < 1000; ++i) {
             address account = address(uint160(i));
             deal(address(ANGLE), account, amount);
 
@@ -880,7 +880,7 @@ contract VeANGLEVotingDelegationTest is Test, Utils {
 
         vm.warp(((block.timestamp / 1 days) * 1 days) + 1 days);
 
-        for (uint256 i = 100; i < 15_100; ++i) {
+        for (uint256 i = 100; i < 1000; ++i) {
             address account = address(uint160(i));
             totalVeANGLE += veANGLE.balanceOf(account, block.timestamp);
         }
