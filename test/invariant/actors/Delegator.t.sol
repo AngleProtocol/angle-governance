@@ -36,10 +36,16 @@ contract Delegator is BaseActor {
     function delegate(uint256 actorIndex, address toDelegate) public useActor(actorIndex) {
         if (toDelegate == address(0)) return;
 
+        for (uint256 i; i < nbrActor; i++) {
+            if (actors[i] == toDelegate) {
+                return;
+            }
+        }
+
         uint256 balance = veToken.balanceOf(_currentActor);
         address currentDelegatee = delegations[_currentActor];
 
-        if (balance == 0) {
+        if (veToken.locked__end(_currentActor) > ((block.timestamp / 1 days) * 1 days) + 1 days) {
             return;
         }
 

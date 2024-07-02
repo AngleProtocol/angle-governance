@@ -61,15 +61,22 @@ contract DelegationInvariants is Fixture {
         }
         for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
             address delegatee = _delegatorHandler.delegatees(i);
-            uint256 votes = token.getVotes(delegatee);
 
-            uint256 amount = 0;
             address[] memory delegators = _delegatorHandler.reverseDelegationsView(delegatee);
+            for (uint256 j; j < delegators.length; j++) {
+                address delegator = delegators[j];
+                if (veANGLE.locked__end(delegator) > ((block.timestamp / 1 days) * 1 days) + 1 days) {
+                    vm.prank(delegator, delegator);
+                    token.delegate(delegatee);
+                }
+            }
+            uint256 amount = veANGLE.balanceOf(delegatee);
             for (uint256 j; j < delegators.length; j++) {
                 address delegator = delegators[j];
                 uint256 balance = veANGLE.balanceOf(delegator);
                 amount += balance;
             }
+            uint256 votes = token.getVotes(delegatee);
             assertEq(votes, amount, "Delegatee should have votes");
         }
     }
