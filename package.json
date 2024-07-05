@@ -1,5 +1,5 @@
 {
-  "name": "angle-boilerplate",
+  "name": "angle-governance",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -42,7 +42,7 @@
     "url": "https://github.com/AngleProtocol/boilerplate/issues"
   },
   "devDependencies": {
-    "@angleprotocol/sdk": "^v2.12.1",
+    "@angleprotocol/sdk": "^v2.14.0",
     "@layerzerolabs/lz-sdk": "^0.0.75",
     "discord.js": "^14.14.1",
     "prettier": "^2.0.0",

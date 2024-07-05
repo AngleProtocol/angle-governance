@@ -18,6 +18,8 @@ const {
   ProxyAdmin__factory,
   ProposalReceiver__factory,
   AngleRouterV2__factory,
+  LayerZeroBridgeToken__factory,
+  AccessControl__factory,
 } = require("@angleprotocol/sdk");
 const { ethers } = require("ethers");
 const { createPublicClient, http, getContract } = require("viem");
@@ -25,126 +27,6 @@ const { createPublicClient, http, getContract } = require("viem");
 let actors = {};
 let roles = [];
 let listAddressToCheck = [];
-
-const LayerZeroBridgeTokenAbi = [
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "lzEndpoint",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "canonicalToken",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "coreBorrow",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "treasury",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-];
-const GeneralAccessControlAbi = [
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "owner",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "isMinter",
-    inputs: [{ name: "", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "bool", internalType: "bool" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "minter",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "treasury",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "coreBorrow",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "accessControlManager",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "core",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "admin",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "future_admin",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "isTrusted",
-    inputs: [{ name: "", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "bool", internalType: "bool" }],
-  },
-  {
-    type: "function",
-    stateMutability: "view",
-    name: "trusted",
-    inputs: [{ name: "", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-  },
-  {
-    inputs: [
-      { internalType: "bytes32", name: "role", type: "bytes32" },
-      { internalType: "address", name: "account", type: "address" },
-    ],
-    name: "hasRole",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-];
 
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                         CONSTANTS                                                    
@@ -900,7 +782,7 @@ const checkRoles = async (chainIds) => {
       if (_isAngleDeployed(chainRegistry) && chainId != ChainId.POLYGON) {
         const instance = getContract({
           address: chainRegistry.bridges.LayerZero,
-          abi: LayerZeroBridgeTokenAbi,
+          abi: LayerZeroBridgeToken__factory.abi,
           client,
         });
         await _checkOnLzToken(chainRegistry, instance, "ANGLE");
@@ -978,7 +860,7 @@ const checkRoles = async (chainIds) => {
           chainRegistry,
           getContract({
             address: chainRegistry.EUR.bridges.LayerZero,
-            abi: LayerZeroBridgeTokenAbi,
+            abi: LayerZeroBridgeToken__factory.abi,
             client,
           }),
           "EUR"
@@ -987,7 +869,7 @@ const checkRoles = async (chainIds) => {
           chainRegistry,
           getContract({
             address: chainRegistry.USD.bridges.LayerZero,
-            abi: LayerZeroBridgeTokenAbi,
+            abi: LayerZeroBridgeToken__factory.abi,
             client,
           }),
           "USD"
@@ -1000,7 +882,7 @@ const checkRoles = async (chainIds) => {
         allContracts.map(async (contractToCheck) => {
           const instance = getContract({
             address: contractToCheck,
-            abi: GeneralAccessControlAbi,
+            abi: AccessControl__factory.abi,
             client,
           });
           return _checkGlobalAccessControl(chainRegistry, instance);
@@ -1010,22 +892,22 @@ const checkRoles = async (chainIds) => {
       // Contract to check roles on
       const EURA = getContract({
         address: chainRegistry.EUR.AgToken,
-        abi: GeneralAccessControlAbi,
+        abi: AccessControl__factory.abi,
         client,
       });
       const USDA = getContract({
         address: chainRegistry.USD.AgToken,
-        abi: GeneralAccessControlAbi,
+        abi: AccessControl__factory.abi,
         client,
       });
       const core = getContract({
         address: coreBorrow,
-        abi: GeneralAccessControlAbi,
+        abi: AccessControl__factory.abi,
         client,
       });
       const timelockContract = getContract({
         address: timelock,
-        abi: GeneralAccessControlAbi,
+        abi: AccessControl__factory.abi,
         client,
       });
 
@@ -1135,7 +1017,7 @@ const checkRoles = async (chainIds) => {
           allContracts.map(async (contractToCheck) => {
             const instance = getContract({
               address: contractToCheck,
-              abi: GeneralAccessControlAbi,
+              abi: AccessControl__factory.abi,
               client,
             });
             return _checkAddressAccessControl(
@@ -1150,7 +1032,7 @@ const checkRoles = async (chainIds) => {
         if (_isMerklDeployed(chainRegistry)) {
           const coreMerkl = getContract({
             address: chainRegistry.Merkl.CoreMerkl,
-            abi: GeneralAccessControlAbi,
+            abi: AccessControl__factory.abi,
             client,
           });
           const [hasRoleGovernor, hasRoleGuardian, hasRoleFlashloaner] =
@@ -1192,7 +1074,7 @@ const checkRoles = async (chainIds) => {
         if (chainId == ChainId.MAINNET) {
           const distributor = getContract({
             address: chainRegistry.AngleDistributor,
-            abi: GeneralAccessControlAbi,
+            abi: AccessControl__factory.abi,
             client,
           });
           const [hasRoleGovernor, hasRoleGuardian] = await Promise.all([
@@ -1226,7 +1108,6 @@ const checkRoles = async (chainIds) => {
       const message = await updateMessageWithRolesAndActors(roles, actors, chainId);
       const title = `⛓️ Chain: ${chainId}`;
       embeds.push(new EmbedBuilder().setTitle(title).setDescription(message));
-      console.log(embeds);
     })
   );
   return embeds
@@ -1280,6 +1161,10 @@ client.on("ready", async () => {
 
   const embeds = await checkRoles(chainIds);
 
+  console.log(embeds);
+
+  /*
+
   const lastMessages = (
     await channel.messages.fetch({ limit: 20, sort: "timestamp" })
   )
@@ -1306,6 +1191,7 @@ client.on("ready", async () => {
       await channel.send({ embeds: [embed] });
     }
   }
+    */
   process.exit(0);
 });
 
