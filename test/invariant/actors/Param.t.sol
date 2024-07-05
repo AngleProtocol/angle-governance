@@ -14,7 +14,7 @@ contract Param is BaseActor {
     constructor(uint256 _nbrActor, IERC20 _agToken) BaseActor(_nbrActor, "Param", _agToken) {}
 
     function wrap(uint256 duration) public {
-        duration = bound(duration, 0, 1 days);
+        duration = bound(duration, 0, 365 days);
         vm.warp(block.timestamp + duration);
         vm.roll(block.number + 1);
     }
