@@ -1196,8 +1196,3 @@ client.on("ready", async () => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
-
-
-(async () => {
-  await checkRoles();
-})();
