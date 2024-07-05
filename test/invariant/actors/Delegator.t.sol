@@ -6,8 +6,6 @@ import { IERC5805 } from "oz/interfaces/IERC5805.sol";
 import { MockANGLE } from "../../external/MockANGLE.sol";
 import "contracts/interfaces/IveANGLE.sol";
 import "contracts/utils/Errors.sol";
-import { console } from "forge-std/console.sol";
-import { TimestampStore } from "../stores/TimestampStore.sol";
 
 contract Delegator is BaseActor {
     IveANGLE public veToken;
@@ -16,18 +14,15 @@ contract Delegator is BaseActor {
     mapping(address => address) public delegations;
     mapping(address => address[]) public reverseDelegations;
     address[] public delegatees;
-    TimestampStore public timestampStore;
 
     constructor(
         uint256 _nbrActor,
         IERC20 _agToken,
         address _veToken,
-        address _veDelegation,
-        TimestampStore _timestampStore
+        address _veDelegation
     ) BaseActor(_nbrActor, "Delegator", _agToken) {
         veToken = IveANGLE(_veToken);
         veDelegation = IERC5805(_veDelegation);
-        timestampStore = _timestampStore;
     }
 
     function reverseDelegationsView(address locker) public view returns (address[] memory) {
@@ -41,17 +36,22 @@ contract Delegator is BaseActor {
     function delegate(uint256 actorIndex, address toDelegate) public useActor(actorIndex) {
         if (toDelegate == address(0)) return;
 
+        for (uint256 i; i < nbrActor; i++) {
+            if (actors[i] == toDelegate) {
+                return;
+            }
+        }
+
         uint256 balance = veToken.balanceOf(_currentActor);
         address currentDelegatee = delegations[_currentActor];
 
-        if (balance == 0) {
+        if (veToken.locked__end(_currentActor) > ((block.timestamp / 1 days) * 1 days) + 1 days) {
             return;
         }
 
         veDelegation.delegate(toDelegate);
-        timestampStore.increaseCurrentTimestamp(1 days);
-        vm.warp(timestampStore.currentTimestamp());
-        vm.roll(timestampStore.currentBlockNumber());
+        vm.warp(block.timestamp + 1 days);
+        vm.roll(block.number + 1);
 
         // Update delegations
         if (toDelegate == currentDelegatee) {
@@ -105,6 +105,8 @@ contract Delegator is BaseActor {
         veToken.increase_unlock_time(duration);
         if (delegations[_currentActor] != address(0)) {
             veDelegation.delegate(delegations[_currentActor]);
+            vm.warp(block.timestamp + 1 days);
+            vm.roll(block.number + 1);
         }
     }
 
@@ -119,6 +121,8 @@ contract Delegator is BaseActor {
         veToken.increase_amount(amount);
         if (delegations[_currentActor] != address(0)) {
             veDelegation.delegate(delegations[_currentActor]);
+            vm.warp(block.timestamp + 1 days);
+            vm.roll(block.number + 1);
         }
     }
 }

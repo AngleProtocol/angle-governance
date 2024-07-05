@@ -283,26 +283,25 @@ jobs:
         with:
           version: nightly
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          cache: 'pip' # caching pip dependencies
-
       - name: Install viper
         shell: bash
-        run: pip install vyper==0.3.10
+        run: python3 -m pip install vyper==0.3.10
 
       - name: Compile foundry
         run: forge build --build-info --skip */test/** */scripts/** --force
 
+      - name: "Install Slither"
+        run: "python3 -m pip install slither-analyzer"
+
       - name: "Run Slither analysis"
-        uses: "crytic/slither-action@v0.3.2"
         id: slither
+        run:
+          slither . --ignore-compile --sarif results.sarif --fail-none
+
+      - name: "Upload SARIF file to GitHub code scanning"
+        uses: "github/codeql-action/upload-sarif@v2"
         with:
-          fail-on: "none"
-          sarif: "results.sarif"
-          ignore-compile: true
-          slither-version: "0.10.1"
+          sarif_file: results.sarif
 
       - name: "Upload SARIF file to GitHub code scanning"
         uses: "github/codeql-action/upload-sarif@v2"

@@ -6,26 +6,22 @@ import { console } from "forge-std/console.sol";
 import { IGovernor } from "oz/governance/IGovernor.sol";
 import { ProposalStore, Proposal } from "../stores/ProposalStore.sol";
 import { IERC5805 } from "oz/interfaces/IERC5805.sol";
-import { TimestampStore } from "../stores/TimestampStore.sol";
 
 contract Proposer is BaseActor {
     AngleGovernor internal _angleGovernor;
     ProposalStore public proposalStore;
     IERC5805 public veANGLEDelegation;
-    TimestampStore public timestampStore;
 
     constructor(
         AngleGovernor angleGovernor,
         IERC20 angle,
         uint256 nbrVoter,
         ProposalStore _proposalStore,
-        IERC5805 _veANGLEDelegation,
-        TimestampStore _timestampStore
+        IERC5805 _veANGLEDelegation
     ) BaseActor(nbrVoter, "Proposer", angle) {
         _angleGovernor = angleGovernor;
         proposalStore = _proposalStore;
         veANGLEDelegation = _veANGLEDelegation;
-        timestampStore = _timestampStore;
     }
 
     function propose(uint256 value) public useActor(1) {
@@ -66,12 +62,8 @@ contract Proposer is BaseActor {
             proposal.description
         );
         uint256 proposalSnapshot = _angleGovernor.proposalSnapshot(proposalHash);
-        timestampStore.increaseCurrentTimestamp(_angleGovernor.proposalDeadline(proposalHash));
-        timestampStore.increaseCurrentBlockNumber(
-            _angleGovernor.$snapshotTimestampToSnapshotBlockNumber(proposalSnapshot)
-        );
-        vm.warp(timestampStore.currentTimestamp());
-        vm.roll(timestampStore.currentBlockNumber());
+        vm.warp(block.timestamp + _angleGovernor.proposalDeadline(proposalHash));
+        vm.roll(block.number + _angleGovernor.$snapshotTimestampToSnapshotBlockNumber(proposalSnapshot));
         IGovernor.ProposalState currentState = _angleGovernor.state(proposalHash);
         if (currentState != IGovernor.ProposalState.Succeeded) {
             vm.expectRevert(
@@ -123,7 +115,6 @@ contract Proposer is BaseActor {
     }
 
     function skipVotingDelay() public useActor(1) {
-        timestampStore.increaseCurrentTimestamp(_angleGovernor.votingDelay() + 1);
         vm.warp(block.timestamp + _angleGovernor.votingDelay() + 1);
         vm.roll(block.number + 1);
     }
