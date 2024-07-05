@@ -103,7 +103,7 @@ contract DelegationInvariants is Fixture {
         }
     }
 
-    function invariant_SumDelegationExternalEqualTotalSupply() public useCurrentTimestampBlock {
+    function invariant_SumDelegationExternalEqualTotalSupply() public {
         uint256 totalVotes = token.getVotes(alice) +
             token.getVotes(bob) +
             token.getVotes(charlie) +
@@ -125,7 +125,7 @@ contract DelegationInvariants is Fixture {
         );
     }
 
-    function invariant_SumDelegationInternalEqualTotalSupply() public useCurrentTimestampBlock {
+    function invariant_SumDelegationInternalEqualTotalSupply() public {
         uint256 totalVotes = token.getVotes(alice) +
             token.getVotes(bob) +
             token.getVotes(charlie) +
