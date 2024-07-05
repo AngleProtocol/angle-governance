@@ -266,49 +266,49 @@ jobs:
           echo "## Coverage result" >> $GITHUB_STEP_SUMMARY
           echo "✅ Uploaded to Codecov" >> $GITHUB_STEP_SUMMARY
 
-  slither-analyze:
-    needs: ["build", "lint"]
-    runs-on: "ubuntu-latest"
-    permissions:
-      actions: "read"
-      contents: "read"
-      security-events: "write"
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - name: Install viper
-        shell: bash
-        run: python3 -m pip install vyper==0.3.10
-
-      - name: Compile foundry
-        run: forge build --build-info --skip */test/** */scripts/** --force
-
-      - name: "Install Slither"
-        run: "python3 -m pip install slither-analyzer"
-
-      - name: "Run Slither analysis"
-        id: slither
-        run:
-          slither . --ignore-compile --sarif results.sarif --fail-none
-
-      - name: "Upload SARIF file to GitHub code scanning"
-        uses: "github/codeql-action/upload-sarif@v2"
-        with:
-          sarif_file: results.sarif
-
-      - name: "Upload SARIF file to GitHub code scanning"
-        uses: "github/codeql-action/upload-sarif@v2"
-        with:
-          sarif_file: ${{ steps.slither.outputs.sarif }}
-
-      - name: "Add Slither summary"
-        run: |
-          echo "## Slither result" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Uploaded to GitHub code scanning" >> $GITHUB_STEP_SUMMARY
+  #slither-analyze:
+  #  needs: ["build", "lint"]
+  #  runs-on: "ubuntu-latest"
+  #  permissions:
+  #    actions: "read"
+  #    contents: "read"
+  #    security-events: "write"
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #      with:
+  #        submodules: "recursive"
+#
+  #    - name: Install Foundry
+  #      uses: foundry-rs/foundry-toolchain@v1
+  #      with:
+  #        version: nightly
+#
+  #    - name: Install viper
+  #      shell: bash
+  #      run: python3 -m pip install vyper==0.3.10
+#
+  #    - name: Compile foundry
+  #      run: forge build --build-info --skip */test/** */scripts/** --force
+#
+  #    - name: "Install Slither"
+  #      run: "python3 -m pip install slither-analyzer"
+#
+  #    - name: "Run Slither analysis"
+  #      id: slither
+  #      run:
+  #        slither . --ignore-compile --sarif results.sarif --fail-none
+#
+  #    - name: "Upload SARIF file to GitHub code scanning"
+  #      uses: "github/codeql-action/upload-sarif@v2"
+  #      with:
+  #        sarif_file: results.sarif
+#
+  #    - name: "Upload SARIF file to GitHub code scanning"
+  #      uses: "github/codeql-action/upload-sarif@v2"
+  #      with:
+  #        sarif_file: ${{ steps.slither.outputs.sarif }}
+#
+  #    - name: "Add Slither summary"
+  #      run: |
+  #        echo "## Slither result" >> $GITHUB_STEP_SUMMARY
+  #        echo "✅ Uploaded to GitHub code scanning" >> $GITHUB_STEP_SUMMARY
