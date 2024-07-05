@@ -1161,10 +1161,6 @@ client.on("ready", async () => {
 
   const embeds = await checkRoles(chainIds);
 
-  console.log(embeds);
-
-  /*
-
   const lastMessages = (
     await channel.messages.fetch({ limit: 20, sort: "timestamp" })
   )
@@ -1191,7 +1187,6 @@ client.on("ready", async () => {
       await channel.send({ embeds: [embed] });
     }
   }
-    */
   process.exit(0);
 });
 
