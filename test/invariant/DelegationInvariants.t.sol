@@ -102,4 +102,46 @@ contract DelegationInvariants is Fixture {
             }
         }
     }
+
+    function invariant_SumDelegationExternalEqualTotalSupply() public useCurrentTimestampBlock {
+        uint256 totalVotes = token.getVotes(alice) +
+            token.getVotes(bob) +
+            token.getVotes(charlie) +
+            token.getVotes(dylan);
+
+        for (uint256 i; i < _NUM_DELEGATORS; i++) {
+            address actor = _delegatorHandler.actors(i);
+            totalVotes += token.getVotes(actor);
+        }
+        for (uint256 i; i < _delegatorHandler.delegateesLength(); i++) {
+            address delegatee = _delegatorHandler.delegatees(i);
+            totalVotes += token.getVotes(delegatee);
+        }
+
+        assertEq(
+            totalVotes,
+            veANGLE.totalSupply(block.timestamp),
+            "The sum of voting power should be equal to the totalSupply"
+        );
+    }
+
+    function invariant_SumDelegationInternalEqualTotalSupply() public useCurrentTimestampBlock {
+        uint256 totalVotes = token.getVotes(alice) +
+            token.getVotes(bob) +
+            token.getVotes(charlie) +
+            token.getVotes(dylan);
+
+        for (uint256 i; i < _NUM_DELEGATORS; i++) {
+            address actor = _delegatorHandler.actors(i);
+            totalVotes += token.getVotes(actor);
+            address delegatee = token.delegates(actor);
+            totalVotes += token.getVotes(delegatee);
+        }
+
+        assertEq(
+            totalVotes,
+            veANGLE.totalSupply(block.timestamp),
+            "The sum of voting power should be equal to the totalSupply"
+        );
+    }
 }
