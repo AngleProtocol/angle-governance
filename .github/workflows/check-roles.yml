@@ -1,11 +1,9 @@
 name: "check-roles"
 
-env:
-  FOUNDRY_PROFILE: "ci"
-
 on:
   schedule:
     - cron: "0 0 * * *" # every day at midnight
+  workflow_dispatch:
 
 jobs:
   check-roles:
@@ -22,25 +20,18 @@ jobs:
           node-version: 18
           cache: "yarn"
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
       - name: Setup repo
         uses: ./.github/actions/setup-repo
         with:
           registry-token: ${{ secrets.GH_REGISTRY_ACCESS_TOKEN }}
 
-      - name: Compile
-        run: forge build
-
       - uses: nick-fields/retry@v2
         with:
           max_attempts: 5
-          command: forge script CheckRoles
+          command: yarn check-roles
           timeout_minutes: 60
         env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           ETH_NODE_URI_MAINNET: ${{ secrets.ETH_NODE_URI_MAINNET }}
           ETH_NODE_URI_ARBITRUM: ${{ secrets.ETH_NODE_URI_ARBITRUM }}
           ETH_NODE_URI_AVALANCHE: ${{ secrets.ETH_NODE_URI_AVALANCHE }}
@@ -54,7 +45,10 @@ jobs:
           ETH_NODE_URI_LINEA: ${{ secrets.ETH_NODE_URI_LINEA }}
           CHAIN_IDS: ${{ matrix.chain }}
 
-      - name: Run script
-        run: yarn check-roles
+      - name: Notify Discord on Failure
+        if: failure()
         env:
-          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_ROLES_ON_CHAIN }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "Failed to check roles for chain ${{ matrix.chain }} (https://github.com/AngleProtocol/angle-governance/actions/runs/${{ github.run_id }})"
