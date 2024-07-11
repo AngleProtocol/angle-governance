@@ -1172,10 +1172,11 @@ client.on("ready", async () => {
   for (const embed of embeds) {
     if (
       latestChainIdsMessages.find(
-        (m) =>
-          m.data.description.replace(/\n/g, "") ==
-          embed.data.description.replace(/\n/g, "")
-      )
+        (m) => {
+          const description = m.data.description.split("\n");
+          const embedDescription = embed.data.description.split("\n");
+          return description.every((line) => embedDescription.includes(line));
+        })
     ) {
       console.log("chain embed is already the same");
       continue;
@@ -1190,4 +1191,4 @@ client.on("ready", async () => {
   process.exit(0);
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN);
