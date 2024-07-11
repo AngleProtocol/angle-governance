@@ -1191,4 +1191,4 @@ client.on("ready", async () => {
   process.exit(0);
 });
 
-client.login(process.env.DISCORD_BOT_TOKEN);
+client.login(process.env.DISCORD_TOKEN);
