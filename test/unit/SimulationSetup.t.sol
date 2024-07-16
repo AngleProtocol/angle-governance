@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.9;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { Strings } from "oz/utils/Strings.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { IVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { Strings } from "oz-v5/utils/Strings.sol";
 
 import { console } from "forge-std/console.sol";
 import { Test, stdError } from "forge-std/Test.sol";
@@ -51,7 +51,10 @@ contract SimulationSetup is Test, CommonUtils {
         mapChainIds[10] = "OPTIMISM";
 
         setUpForks();
-        // TODO Complete with all deployed chains
+        if (vm.envExists("ETH_NODE_URI_FORK")) {
+            chainFork = vm.createFork(vm.envString("ETH_NODE_URI_FORK"));
+            forkIdentifier[CHAIN_FORK] = chainFork;
+        }
 
         veANGLEDelegation = new VeANGLEVotingDelegation(address(veANGLE), "veANGLE Delegation", "1");
 

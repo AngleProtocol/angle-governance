@@ -7,6 +7,7 @@ function usage {
   echo ""
   echo -e "script: path to the script to run"
   echo -e "chain: chain(s) to run the script on (separate with commas)"
+  echo -e "\t0: Fork"
   echo -e "\t1: Ethereum Mainnet"
   echo -e "\t2: Arbitrum"
   echo -e "\t3: Polygon"
@@ -53,6 +54,7 @@ function main {
         echo ""
 
         echo "Which chain(s) would you like to run the script on ? (separate with commas)"
+        echo "- 0: Fork"
         echo "- 1: Ethereum Mainnet"
         echo "- 2: Arbitrum"
         echo "- 3: Polygon"
@@ -95,7 +97,7 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    FOUNDRY_PROFILE=dev forge script $script
+    forge script $script -vvv
 
     if [ $? -ne 0 ]; then
         echo ""
@@ -106,7 +108,7 @@ function main {
     testContract="${script}Test"
     echo ""
     echo "Running test"
-    FOUNDRY_PROFILE=dev forge test --match-contract $testContract -vvv
+    forge test --match-contract $testContract -vvv
 
     if [ $? -ne 0 ]; then
         echo ""
@@ -118,7 +120,7 @@ function main {
     read execute
 
     if [[ $execute == "yes" ]]; then
-        FOUNDRY_PROFILE=dev forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
+        forge script scripts/proposals/Propose.s.sol:Propose --fork-url $mainnet_uri --broadcast
     fi
 }
 

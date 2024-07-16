@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import { IERC20 } from "oz/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "oz/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20 } from "oz-v5/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "oz-v5/token/ERC20/extensions/IERC20Metadata.sol";
 import { Test, stdMath, StdStorage, stdStorage } from "forge-std/Test.sol";
-import { IVotes } from "oz/governance/utils/IVotes.sol";
+import { IVotes } from "oz-v5/governance/utils/IVotes.sol";
 import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import "contracts/utils/Errors.sol";
 

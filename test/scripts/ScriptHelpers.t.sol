@@ -15,6 +15,13 @@ contract ScriptHelpers is Test, Utils {
     using stdStorage for StdStorage;
 
     uint256 constant valueEther = 1 ether;
+    bytes[] private calldatasHelpers;
+    string private descriptionHelpers;
+    address[] private targetsHelpers;
+    uint256[] private valuesHelpers;
+    uint256[] private chainIdsHelpers;
+    Vm.Log[] private entriesHelpers;
+    bytes private payloadHelpers;
 
     function setUp() public virtual override {
         super.setUp();
@@ -47,22 +54,29 @@ contract ScriptHelpers is Test, Utils {
         vm.stopPrank();
     }
 
-    function _executeProposal() public returns (uint256[] memory) {
-        (
-            bytes[] memory calldatas,
-            string memory description,
-            address[] memory targets,
-            uint256[] memory values,
-            uint256[] memory chainIds
-        ) = _deserializeJson();
+    function _executeProposalWithFork() public returns (uint256[] memory) {
+        return _executeProposalInternal(true);
+    }
 
-        vm.selectFork(forkIdentifier[CHAIN_SOURCE]);
+    function _executeProposal() public returns (uint256[] memory) {
+        return _executeProposalInternal(false);
+    }
+
+    function _executeProposalInternal(bool isFork) public returns (uint256[] memory) {
+        (calldatasHelpers, descriptionHelpers, targetsHelpers, valuesHelpers, chainIdsHelpers) = _deserializeJson();
+
+        vm.selectFork(forkIdentifier[isFork ? CHAIN_FORK : CHAIN_SOURCE]);
         {
             AngleGovernor governor = AngleGovernor(payable(_chainToContract(CHAIN_SOURCE, ContractType.Governor)));
 
             {
                 hoax(whale);
-                uint256 proposalId = governor.propose(targets, values, calldatas, description);
+                uint256 proposalId = governor.propose(
+                    targetsHelpers,
+                    valuesHelpers,
+                    calldatasHelpers,
+                    descriptionHelpers
+                );
                 vm.warp(block.timestamp + governor.votingDelay() + 1);
                 vm.roll(block.number + governor.$votingDelayBlocks() + 1);
 
@@ -73,40 +87,44 @@ contract ScriptHelpers is Test, Utils {
 
             vm.recordLogs();
             hoax(whale);
-            governor.execute{ value: valueEther }(targets, values, calldatas, keccak256(bytes(description)));
+            governor.execute{ value: valueEther }(
+                targetsHelpers,
+                valuesHelpers,
+                calldatasHelpers,
+                keccak256(bytes(descriptionHelpers))
+            );
         }
-        Vm.Log[] memory entries = vm.getRecordedLogs();
+        entriesHelpers = vm.getRecordedLogs();
 
-        for (uint256 chainCount; chainCount < chainIds.length; chainCount++) {
-            uint256 chainId = chainIds[chainCount];
+        for (uint256 chainCount; chainCount < chainIdsHelpers.length; chainCount++) {
+            uint256 chainId = chainIdsHelpers[chainCount];
             TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
                 payable(_chainToContract(chainId, ContractType.Timelock))
             );
 
             if (chainId == CHAIN_SOURCE) {
                 vm.warp(block.timestamp + timelock.getMinDelay() + 1);
-                _executeTimelock(chainId, timelock, targets[chainCount], calldatas[chainCount]);
+                _executeTimelock(chainId, timelock, targetsHelpers[chainCount], calldatasHelpers[chainCount]);
             } else {
                 {
+                    {
+                        for (uint256 i; i < entriesHelpers.length; i++) {
+                            if (
+                                entriesHelpers[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
+                                entriesHelpers[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
+                            ) {
+                                payloadHelpers = abi.decode(entriesHelpers[i].data, (bytes));
+                                break;
+                            }
+                        }
+                    }
+
                     ProposalSender proposalSender = ProposalSender(
                         payable(_chainToContract(CHAIN_SOURCE, ContractType.ProposalSender))
                     );
                     ProposalReceiver proposalReceiver = ProposalReceiver(
                         payable(_chainToContract(chainId, ContractType.ProposalReceiver))
                     );
-                    bytes memory payload;
-
-                    {
-                        for (uint256 i; i < entries.length; i++) {
-                            if (
-                                entries[i].topics[0] == keccak256("ExecuteRemoteProposal(uint16,bytes)") &&
-                                entries[i].topics[1] == bytes32(uint256(_getLZChainId(chainId)))
-                            ) {
-                                payload = abi.decode(entries[i].data, (bytes));
-                                break;
-                            }
-                        }
-                    }
 
                     vm.selectFork(forkIdentifier[chainId]);
                     hoax(address(_lzEndPoint(chainId)));
@@ -114,7 +132,7 @@ contract ScriptHelpers is Test, Utils {
                         _getLZChainId(CHAIN_SOURCE),
                         abi.encodePacked(proposalSender, proposalReceiver),
                         0,
-                        payload
+                        payloadHelpers
                     );
                 }
 
@@ -122,10 +140,10 @@ contract ScriptHelpers is Test, Utils {
                 address[] memory chainTargets;
                 bytes[] memory chainCalldatas;
                 {
-                    console.logBytes(calldatas[chainCount]);
+                    console.logBytes(calldatasHelpers[chainCount]);
                     (, bytes memory senderData, ) = abi.decode(
-                        // calldatas[chainCount],
-                        _slice(calldatas[chainCount], 4, calldatas[chainCount].length - 4),
+                        // calldatasHelpers[chainCount],
+                        _slice(calldatasHelpers[chainCount], 4, calldatasHelpers[chainCount].length - 4),
                         (uint16, bytes, bytes)
                     );
                     console.logBytes(senderData);
@@ -140,7 +158,7 @@ contract ScriptHelpers is Test, Utils {
                 }
             }
         }
-        return chainIds;
+        return chainIdsHelpers;
     }
 
     function _executeTimelock(

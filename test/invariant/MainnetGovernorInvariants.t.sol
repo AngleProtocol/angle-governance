@@ -10,7 +10,7 @@ import { Proposer } from "./actors/Proposer.t.sol";
 import { BadVoter } from "./actors/BadVoter.t.sol";
 import { Fixture, AngleGovernor } from "../Fixture.t.sol";
 import { ProposalStore, Proposal } from "./stores/ProposalStore.sol";
-import { IGovernor } from "oz/governance/IGovernor.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
 
 //solhint-disable
 import { console } from "forge-std/console.sol";

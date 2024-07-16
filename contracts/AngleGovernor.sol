@@ -2,13 +2,14 @@
 
 pragma solidity ^0.8.20;
 
-import { IVotes } from "oz/governance/utils/IVotes.sol";
+import { IVotes } from "oz-v5/governance/utils/IVotes.sol";
 
-import { Governor } from "oz/governance/Governor.sol";
-import { GovernorPreventLateQuorum } from "oz/governance/extensions/GovernorPreventLateQuorum.sol";
-import { GovernorVotesQuorumFraction, GovernorVotes } from "oz/governance/extensions/GovernorVotesQuorumFraction.sol";
-import { GovernorSettings } from "oz/governance/extensions/GovernorSettings.sol";
-import { IERC5805 } from "oz/interfaces/IERC5805.sol";
+import { Governor } from "oz-v5/governance/Governor.sol";
+import { GovernorPreventLateQuorum } from "oz-v5/governance/extensions/GovernorPreventLateQuorum.sol";
+import { GovernorVotes } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorVotesQuorumFraction } from "oz-v5/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorSettings } from "oz-v5/governance/extensions/GovernorSettings.sol";
+import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
 
 import { GovernorCountingFractional } from "./external/GovernorCountingFractional.sol";
 import { GovernorShortCircuit } from "./external/GovernorShortCircuit.sol";

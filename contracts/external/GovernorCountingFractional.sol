@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.20;
 
-import { Governor } from "oz/governance/Governor.sol";
-import { GovernorCountingSimple } from "oz/governance/extensions/GovernorCountingSimple.sol";
-import { SafeCast } from "oz/utils/math/SafeCast.sol";
+import { Governor } from "oz-v5/governance/Governor.sol";
+import { GovernorCountingSimple } from "oz-v5/governance/extensions/GovernorCountingSimple.sol";
+import { SafeCast } from "oz-v5/utils/math/SafeCast.sol";
 
 import "../utils/Errors.sol";
 

@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.9;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { GovernorCountingSimple } from "oz/governance/extensions/GovernorCountingSimple.sol";
-import { Strings } from "oz/utils/Strings.sol";
-import { ERC20 } from "oz/token/ERC20/ERC20.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { IVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { GovernorCountingSimple } from "oz-v5/governance/extensions/GovernorCountingSimple.sol";
+import { Strings } from "oz-v5/utils/Strings.sol";
+import { ERC20 } from "oz-v5/token/ERC20/ERC20.sol";
 
 import { stdStorage, StdStorage, Test, stdError } from "forge-std/Test.sol";
 import { Vm } from "forge-std/Vm.sol";

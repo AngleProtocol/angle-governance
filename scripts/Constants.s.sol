@@ -3,14 +3,14 @@
 pragma solidity ^0.8.9;
 
 import { ILayerZeroEndpoint } from "lz/lzApp/interfaces/ILayerZeroEndpoint.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
+import { IVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
 import { ITransmuter } from "transmuter/interfaces/ITransmuter.sol";
 import { IAgToken } from "borrow/interfaces/IAgToken.sol";
-import { ProxyAdmin } from "oz/proxy/transparent/ProxyAdmin.sol";
-import { Ownable } from "oz/access/Ownable.sol";
+import { ProxyAdmin } from "oz-v5/proxy/transparent/ProxyAdmin.sol";
+import { Ownable } from "oz-v5/access/Ownable.sol";
 import { CoreBorrow } from "borrow/coreBorrow/CoreBorrow.sol";
 import { ITreasury } from "borrow/interfaces/ITreasury.sol";
-import { TimelockController } from "oz/governance/TimelockController.sol";
+import { TimelockController } from "oz-v5/governance/TimelockController.sol";
 import { AngleGovernor } from "contracts/AngleGovernor.sol";
 import "utils/src/Constants.sol";
 import "./Interfaces.s.sol";

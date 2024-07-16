@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import "oz/utils/ReentrancyGuard.sol";
+import "oz-v5/utils/ReentrancyGuard.sol";
 import "lz/lzApp/NonblockingLzApp.sol";
 import "./utils/Errors.sol";
 
@@ -51,7 +51,7 @@ contract ProposalReceiver is NonblockingLzApp, ReentrancyGuard {
     /// @dev Called by LayerZero Endpoint when a message from the source is received
     function _nonblockingLzReceive(uint16, bytes memory, uint64, bytes memory _payload) internal virtual override {
         (address[] memory targets, uint256[] memory values, string[] memory signatures, bytes[] memory calldatas) = abi
-            .decode(_payload, (address[], uint[], string[], bytes[]));
+            .decode(_payload, (address[], uint256[], string[], bytes[]));
 
         for (uint256 i = 0; i < targets.length; i++) {
             _executeTransaction(targets[i], values[i], signatures[i], calldatas[i]);

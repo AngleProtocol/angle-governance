@@ -4,14 +4,20 @@ pragma solidity ^0.8.19;
 import { console } from "forge-std/console.sol";
 import { Wrapper } from "../Wrapper.s.sol";
 import "../../Constants.s.sol";
-import { ProxyAdmin } from "oz/proxy/transparent/ProxyAdmin.sol";
 
 contract UpgradeAgTokenNameable is Wrapper {
     SubCall[] private subCalls;
     mapping(uint256 => address) private _chainToToken;
     mapping(uint256 => address) private _chainToImplementation;
 
-    function _upgradeAgToken(uint256 chainId, string memory name, string memory symbol, address proxy, address implementation, address proxyAdmin) private {
+    function _upgradeAgToken(
+        uint256 chainId,
+        string memory name,
+        string memory symbol,
+        address proxy,
+        address implementation,
+        address proxyAdmin
+    ) private {
         vm.selectFork(forkIdentifier[chainId]);
 
         bytes memory nameAndSymbolData = abi.encodeWithSelector(INameable.setNameAndSymbol.selector, name, symbol);

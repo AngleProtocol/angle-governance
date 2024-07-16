@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.9;
 
-import { IGovernor } from "oz/governance/IGovernor.sol";
-import { IVotes } from "oz/governance/extensions/GovernorVotes.sol";
-import { IAccessControl } from "oz/access/IAccessControl.sol";
-import { Strings } from "oz/utils/Strings.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
+import { IVotes } from "oz-v5/governance/extensions/GovernorVotes.sol";
+import { IAccessControl } from "oz-v5/access/IAccessControl.sol";
+import { Strings } from "oz-v5/utils/Strings.sol";
 
 import { console } from "forge-std/console.sol";
 import { Test, stdError } from "forge-std/Test.sol";
@@ -658,7 +658,7 @@ contract TimelockControllerWithCounterTest is SimulationSetup {
         uint256 chainId,
         bool isBatch
     ) internal view returns (bytes32) {
-        (, , , bytes[] memory calldatas) = abi.decode(payload, (address[], uint[], string[], bytes[]));
+        (, , , bytes[] memory calldatas) = abi.decode(payload, (address[], uint256[], string[], bytes[]));
         bytes memory higherData = calldatas[0];
         if (isBatch) return this._decodePayloadTimelockScheduleBatch(higherData, chainId);
         else return this._decodePayloadTimelockSchedule(higherData, chainId);

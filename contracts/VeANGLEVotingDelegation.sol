@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: ISC
 pragma solidity ^0.8.20;
 
-import { ECDSA } from "oz/utils/cryptography/ECDSA.sol";
-import { EIP712 } from "oz/utils/cryptography/EIP712.sol";
-import { Math } from "oz/utils/math/Math.sol";
-import { SafeCast } from "oz/utils/math/SafeCast.sol";
-import { IERC5805 } from "oz/interfaces/IERC5805.sol";
+import { ECDSA } from "oz-v5/utils/cryptography/ECDSA.sol";
+import { EIP712 } from "oz-v5/utils/cryptography/EIP712.sol";
+import { Math } from "oz-v5/utils/math/Math.sol";
+import { SafeCast } from "oz-v5/utils/math/SafeCast.sol";
+import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
 import { IveANGLE } from "./interfaces/IveANGLE.sol";
 import { IveANGLEVotingDelegation } from "./interfaces/IveANGLEVotingDelegation.sol";
 

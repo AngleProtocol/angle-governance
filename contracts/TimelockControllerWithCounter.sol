@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import { TimelockController } from "oz/governance/TimelockController.sol";
+import { TimelockController } from "oz-v5/governance/TimelockController.sol";
 
 /// @title AngleGovernor
 /// @author Angle Labs, Inc
