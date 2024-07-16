@@ -3,9 +3,9 @@ pragma solidity ^0.8.19;
 
 import { BaseActor, IERC20, IERC20Metadata, AngleGovernor, TestStorage } from "./BaseActor.t.sol";
 import { console } from "forge-std/console.sol";
-import { IGovernor } from "oz/governance/IGovernor.sol";
+import { IGovernor } from "oz-v5/governance/IGovernor.sol";
 import { ProposalStore, Proposal } from "../stores/ProposalStore.sol";
-import { IERC5805 } from "oz/interfaces/IERC5805.sol";
+import { IERC5805 } from "oz-v5/interfaces/IERC5805.sol";
 
 contract Proposer is BaseActor {
     AngleGovernor internal _angleGovernor;
