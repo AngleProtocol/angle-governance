@@ -19,6 +19,10 @@ interface IAccessControlWriteVyper {
     function accept_transfer_ownership() external;
 }
 
+interface IProxyAdmin {
+    function upgrade(address proxy, address implementation) external;
+}
+
 interface IVaultManagerGovernance {
     function setUint64(uint64 param, bytes32 what) external;
 
