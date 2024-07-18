@@ -29,10 +29,26 @@ interface INameable {
     function setNameAndSymbol(string memory name, string memory symbol) external;
 }
 
+interface ITreasuryGovernance {
+    function addMinter(address minter) external;
+
+    function setCore(address _core) external;
+
+    function core() external view returns (address);
+}
+
 interface ISavings {
     function setRate(uint208 newRate) external;
 
+    function setMaxRate(uint256 newMaxRate) external;
+
+    function toggleTrusted(address trustedAddress) external;
+
+    function isTrustedUpdater(address) external view returns (uint256);
+
     function rate() external view returns (uint208);
+
+    function maxRate() external view returns (uint256);
 
     function accessControlManager() external view returns (address);
 }

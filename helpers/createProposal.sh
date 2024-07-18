@@ -95,7 +95,7 @@ function main {
     echo "Running on chains $chainIds"
 
     export CHAIN_IDS=$chainIds
-    FOUNDRY_PROFILE=dev forge script $script
+    FOUNDRY_PROFILE=dev forge script $script -vvvv
 
     if [ $? -ne 0 ]; then
         echo ""
