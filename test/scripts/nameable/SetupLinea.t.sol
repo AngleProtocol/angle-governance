@@ -34,16 +34,17 @@ contract SetupLineaTest is ScriptHelpers {
         string memory symbolEUR = "stEUR";
 
         assertEq(ITreasuryGovernance(treasuryUSD).core(), 0x4b1E2c2762667331Bc91648052F646d1b0d35984);
-        assertEq(IGenericAccessControl(treasuryUSD).isMinter(stUSD), true);
+        assertEq(IGenericAccessControl(0x0000206329b97DB379d5E1Bf586BbDB969C63274).isMinter(stUSD), true);
         assertEq(IERC20Metadata(stUSD).name(), nameUSD);
         assertEq(IERC20Metadata(stUSD).symbol(), symbolUSD);
         assertEq(ISavings(stUSD).maxRate(), maxRateUSD);
         assertEq(ISavings(stUSD).isTrustedUpdater(keeper), 1);
 
         assertEq(ITreasuryGovernance(treasuryEUR).core(), 0x4b1E2c2762667331Bc91648052F646d1b0d35984);
-        assertEq(IGenericAccessControl(treasuryEUR).isMinter(stEUR), true);
+        assertEq(IGenericAccessControl(0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8).isMinter(stEUR), true);
         assertEq(IERC20Metadata(stEUR).name(), nameEUR);
         assertEq(IERC20Metadata(stEUR).symbol(), symbolEUR);
+        assertEq(ISavings(stEUR).maxRate(), maxRateEUR);
         assertEq(ISavings(stEUR).isTrustedUpdater(keeper), 1);
     }
 }

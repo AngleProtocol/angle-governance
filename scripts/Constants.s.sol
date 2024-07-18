@@ -45,4 +45,4 @@ uint64 constant fourPoint3Rate = 1335019428339023872;
 
 string constant pathProposal = "/scripts/proposals/payload.json";
 address constant proposer = 0xfdA462548Ce04282f4B6D6619823a7C64Fdc0185;
-address constant whale = 0x41Bc7d0687e6Cea57Fa26da78379DfDC5627C56d;
+address constant whale = 0xD13F8C25CceD32cdfA79EB5eD654Ce3e484dCAF5;

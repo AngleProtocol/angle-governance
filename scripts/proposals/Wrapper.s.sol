@@ -210,7 +210,7 @@ contract Wrapper is Utils {
                     hex""
                 );
 
-                values[finalPropLength] = nativeFee;
+                values[finalPropLength] = (nativeFee * GAS_MULTIPLIER) / BASE_GAS;
 
                 finalPropLength += 1;
                 i += count;

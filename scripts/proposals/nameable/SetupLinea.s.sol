@@ -19,10 +19,17 @@ contract SetupLinea is Wrapper {
         string memory symbol,
         address keeper
     ) private {
+        bytes memory upgradeData = abi.encodeWithSelector(
+            IProxyAdmin.upgrade.selector,
+            savings,
+            // SavingsNameable implem on Linea
+            0x2C28Bd22aB59341892e85aD76d159d127c4B03FA
+        );
         bytes memory nameAndSymbolData = abi.encodeWithSelector(INameable.setNameAndSymbol.selector, name, symbol);
         bytes memory maxRateData = abi.encodeWithSelector(ISavings.setMaxRate.selector, maxRate);
         bytes memory keeperData = abi.encodeWithSelector(ISavings.toggleTrusted.selector, keeper);
         bytes memory minterData = abi.encodeWithSelector(ITreasuryGovernance.addMinter.selector, savings);
+        subCalls.push(SubCall(chainId, 0x1D941EF0D3Bba4ad67DBfBCeE5262F4CEE53A32b, 0, upgradeData));
         subCalls.push(SubCall(chainId, treasury, 0, minterData));
         subCalls.push(SubCall(chainId, savings, 0, nameAndSymbolData));
         subCalls.push(SubCall(chainId, savings, 0, maxRateData));
@@ -43,19 +50,6 @@ contract SetupLinea is Wrapper {
         string memory symbolEUR = "stEUR";
 
         {
-            // Upgrade stUSD to the latest version
-            address proxyAdmin = 0x1D941EF0D3Bba4ad67DBfBCeE5262F4CEE53A32b;
-            bytes memory upgradeData = abi.encodeWithSelector(
-                ProxyAdmin.upgradeAndCall.selector,
-                stUSD,
-                // SavingsNameable implem on Linea
-                0x2b11d82caadD76985861e858029C28446DE05A50,
-                ""
-            );
-            subCalls.push(SubCall(chainId, proxyAdmin, 0, upgradeData));
-        }
-
-        {
             bytes memory treasuryData = abi.encodeWithSelector(
                 ITreasuryGovernance.setCore.selector,
                 // AccessControlManager Core
@@ -67,7 +61,6 @@ contract SetupLinea is Wrapper {
         _setMaxRateSavings(stUSD, treasuryUSD, maxRateUSD, nameUSD, symbolUSD, keeper);
         _setMaxRateSavings(stEUR, treasuryEUR, maxRateEUR, nameEUR, symbolEUR, keeper);
 
-        // TODO: complete
         string memory description = "ipfs://QmRSdyuXeemVEn97RPRSiit6UEUonvwVr9we7bEe2w8v2E";
 
         (
