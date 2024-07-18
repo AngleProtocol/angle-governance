@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.10.0.tgz#d2a39395c587e092d77cbbc80acf956a54f38bf7"
   integrity sha512-nA9XHtlAkYfJxY7bce8DcN7eKxWWCWkU+1GR9d+U6MbNpfwQp8TI7vqOsBsMcHoT4mBu2kypKoSKnghEzOOq5Q==
 
-"@angleprotocol/sdk@^v2.14.0":
-  version "2.14.17"
-  resolved "https://npm.pkg.github.com/download/@angleprotocol/sdk/2.14.17/a183797ef1372251c1305f02f77eb7d161717189#a183797ef1372251c1305f02f77eb7d161717189"
-  integrity sha512-7Yn+mo8mwrA0EMqZtveh+fVHNRlcvxPNeQN8M0AIlYysp/rpbhQLZ6aQpTCvnH/5VyyiY8svHBOHs6Tj+aHWEg==
+"@angleprotocol/sdk@^v2.19.0":
+  version "2.19.0"
+  resolved "https://npm.pkg.github.com/download/@angleprotocol/sdk/2.19.0/fab70b8f9745e22ade307e591005946bcffc3107#fab70b8f9745e22ade307e591005946bcffc3107"
+  integrity sha512-pxQH7bpdx+WInO5ehpwvvjiUZezg1SznytRsgfXxxX7SbiE9FHaQiamW+KhvvEx/yFQuxvQkj8QnjiiKfvuqxQ==
   dependencies:
     "@apollo/client" "^3.7.17"
     "@typechain/ethers-v5" "^10.0.0"

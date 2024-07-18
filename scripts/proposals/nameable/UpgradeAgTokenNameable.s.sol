@@ -30,7 +30,7 @@ contract UpgradeAgTokenNameable is Wrapper {
 
     function run() external {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
-        string memory description = "ipfs://QmRSdyuXeemVEn97RPRSiit6UEUonvwVr9we7bEe2w8v2E";
+        string memory description = "ipfs://QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH";
 
         /** TODO  complete */
         string memory name = "EURA"; // previously "agEUR"

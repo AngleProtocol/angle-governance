@@ -42,7 +42,7 @@
     "url": "https://github.com/AngleProtocol/boilerplate/issues"
   },
   "devDependencies": {
-    "@angleprotocol/sdk": "^v2.14.0",
+    "@angleprotocol/sdk": "^v2.19.0",
     "@layerzerolabs/lz-sdk": "^0.0.75",
     "discord.js": "^14.14.1",
     "prettier": "^2.0.0",
