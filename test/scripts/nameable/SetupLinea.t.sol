@@ -46,5 +46,16 @@ contract SetupLineaTest is ScriptHelpers {
         assertEq(IERC20Metadata(stEUR).symbol(), symbolEUR);
         assertEq(ISavings(stEUR).maxRate(), maxRateEUR);
         assertEq(ISavings(stEUR).isTrustedUpdater(keeper), 1);
+
+        address EURA = 0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8;
+        address USDA = 0x0000206329b97DB379d5E1Bf586BbDB969C63274;
+
+        assertEq(IERC20Metadata(EURA).name(), "EURA");
+        assertEq(IERC20Metadata(EURA).symbol(), "EURA");
+        console.log(IERC20Metadata(EURA).totalSupply());
+
+        assertEq(IERC20Metadata(USDA).name(), "USDA");
+        assertEq(IERC20Metadata(USDA).symbol(), "USDA");
+        console.log(IERC20Metadata(USDA).totalSupply());
     }
 }
