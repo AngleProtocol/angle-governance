@@ -30,8 +30,8 @@ contract DeploySideChainGovernance is Utils {
 
         // TODO can be modified to deploy on any chain
         uint256 srcChainId = CHAIN_ETHEREUM;
-        uint256 destChainId = CHAIN_BLAST;
-        address destSafeMultiSig = 0x7DE8289038DF0b89FFEC71Ee48a2BaD572549027; // guardian
+        uint256 destChainId = CHAIN_XLAYER;
+        address destSafeMultiSig = 0x60C7A25703f69a5f3fB77c694B938661761f728a; // guardian
         // END
 
         ProposalSender proposalSender = ProposalSender(_chainToContract(srcChainId, ContractType.ProposalSender));

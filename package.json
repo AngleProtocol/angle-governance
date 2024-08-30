@@ -42,8 +42,8 @@
     "url": "https://github.com/AngleProtocol/boilerplate/issues"
   },
   "devDependencies": {
-    "@angleprotocol/sdk": "^v2.14.0",
-    "@layerzerolabs/lz-sdk": "^0.0.75",
+    "@angleprotocol/sdk": "^v2.28.7",
+    "@layerzerolabs/lz-sdk": "^0.0.80",
     "discord.js": "^14.14.1",
     "prettier": "^2.0.0",
     "prettier-plugin-solidity": "^1.1.3",
