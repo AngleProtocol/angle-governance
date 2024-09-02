@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.10.0.tgz#d2a39395c587e092d77cbbc80acf956a54f38bf7"
   integrity sha512-nA9XHtlAkYfJxY7bce8DcN7eKxWWCWkU+1GR9d+U6MbNpfwQp8TI7vqOsBsMcHoT4mBu2kypKoSKnghEzOOq5Q==
 
-"@angleprotocol/sdk@^v2.14.0":
-  version "2.14.17"
-  resolved "https://npm.pkg.github.com/download/@angleprotocol/sdk/2.14.17/a183797ef1372251c1305f02f77eb7d161717189#a183797ef1372251c1305f02f77eb7d161717189"
-  integrity sha512-7Yn+mo8mwrA0EMqZtveh+fVHNRlcvxPNeQN8M0AIlYysp/rpbhQLZ6aQpTCvnH/5VyyiY8svHBOHs6Tj+aHWEg==
+"@angleprotocol/sdk@^v2.28.7":
+  version "2.28.7"
+  resolved "https://npm.pkg.github.com/download/@angleprotocol/sdk/2.28.7/19740e6e027f19618c21bd0208d18c56d1d48f4c#19740e6e027f19618c21bd0208d18c56d1d48f4c"
+  integrity sha512-cnc5ohltVsfKZNGHpd3vS+CGE6IS4rR6gA2gnWay6Zrphf7K5kB1H6EJtAkiR/HkmCOEbvflWmwZhLwn0ANtPQ==
   dependencies:
     "@apollo/client" "^3.7.17"
     "@typechain/ethers-v5" "^10.0.0"
@@ -496,10 +496,10 @@
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.2.0.tgz#5f3d96ec6b2354ad6d8a28bf216a1d97b5426861"
   integrity sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==
 
-"@layerzerolabs/lz-sdk@^0.0.75":
-  version "0.0.75"
-  resolved "https://registry.yarnpkg.com/@layerzerolabs/lz-sdk/-/lz-sdk-0.0.75.tgz#e8e2d1ba4704020b8c876b94b965da8a55a96f27"
-  integrity sha512-s8HCMwhPpXfSLkZDeWJ281q8sMZRSQlC5LieCmqIHnYAquCAke3/w+nRHuvnu/KtgE9i5Y9dc+mbOqNUTNGv2g==
+"@layerzerolabs/lz-sdk@^0.0.80":
+  version "0.0.80"
+  resolved "https://registry.yarnpkg.com/@layerzerolabs/lz-sdk/-/lz-sdk-0.0.80.tgz#1392ac3b55a730b73422ae4941a694657ac9f3bf"
+  integrity sha512-s6fJXX6+KKXXGWqkIMOwIaa3B2zuRvCYYP1SXyCSiF7eIfatGlSxQIdYb3+7PKHLMCtGKPcbOvPHWakpJsoiYA==
 
 "@noble/curves@1.1.0", "@noble/curves@~1.1.0":
   version "1.1.0"
