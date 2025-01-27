@@ -19,6 +19,12 @@ interface IAccessControlWriteVyper {
     function accept_transfer_ownership() external;
 }
 
+interface IOwnable {
+    function transferOwnership(address newOwner) external;
+
+    function owner() external view returns (address);
+}
+
 interface IProxyAdmin {
     function upgrade(address proxy, address implementation) external;
 }
@@ -63,7 +69,11 @@ interface IAngle {
     function minter() external returns (address);
 }
 
-interface IVeAngle is IAccessControlViewVyper, IAccessControlWriteVyper {}
+interface IVeAngle is IAccessControlViewVyper, IAccessControlWriteVyper {
+    function set_emergency_withdrawal() external;
+
+    function emergency_withdrawal() external view returns (bool);
+}
 
 interface IGaugeController is IAccessControlViewVyper, IAccessControlWriteVyper {}
 
