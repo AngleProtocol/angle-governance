@@ -11,7 +11,14 @@ contract UpgradeAgTokenNameable is Wrapper {
     mapping(uint256 => address) private _chainToToken;
     mapping(uint256 => address) private _chainToImplementation;
 
-    function _upgradeAgToken(uint256 chainId, string memory name, string memory symbol, address proxy, address implementation, address proxyAdmin) private {
+    function _upgradeAgToken(
+        uint256 chainId,
+        string memory name,
+        string memory symbol,
+        address proxy,
+        address implementation,
+        address proxyAdmin
+    ) private {
         vm.selectFork(forkIdentifier[chainId]);
 
         bytes memory nameAndSymbolData = abi.encodeWithSelector(INameable.setNameAndSymbol.selector, name, symbol);
@@ -23,7 +30,7 @@ contract UpgradeAgTokenNameable is Wrapper {
 
     function run() external {
         uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
-        string memory description = "ipfs://QmRSdyuXeemVEn97RPRSiit6UEUonvwVr9we7bEe2w8v2E";
+        string memory description = "ipfs://QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH";
 
         /** TODO  complete */
         string memory name = "EURA"; // previously "agEUR"
