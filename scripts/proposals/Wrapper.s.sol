@@ -119,9 +119,6 @@ contract Wrapper is Utils {
         uint256 chainId
     ) internal returns (uint256 gas) {
         vm.selectFork(forkIdentifier[chainId]);
-        TimelockControllerWithCounter timelock = TimelockControllerWithCounter(
-            payable(_chainToContract(chainId, ContractType.Timelock))
-        );
 
         address sender = _chainToContract(CHAIN_SOURCE, ContractType.ProposalSender);
         address receiver = _chainToContract(chainId, ContractType.ProposalReceiver);
@@ -172,8 +169,6 @@ contract Wrapper is Utils {
                     prop
                 );
                 chainIds[finalPropLength] = chainId;
-                finalPropLength += 1;
-                i += count;
             } else {
                 vm.selectFork(forkIdentifier[chainId]);
                 (address target, uint256 value, bytes memory data) = wrapTimelock(chainId, prop);
@@ -211,10 +206,9 @@ contract Wrapper is Utils {
                 );
 
                 values[finalPropLength] = (nativeFee * GAS_MULTIPLIER) / BASE_GAS;
-
-                finalPropLength += 1;
-                i += count;
             }
+            finalPropLength += 1;
+            i += count;
         }
         assembly ("memory-safe") {
             mstore(targets, finalPropLength)
