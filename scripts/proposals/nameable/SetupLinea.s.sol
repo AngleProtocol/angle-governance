@@ -64,7 +64,7 @@ contract SetupLinea is Wrapper {
             _setMaxRateSavings(stEUR, treasuryEUR, maxRateEUR, keeper);
         }
 
-        string memory description = "ipfs://QmRSdyuXeemVEn97RPRSiit6UEUonvwVr9we7bEe2w8v2E";
+        string memory description = "ipfs://QmS6WCqc8pA44jJKFyXw8en1qDKkiXCdGPsWamruQyeSY2";
 
         (
             address[] memory targets,

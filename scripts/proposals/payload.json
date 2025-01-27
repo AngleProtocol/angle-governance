@@ -5,11 +5,11 @@
   "chainIds": {
     "0": 59144
   },
-  "description": "ipfs://QmRSdyuXeemVEn97RPRSiit6UEUonvwVr9we7bEe2w8v2E",
+  "description": "ipfs://QmS6WCqc8pA44jJKFyXw8en1qDKkiXCdGPsWamruQyeSY2",
   "targets": {
     "0": "0x896D64B4B7265273dDCD00808f3579563f9790A8"
   },
   "values": {
-    "0": 482036851897461
+    "0": 710587509144021
   }
 }

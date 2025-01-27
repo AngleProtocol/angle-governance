@@ -27,7 +27,7 @@ contract Propose is Utils {
             uint256[] memory chainIds
         ) = _deserializeJson();
 
-        uint256 deployerPrivateKey = vm.deriveKey(vm.envString("MNEMONIC_MAINNET"), 0);
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         vm.rememberKey(deployerPrivateKey);
 
         vm.startBroadcast(deployerPrivateKey);
